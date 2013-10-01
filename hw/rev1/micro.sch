@@ -1,0 +1,265 @@
+EESchema Schematic File Version 2
+LIBS:power
+LIBS:device
+LIBS:transistors
+LIBS:conn
+LIBS:linear
+LIBS:regul
+LIBS:74xx
+LIBS:cmos4000
+LIBS:adc-dac
+LIBS:memory
+LIBS:xilinx
+LIBS:special
+LIBS:microcontrollers
+LIBS:dsp
+LIBS:microchip
+LIBS:analog_switches
+LIBS:motorola
+LIBS:texas
+LIBS:intel
+LIBS:audio
+LIBS:interface
+LIBS:digital-audio
+LIBS:philips
+LIBS:display
+LIBS:cypress
+LIBS:siliconi
+LIBS:opto
+LIBS:atmel
+LIBS:contrib
+LIBS:valves
+LIBS:symbols
+LIBS:audio_iface_rev1-cache
+EELAYER 27 0
+EELAYER END
+$Descr A4 11693 8268
+encoding utf-8
+Sheet 5 5
+Title ""
+Date "1 oct 2013"
+Rev ""
+Comp ""
+Comment1 ""
+Comment2 ""
+Comment3 ""
+Comment4 ""
+$EndDescr
+Text HLabel 7550 2500 2    60   BiDi ~ 0
+I2C1_SDA
+Text HLabel 7550 2600 2    60   BiDi ~ 0
+I2C1_SCL
+Text HLabel 7550 2400 2    60   Output ~ 0
+HP_~SD
+$Comp
+L STM32F37X_LQFP64 U?
+U 1 1 524A6C88
+P 3000 3300
+F 0 "U?" H 2950 3350 60  0000 R CNN
+F 1 "STM32F37X_LQFP64" H 3050 3350 60  0000 L CNN
+F 2 "" H 2450 2700 60  0000 C CNN
+F 3 "" H 2450 2700 60  0000 C CNN
+	1    3000 3300
+	1    0    0    -1  
+$EndComp
+$Comp
+L STM32F37X_LQFP64 U?
+U 2 1 524A6C97
+P 5150 3550
+F 0 "U?" H 5100 3600 60  0000 R CNN
+F 1 "STM32F37X_LQFP64" H 5200 3600 60  0000 L CNN
+F 2 "" H 4600 2950 60  0000 C CNN
+F 3 "" H 4600 2950 60  0000 C CNN
+	2    5150 3550
+	1    0    0    -1  
+$EndComp
+$Comp
+L STM32F37X_LQFP64 U?
+U 3 1 524A6CA4
+P 6500 3900
+F 0 "U?" H 6450 3950 60  0000 R CNN
+F 1 "STM32F37X_LQFP64" H 6550 3950 60  0000 L CNN
+F 2 "" H 5950 3300 60  0000 C CNN
+F 3 "" H 5950 3300 60  0000 C CNN
+	3    6500 3900
+	1    0    0    -1  
+$EndComp
+$Comp
+L STM32F37X_LQFP64 U?
+U 4 1 524A6CAA
+P 8200 3950
+F 0 "U?" H 8150 4000 60  0000 R CNN
+F 1 "STM32F37X_LQFP64" H 8250 4000 60  0000 L CNN
+F 2 "" H 7650 3350 60  0000 C CNN
+F 3 "" H 7650 3350 60  0000 C CNN
+	4    8200 3950
+	1    0    0    -1  
+$EndComp
+$Comp
+L +3V #PWR?
+U 1 1 524A6D6E
+P 2350 3300
+F 0 "#PWR?" H 2350 3260 30  0001 C CNN
+F 1 "+3V" H 2350 3410 30  0000 C CNN
+F 2 "" H 2350 3300 60  0000 C CNN
+F 3 "" H 2350 3300 60  0000 C CNN
+	1    2350 3300
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	2350 3300 2350 3900
+Wire Wire Line
+	2350 3400 2600 3400
+Wire Wire Line
+	2350 3500 2600 3500
+Connection ~ 2350 3400
+Wire Wire Line
+	2350 3600 2600 3600
+Connection ~ 2350 3500
+Wire Wire Line
+	2350 3700 2600 3700
+Connection ~ 2350 3600
+Connection ~ 2350 3700
+Wire Wire Line
+	2350 3900 2600 3900
+Connection ~ 2350 3800
+$Comp
+L CAP C?
+U 1 1 524A6DA1
+P 2150 3950
+F 0 "C?" H 2170 3920 50  0000 L TNN
+F 1 "10n" H 2175 3970 30  0000 L BNN
+F 2 "~" H 2150 3950 60  0000 C CNN
+F 3 "~" H 2150 3950 60  0000 C CNN
+	1    2150 3950
+	0    -1   -1   0   
+$EndComp
+$Comp
+L CAP C?
+U 1 1 524A6DAE
+P 2000 3950
+F 0 "C?" H 2020 3920 50  0000 L TNN
+F 1 "0.1u" H 2025 3970 30  0000 L BNN
+F 2 "~" H 2000 3950 60  0000 C CNN
+F 3 "~" H 2000 3950 60  0000 C CNN
+	1    2000 3950
+	0    -1   -1   0   
+$EndComp
+$Comp
+L CAP C?
+U 1 1 524A6DB4
+P 1850 3950
+F 0 "C?" H 1870 3920 50  0000 L TNN
+F 1 "0.1u" H 1875 3970 30  0000 L BNN
+F 2 "~" H 1850 3950 60  0000 C CNN
+F 3 "~" H 1850 3950 60  0000 C CNN
+	1    1850 3950
+	0    -1   -1   0   
+$EndComp
+$Comp
+L CAP C?
+U 1 1 524A6DBA
+P 1400 3950
+F 0 "C?" H 1420 3920 50  0000 L TNN
+F 1 "2.2u" H 1425 3970 30  0000 L BNN
+F 2 "~" H 1400 3950 60  0000 C CNN
+F 3 "~" H 1400 3950 60  0000 C CNN
+	1    1400 3950
+	0    -1   -1   0   
+$EndComp
+Wire Wire Line
+	1400 3800 1400 3850
+Wire Wire Line
+	1400 4100 2600 4100
+Wire Wire Line
+	2150 4100 2150 4050
+Wire Wire Line
+	2000 4100 2000 4050
+Connection ~ 2150 4100
+Wire Wire Line
+	1850 4100 1850 4050
+Connection ~ 2000 4100
+Wire Wire Line
+	1400 4100 1400 4050
+Connection ~ 1850 4100
+Wire Wire Line
+	2600 4200 2350 4200
+Wire Wire Line
+	2350 4100 2350 4500
+Connection ~ 2350 4100
+Wire Wire Line
+	2350 4300 2600 4300
+Connection ~ 2350 4200
+Wire Wire Line
+	1400 3800 2600 3800
+Wire Wire Line
+	2150 3800 2150 3850
+Wire Wire Line
+	2000 3800 2000 3850
+Connection ~ 2150 3800
+Wire Wire Line
+	1850 3800 1850 3850
+Connection ~ 2000 3800
+Connection ~ 1850 3800
+$Comp
+L CAP C?
+U 1 1 524A7184
+P 1550 3950
+F 0 "C?" H 1570 3920 50  0000 L TNN
+F 1 "1u" H 1575 3970 30  0000 L BNN
+F 2 "~" H 1550 3950 60  0000 C CNN
+F 3 "~" H 1550 3950 60  0000 C CNN
+	1    1550 3950
+	0    -1   -1   0   
+$EndComp
+$Comp
+L CAP C?
+U 1 1 524A718A
+P 1700 3950
+F 0 "C?" H 1720 3920 50  0000 L TNN
+F 1 "1u" H 1725 3970 30  0000 L BNN
+F 2 "~" H 1700 3950 60  0000 C CNN
+F 3 "~" H 1700 3950 60  0000 C CNN
+	1    1700 3950
+	0    -1   -1   0   
+$EndComp
+Wire Wire Line
+	1700 3800 1700 3850
+Connection ~ 1700 3800
+Wire Wire Line
+	1550 3800 1550 3850
+Connection ~ 1550 3800
+Wire Wire Line
+	1550 4050 1550 4100
+Connection ~ 1550 4100
+Wire Wire Line
+	1700 4050 1700 4100
+Connection ~ 1700 4100
+$Comp
+L DGND #PWR?
+U 1 1 524A765B
+P 2350 4500
+F 0 "#PWR?" H 2350 4500 40  0001 C CNN
+F 1 "DGND" H 2350 4430 40  0000 C CNN
+F 2 "" H 2350 4500 60  0000 C CNN
+F 3 "" H 2350 4500 60  0000 C CNN
+	1    2350 4500
+	1    0    0    -1  
+$EndComp
+Connection ~ 2350 4300
+$Comp
+L DGND #PWR?
+U 1 1 524A769B
+P 3600 3700
+F 0 "#PWR?" H 3600 3700 40  0001 C CNN
+F 1 "DGND" H 3600 3630 40  0000 C CNN
+F 2 "" H 3600 3700 60  0000 C CNN
+F 3 "" H 3600 3700 60  0000 C CNN
+	1    3600 3700
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	3600 3700 3600 3500
+Wire Wire Line
+	3600 3500 3400 3500
+$EndSCHEMATC

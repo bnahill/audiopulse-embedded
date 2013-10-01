@@ -1,0 +1,207 @@
+EESchema Schematic File Version 2
+LIBS:power
+LIBS:device
+LIBS:transistors
+LIBS:conn
+LIBS:linear
+LIBS:regul
+LIBS:74xx
+LIBS:cmos4000
+LIBS:adc-dac
+LIBS:memory
+LIBS:xilinx
+LIBS:special
+LIBS:microcontrollers
+LIBS:dsp
+LIBS:microchip
+LIBS:analog_switches
+LIBS:motorola
+LIBS:texas
+LIBS:intel
+LIBS:audio
+LIBS:interface
+LIBS:digital-audio
+LIBS:philips
+LIBS:display
+LIBS:cypress
+LIBS:siliconi
+LIBS:opto
+LIBS:atmel
+LIBS:contrib
+LIBS:valves
+LIBS:symbols
+LIBS:audio_iface_rev1-cache
+EELAYER 27 0
+EELAYER END
+$Descr A4 11693 8268
+encoding utf-8
+Sheet 1 5
+Title ""
+Date "1 oct 2013"
+Rev ""
+Comp ""
+Comment1 ""
+Comment2 ""
+Comment3 ""
+Comment4 ""
+$EndDescr
+$Sheet
+S 1700 3300 1200 1150
+U 523B0E12
+F0 "Audio In" 50
+F1 "audio_in.sch" 50
+F2 "MIC_IN" I L 1700 3700 60 
+F3 "MIC_DIFF_N" O R 2900 3800 60 
+F4 "MIC_DIFF_P" O R 2900 3700 60 
+F5 "EXT_DIFF_N" O R 2900 4100 60 
+F6 "EXT_DIFF_P" O R 2900 4000 60 
+F7 "EXT_IN" I L 1700 4100 60 
+$EndSheet
+$Sheet
+S 3550 3600 1200 1200
+U 523B943D
+F0 "CODEC" 50
+F1 "codec.sch" 50
+F2 "AINL+" I L 3550 3700 60 
+F3 "AINL-" I L 3550 3800 60 
+F4 "AINR+" I L 3550 4000 60 
+F5 "AINR-" I L 3550 4100 60 
+F6 "AOUTR+" O R 4750 4000 60 
+F7 "AOUTR-" O R 4750 4100 60 
+F8 "AOUTL+" O R 4750 3700 60 
+F9 "AOUTL-" O R 4750 3800 60 
+$EndSheet
+Wire Wire Line
+	3550 3700 2900 3700
+Wire Wire Line
+	2900 3800 3550 3800
+$Sheet
+S 5550 3600 1150 1200
+U 523BC94C
+F0 "HP Amp" 50
+F1 "hp_amp.sch" 50
+F2 "INL+" I L 5550 3700 60 
+F3 "INL-" I L 5550 3800 60 
+F4 "INR-" I L 5550 4100 60 
+F5 "INR+" I L 5550 4000 60 
+F6 "HPL" O R 6700 3700 60 
+F7 "HPR" O R 6700 3800 60 
+F8 "~SD" I L 5550 4300 60 
+F9 "SDA" B L 5550 4400 60 
+F10 "SCL" I L 5550 4500 60 
+$EndSheet
+Wire Wire Line
+	5550 3700 4750 3700
+Wire Wire Line
+	4750 3800 5550 3800
+Wire Wire Line
+	5550 4000 4750 4000
+Wire Wire Line
+	4750 4100 5550 4100
+$Comp
+L CONN_2 J?
+U 1 1 523BE918
+P 800 3800
+F 0 "J?" V 750 3800 40  0000 C CNN
+F 1 "CONN_2" V 850 3800 40  0000 C CNN
+F 2 "~" H 800 3800 60  0000 C CNN
+F 3 "~" H 800 3800 60  0000 C CNN
+	1    800  3800
+	-1   0    0    1   
+$EndComp
+Wire Wire Line
+	1150 3700 1250 3700
+Wire Wire Line
+	1250 3700 1700 3700
+$Comp
+L AGND_IN #PWR?
+U 1 1 523BE9E2
+P 1250 3950
+F 0 "#PWR?" H 1250 3950 40  0001 C CNN
+F 1 "AGND_IN" H 1250 3880 50  0000 C CNN
+F 2 "" H 1250 3950 60  0000 C CNN
+F 3 "" H 1250 3950 60  0000 C CNN
+	1    1250 3950
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	1250 3950 1250 3900
+Wire Wire Line
+	1250 3900 1150 3900
+$Comp
+L RES R?
+U 1 1 523BEA36
+P 1250 3450
+F 0 "R?" H 1320 3415 50  0000 L TNN
+F 1 "3.9k (1%)" H 1250 3505 30  0000 C BNN
+F 2 "" H 1250 3450 60  0000 C CNN
+F 3 "" H 1250 3450 60  0000 C CNN
+	1    1250 3450
+	0    -1   -1   0   
+$EndComp
+$Comp
+L +5V #PWR?
+U 1 1 523BEA45
+P 1250 3200
+F 0 "#PWR?" H 1250 3290 20  0001 C CNN
+F 1 "+5V" H 1250 3290 30  0000 C CNN
+F 2 "" H 1250 3200 60  0000 C CNN
+F 3 "" H 1250 3200 60  0000 C CNN
+	1    1250 3200
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	1250 3200 1250 3300
+Wire Wire Line
+	1250 3600 1250 3700
+Connection ~ 1250 3700
+$Sheet
+S 3550 5550 1500 1900
+U 523BF424
+F0 "Microcontroller" 50
+F1 "micro.sch" 50
+$EndSheet
+$Comp
+L USBMICROCONN U?
+U 1 1 523BF69D
+P 2000 6650
+F 0 "U?" H 2050 6250 60  0001 C CNN
+F 1 "USBMICROCONN" H 2050 6250 60  0000 C CNN
+F 2 "" H 2000 6650 60  0000 C CNN
+F 3 "" H 2000 6650 60  0000 C CNN
+	1    2000 6650
+	0    1    1    0   
+$EndComp
+Wire Wire Line
+	2900 4000 3550 4000
+Wire Wire Line
+	3550 4100 2900 4100
+$Comp
+L CONN_2 J?
+U 1 1 52486D64
+P 800 4200
+F 0 "J?" V 750 4200 40  0000 C CNN
+F 1 "CONN_2" V 850 4200 40  0000 C CNN
+F 2 "~" H 800 4200 60  0000 C CNN
+F 3 "~" H 800 4200 60  0000 C CNN
+	1    800  4200
+	-1   0    0    1   
+$EndComp
+$Comp
+L AGND_IN #PWR?
+U 1 1 52486D6B
+P 1250 4400
+F 0 "#PWR?" H 1250 4400 40  0001 C CNN
+F 1 "AGND_IN" H 1250 4330 50  0000 C CNN
+F 2 "" H 1250 4400 60  0000 C CNN
+F 3 "" H 1250 4400 60  0000 C CNN
+	1    1250 4400
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	1250 4400 1250 4300
+Wire Wire Line
+	1250 4300 1150 4300
+Wire Wire Line
+	1150 4100 1700 4100
+$EndSCHEMATC
