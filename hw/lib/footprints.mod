@@ -1,0 +1,463 @@
+PCBNEW-LibModule-V1  Fri 04 Oct 2013 06:52:03 PM EDT
+# encoding utf-8
+Units mm
+$INDEX
+FREESCALE_QFN32
+LT_DFN16_QUAD
+LT_DFN8_DUAL
+$EndINDEX
+$MODULE FREESCALE_QFN32
+Po 0 0 0 15 524F4685 00000000 ~~
+Li FREESCALE_QFN32
+Sc 0
+AR 
+Op 0 0 0
+T0 0 -3.5 1 1 0 0.15 N V 21 N "FREESCALE_QFN32"
+T1 0 3.6 1 1 0 0.15 N I 21 N "VAL**"
+DS -2.5 -2.5 2.5 -2.5 0.15 21
+DS 2.5 -2.5 2.5 2.5 0.15 21
+DS 2.5 2.5 -2.5 2.5 0.15 21
+DS -2.5 2.5 -2.5 -2.5 0.15 21
+$PAD
+Sh "9" R 0.6 0.25 0 0 900
+Dr 0 0 0
+At SMD N 00888000
+Ne 0 ""
+Po -1.75 2.35
+$EndPAD
+$PAD
+Sh "10" R 0.6 0.25 0 0 900
+Dr 0 0 0
+At SMD N 00888000
+Ne 0 ""
+Po -1.25 2.35
+$EndPAD
+$PAD
+Sh "12" R 0.6 0.25 0 0 900
+Dr 0 0 0
+At SMD N 00888000
+Ne 0 ""
+Po -0.25 2.35
+$EndPAD
+$PAD
+Sh "11" R 0.6 0.25 0 0 900
+Dr 0 0 0
+At SMD N 00888000
+Ne 0 ""
+Po -0.75 2.35
+$EndPAD
+$PAD
+Sh "15" R 0.6 0.25 0 0 900
+Dr 0 0 0
+At SMD N 00888000
+Ne 0 ""
+Po 1.25 2.35
+$EndPAD
+$PAD
+Sh "16" R 0.6 0.25 0 0 900
+Dr 0 0 0
+At SMD N 00888000
+Ne 0 ""
+Po 1.75 2.35
+$EndPAD
+$PAD
+Sh "14" R 0.6 0.25 0 0 900
+Dr 0 0 0
+At SMD N 00888000
+Ne 0 ""
+Po 0.75 2.35
+$EndPAD
+$PAD
+Sh "13" R 0.6 0.25 0 0 900
+Dr 0 0 0
+At SMD N 00888000
+Ne 0 ""
+Po 0.25 2.35
+$EndPAD
+$PAD
+Sh "28" R 0.6 0.25 0 0 900
+Dr 0 0 0
+At SMD N 00888000
+Ne 0 ""
+Po 0.25 -2.35
+$EndPAD
+$PAD
+Sh "27" R 0.6 0.25 0 0 900
+Dr 0 0 0
+At SMD N 00888000
+Ne 0 ""
+Po 0.75 -2.35
+$EndPAD
+$PAD
+Sh "25" R 0.6 0.25 0 0 900
+Dr 0 0 0
+At SMD N 00888000
+Ne 0 ""
+Po 1.75 -2.35
+$EndPAD
+$PAD
+Sh "26" R 0.6 0.25 0 0 900
+Dr 0 0 0
+At SMD N 00888000
+Ne 0 ""
+Po 1.25 -2.35
+$EndPAD
+$PAD
+Sh "30" R 0.6 0.25 0 0 900
+Dr 0 0 0
+At SMD N 00888000
+Ne 0 ""
+Po -0.75 -2.35
+$EndPAD
+$PAD
+Sh "29" R 0.6 0.25 0 0 900
+Dr 0 0 0
+At SMD N 00888000
+Ne 0 ""
+Po -0.25 -2.35
+$EndPAD
+$PAD
+Sh "31" R 0.6 0.25 0 0 900
+Dr 0 0 0
+At SMD N 00888000
+Ne 0 ""
+Po -1.25 -2.35
+$EndPAD
+$PAD
+Sh "32" R 0.6 0.25 0 0 900
+Dr 0 0 0
+At SMD N 00888000
+Ne 0 ""
+Po -1.75 -2.35
+$EndPAD
+$PAD
+Sh "24" R 0.6 0.25 0 0 0
+Dr 0 0 0
+At SMD N 00888000
+Ne 0 ""
+Po 2.35 -1.75
+$EndPAD
+$PAD
+Sh "23" R 0.6 0.25 0 0 0
+Dr 0 0 0
+At SMD N 00888000
+Ne 0 ""
+Po 2.35 -1.25
+$EndPAD
+$PAD
+Sh "21" R 0.6 0.25 0 0 0
+Dr 0 0 0
+At SMD N 00888000
+Ne 0 ""
+Po 2.35 -0.25
+$EndPAD
+$PAD
+Sh "22" R 0.6 0.25 0 0 0
+Dr 0 0 0
+At SMD N 00888000
+Ne 0 ""
+Po 2.35 -0.75
+$EndPAD
+$PAD
+Sh "18" R 0.6 0.25 0 0 0
+Dr 0 0 0
+At SMD N 00888000
+Ne 0 ""
+Po 2.35 1.25
+$EndPAD
+$PAD
+Sh "17" R 0.6 0.25 0 0 0
+Dr 0 0 0
+At SMD N 00888000
+Ne 0 ""
+Po 2.35 1.75
+$EndPAD
+$PAD
+Sh "19" R 0.6 0.25 0 0 0
+Dr 0 0 0
+At SMD N 00888000
+Ne 0 ""
+Po 2.35 0.75
+$EndPAD
+$PAD
+Sh "20" R 0.6 0.25 0 0 0
+Dr 0 0 0
+At SMD N 00888000
+Ne 0 ""
+Po 2.35 0.25
+$EndPAD
+$PAD
+Sh "5" R 0.6 0.25 0 0 0
+Dr 0 0 0
+At SMD N 00888000
+Ne 0 ""
+Po -2.35 0.25
+$EndPAD
+$PAD
+Sh "6" R 0.6 0.25 0 0 0
+Dr 0 0 0
+At SMD N 00888000
+Ne 0 ""
+Po -2.35 0.75
+$EndPAD
+$PAD
+Sh "8" R 0.6 0.25 0 0 0
+Dr 0 0 0
+At SMD N 00888000
+Ne 0 ""
+Po -2.35 1.75
+$EndPAD
+$PAD
+Sh "7" R 0.6 0.25 0 0 0
+Dr 0 0 0
+At SMD N 00888000
+Ne 0 ""
+Po -2.35 1.25
+$EndPAD
+$PAD
+Sh "3" R 0.6 0.25 0 0 0
+Dr 0 0 0
+At SMD N 00888000
+Ne 0 ""
+Po -2.35 -0.75
+$EndPAD
+$PAD
+Sh "4" R 0.6 0.25 0 0 0
+Dr 0 0 0
+At SMD N 00888000
+Ne 0 ""
+Po -2.35 -0.25
+$EndPAD
+$PAD
+Sh "2" R 0.6 0.25 0 0 0
+Dr 0 0 0
+At SMD N 00888000
+Ne 0 ""
+Po -2.35 -1.25
+$EndPAD
+$PAD
+Sh "PAD" R 3.5 3.5 0 0 0
+Dr 0 0 0
+At SMD N 00888000
+Ne 0 ""
+Po 0 0
+$EndPAD
+$PAD
+Sh "1" R 0.6 0.25 0 0 0
+Dr 0 0 0
+At SMD N 00888000
+Ne 0 ""
+Po -2.35 -1.75
+$EndPAD
+$EndMODULE FREESCALE_QFN32
+$MODULE LT_DFN16_QUAD
+Po 0 0 0 15 524F3BCC 00000000 ~~
+Li LT_DFN16_QUAD
+Sc 0
+AR 
+Op 0 0 0
+T0 0 -2.7 1 1 0 0.15 N V 21 N "LT_DFN16_QUAD"
+T1 0 2.8 1 1 0 0.15 N I 21 N "VAL**"
+DC -3 0.9 -2.9 0.7 0.15 21
+DS -2.5 -1.5 -2.5 1.5 0.15 21
+DS -2.5 1.5 2.5 1.5 0.15 21
+DS 2.5 1.5 2.5 -1.5 0.15 21
+DS 2.5 -1.5 -2.5 -1.5 0.15 21
+$PAD
+Sh "" R 0.25 0.65 0 0 0
+Dr 0 0 0
+At SMD N 00888000
+Ne 0 ""
+Po 1.75 -1.45
+$EndPAD
+$PAD
+Sh "" R 0.25 0.65 0 0 0
+Dr 0 0 0
+At SMD N 00888000
+Ne 0 ""
+Po 1.75 1.45
+$EndPAD
+$PAD
+Sh "n2" R 0.25 0.65 0 0 0
+Dr 0 0 0
+At SMD N 00888000
+Ne 0 ""
+Po 0.75 1.45
+$EndPAD
+$PAD
+Sh "o2" R 0.25 0.65 0 0 0
+Dr 0 0 0
+At SMD N 00888000
+Ne 0 ""
+Po 1.25 1.45
+$EndPAD
+$PAD
+Sh "Vss" R 0.25 0.65 0 0 0
+Dr 0 0 0
+At SMD N 00888000
+Ne 0 ""
+Po -0.25 -1.45
+$EndPAD
+$PAD
+Sh "p3" R 0.25 0.65 0 0 0
+Dr 0 0 0
+At SMD N 00888000
+Ne 0 ""
+Po 0.25 -1.45
+$EndPAD
+$PAD
+Sh "n3" R 0.25 0.65 0 0 0
+Dr 0 0 0
+At SMD N 00888000
+Ne 0 ""
+Po 0.75 -1.45
+$EndPAD
+$PAD
+Sh "o3" R 0.25 0.65 0 0 0
+Dr 0 0 0
+At SMD N 00888000
+Ne 0 ""
+Po 1.25 -1.45
+$EndPAD
+$PAD
+Sh "p2" R 0.25 0.65 0 0 0
+Dr 0 0 0
+At SMD N 00888000
+Ne 0 ""
+Po 0.25 1.45
+$EndPAD
+$PAD
+Sh "Vdd" R 0.25 0.65 0 0 0
+Dr 0 0 0
+At SMD N 00888000
+Ne 0 ""
+Po -0.25 1.45
+$EndPAD
+$PAD
+Sh "n1" R 0.25 0.65 0 0 0
+Dr 0 0 0
+At SMD N 00888000
+Ne 0 ""
+Po -1.25 1.45
+$EndPAD
+$PAD
+Sh "p1" R 0.25 0.65 0 0 0
+Dr 0 0 0
+At SMD N 00888000
+Ne 0 ""
+Po -0.75 1.45
+$EndPAD
+$PAD
+Sh "o1" R 0.25 0.65 0 0 0
+Dr 0 0 0
+At SMD N 00888000
+Ne 0 ""
+Po -1.75 1.45
+$EndPAD
+$PAD
+Sh "p4" R 0.25 0.65 0 0 0
+Dr 0 0 0
+At SMD N 00888000
+Ne 0 ""
+Po -0.75 -1.45
+$EndPAD
+$PAD
+Sh "n4" R 0.25 0.65 0 0 0
+Dr 0 0 0
+At SMD N 00888000
+Ne 0 ""
+Po -1.25 -1.45
+$EndPAD
+$PAD
+Sh "o4" R 0.25 0.65 0 0 0
+Dr 0 0 0
+At SMD N 00888000
+Ne 0 ""
+Po -1.75 -1.45
+$EndPAD
+$PAD
+Sh "Vss" R 4.4 1.65 0 0 0
+Dr 0 0 0
+At SMD N 00888000
+Ne 0 ""
+Po 0 0
+$EndPAD
+$EndMODULE LT_DFN16_QUAD
+$MODULE LT_DFN8_DUAL
+Po 0 0 0 15 524F3DCB 00000000 ~~
+Li LT_DFN8_DUAL
+Sc 0
+AR 
+Op 0 0 0
+T0 0 -2.65 1 1 0 0.15 N V 21 N "LT_DFN8_DUAL"
+T1 0 2.7 1 1 0 0.15 N I 21 N "VAL**"
+DC -2.05 0.9 -1.85 1.05 0.15 21
+DS -1.5 -1.5 1.5 -1.5 0.15 21
+DS 1.5 -1.5 1.5 1.5 0.15 21
+DS 1.5 1.5 -1.5 1.5 0.15 21
+DS -1.5 1.5 -1.5 -1.5 0.15 21
+$PAD
+Sh "o1" R 0.25 0.7 0 0 0
+Dr 0 0 0
+At SMD N 00888000
+Ne 0 ""
+Po -0.75 1.4
+$EndPAD
+$PAD
+Sh "n1" R 0.25 0.7 0 0 0
+Dr 0 0 0
+At SMD N 00888000
+Ne 0 ""
+Po -0.25 1.4
+$EndPAD
+$PAD
+Sh "Vss" R 0.25 0.7 0 0 0
+Dr 0 0 0
+At SMD N 00888000
+Ne 0 ""
+Po 0.75 1.4
+$EndPAD
+$PAD
+Sh "p1" R 0.25 0.7 0 0 0
+Dr 0 0 0
+At SMD N 00888000
+Ne 0 ""
+Po 0.25 1.4
+$EndPAD
+$PAD
+Sh "n2" R 0.25 0.7 0 0 0
+Dr 0 0 0
+At SMD N 00888000
+Ne 0 ""
+Po 0.25 -1.4
+$EndPAD
+$PAD
+Sh "p2" R 0.25 0.7 0 0 0
+Dr 0 0 0
+At SMD N 00888000
+Ne 0 ""
+Po 0.75 -1.4
+$EndPAD
+$PAD
+Sh "o2" R 0.25 0.7 0 0 0
+Dr 0 0 0
+At SMD N 00888000
+Ne 0 ""
+Po -0.25 -1.4
+$EndPAD
+$PAD
+Sh "Vss" R 2.35 1.6 0 0 0
+Dr 0 0 0
+At SMD N 00888000
+Ne 0 ""
+Po 0 0
+$EndPAD
+$PAD
+Sh "Vdd" R 0.25 0.7 0 0 0
+Dr 0 0 0
+At SMD N 00888000
+Ne 0 ""
+Po -0.75 -1.4
+$EndPAD
+$EndMODULE LT_DFN8_DUAL
+$EndLIBRARY
