@@ -35,7 +35,7 @@ EELAYER 27 0
 EELAYER END
 $Descr A 11000 8500
 encoding utf-8
-Sheet 5 5
+Sheet 5 6
 Title "Android DPOAE Interface"
 Date "4 oct 2013"
 Rev "1a"
@@ -161,7 +161,7 @@ Wire Wire Line
 	3700 3500 3700 3550
 Connection ~ 3700 3500
 Wire Wire Line
-	3700 3750 3700 3800
+	3700 3750 3700 4400
 Connection ~ 3700 3800
 Wire Wire Line
 	3850 3750 3850 3800
@@ -189,7 +189,7 @@ F 3 "" H 5200 4550 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
-	4850 3200 4300 3200
+	3100 3200 4850 3200
 Wire Wire Line
 	4850 3100 4300 3100
 Connection ~ 4300 3200
@@ -295,7 +295,7 @@ L RES R?
 U 1 1 524D9932
 P 7550 3600
 F 0 "R?" H 7620 3565 50  0000 L TNN
-F 1 "RES" H 7550 3655 30  0000 C BNN
+F 1 "10k" H 7550 3655 30  0000 C BNN
 F 2 "~" H 7550 3600 60  0000 C CNN
 F 3 "~" H 7550 3600 60  0000 C CNN
 	1    7550 3600
@@ -306,7 +306,7 @@ L RES R?
 U 1 1 524D993F
 P 7400 3600
 F 0 "R?" H 7470 3565 50  0000 L TNN
-F 1 "RES" H 7400 3655 30  0000 C BNN
+F 1 "10k" H 7400 3655 30  0000 C BNN
 F 2 "~" H 7400 3600 60  0000 C CNN
 F 3 "~" H 7400 3600 60  0000 C CNN
 	1    7400 3600
@@ -375,7 +375,7 @@ F 1 "0.1u" H 3425 3570 30  0000 L BNN
 F 2 "~" H 3400 3550 60  0000 C CNN
 F 3 "~" H 3400 3550 60  0000 C CNN
 	1    3400 3550
-	0    1    1    0   
+	0    -1   -1   0   
 $EndComp
 $Comp
 L CAP C?
@@ -386,7 +386,7 @@ F 1 "2.2u" H 3275 3570 30  0000 L BNN
 F 2 "~" H 3250 3550 60  0000 C CNN
 F 3 "~" H 3250 3550 60  0000 C CNN
 	1    3250 3550
-	0    1    1    0   
+	0    -1   -1   0   
 $EndComp
 Wire Wire Line
 	3400 3300 3400 3450
@@ -401,9 +401,9 @@ Wire Wire Line
 	3250 3650 3250 3800
 Connection ~ 3400 3800
 Text Label 4600 4700 2    60   ~ 0
-SWDIO
+RESET
 Wire Wire Line
-	4600 4700 4850 4700
+	3100 4700 4850 4700
 Wire Wire Line
 	7650 4400 6350 4400
 Text HLabel 7650 4900 2    60   Output ~ 0
@@ -429,4 +429,41 @@ F 3 "" H 4100 2900 60  0000 C CNN
 	1    4100 2900
 	1    0    0    -1  
 $EndComp
+Text Label 4600 1900 2    60   ~ 0
+SWDIO
+Text Label 4600 1800 2    60   ~ 0
+SWCLK
+Text Label 4600 2000 2    60   ~ 0
+RESET
+Text Label 4600 2100 2    60   ~ 0
+SWO
+$Comp
+L RES R?
+U 1 1 524F1C32
+P 3100 4450
+F 0 "R?" H 3170 4415 50  0000 L TNN
+F 1 "10k" H 3100 4505 30  0000 C BNN
+F 2 "~" H 3100 4450 60  0000 C CNN
+F 3 "~" H 3100 4450 60  0000 C CNN
+	1    3100 4450
+	0    -1   -1   0   
+$EndComp
+Wire Wire Line
+	3100 4600 3100 4700
+Wire Wire Line
+	3100 4300 3100 3200
+$Comp
+L CAP C?
+U 1 1 524F1CF9
+P 3700 4500
+F 0 "C?" H 3720 4470 50  0000 L TNN
+F 1 "0.1u" H 3725 4520 30  0000 L BNN
+F 2 "~" H 3700 4500 60  0000 C CNN
+F 3 "~" H 3700 4500 60  0000 C CNN
+	1    3700 4500
+	0    -1   -1   0   
+$EndComp
+Wire Wire Line
+	3700 4600 3700 4700
+Connection ~ 3700 4700
 $EndSCHEMATC

@@ -35,7 +35,7 @@ EELAYER 27 0
 EELAYER END
 $Descr A 11000 8500
 encoding utf-8
-Sheet 1 5
+Sheet 1 6
 Title "Android DPOAE Interface"
 Date "4 oct 2013"
 Rev "1a"
@@ -350,74 +350,10 @@ F 3 "~" H 8900 3200 60  0000 C CNN
 $EndComp
 Wire Wire Line
 	9050 2900 8100 2900
-$Comp
-L AGND_IN #PWR?
-U 1 1 524E4E66
-P 4600 1600
-F 0 "#PWR?" H 4600 1600 40  0001 C CNN
-F 1 "AGND_IN" H 4600 1530 50  0000 C CNN
-F 2 "~" H 4600 1600 60  0000 C CNN
-F 3 "~" H 4600 1600 60  0000 C CNN
-	1    4600 1600
-	1    0    0    -1  
-$EndComp
-$Comp
-L AGND_OUT #PWR?
-U 1 1 524E4EF3
-P 5400 1600
-F 0 "#PWR?" H 5400 1600 40  0001 C CNN
-F 1 "AGND_OUT" H 5400 1530 50  0000 C CNN
-F 2 "~" H 5400 1600 60  0000 C CNN
-F 3 "~" H 5400 1600 60  0000 C CNN
-	1    5400 1600
-	1    0    0    -1  
-$EndComp
-$Comp
-L DGND #PWR?
-U 1 1 524E4FFE
-P 5000 1600
-F 0 "#PWR?" H 5000 1600 40  0001 C CNN
-F 1 "DGND" H 5000 1530 40  0000 C CNN
-F 2 "" H 5000 1600 60  0000 C CNN
-F 3 "" H 5000 1600 60  0000 C CNN
-	1    5000 1600
-	1    0    0    -1  
-$EndComp
-$Comp
-L RES R?
-U 1 1 524E6527
-P 5200 1350
-F 0 "R?" H 5270 1315 50  0000 L TNN
-F 1 "0R" H 5200 1405 30  0000 C BNN
-F 2 "~" H 5200 1350 60  0000 C CNN
-F 3 "~" H 5200 1350 60  0000 C CNN
-	1    5200 1350
-	-1   0    0    1   
-$EndComp
-$Comp
-L RES R?
-U 1 1 524E65DF
-P 4800 1350
-F 0 "R?" H 4870 1315 50  0000 L TNN
-F 1 "0R" H 4800 1405 30  0000 C BNN
-F 2 "~" H 4800 1350 60  0000 C CNN
-F 3 "~" H 4800 1350 60  0000 C CNN
-	1    4800 1350
-	-1   0    0    1   
-$EndComp
-Wire Wire Line
-	4650 1350 4600 1350
-Wire Wire Line
-	4600 1350 4600 1600
-Wire Wire Line
-	4950 1350 5050 1350
-Wire Wire Line
-	5000 1350 5000 1600
-Connection ~ 5000 1350
-Wire Wire Line
-	5350 1350 5400 1350
-Wire Wire Line
-	5400 1350 5400 1600
-Text Notes 4200 1250 0    60   ~ 0
-Join nets once layout is complete
+$Sheet
+S 4600 800  1000 1300
+U 524EE3EB
+F0 "Power" 50
+F1 "power.sch" 50
+$EndSheet
 $EndSCHEMATC
