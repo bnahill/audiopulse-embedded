@@ -37,7 +37,7 @@ $Descr A 11000 8500
 encoding utf-8
 Sheet 5 5
 Title "Android DPOAE Interface"
-Date "3 oct 2013"
+Date "4 oct 2013"
 Rev "1a"
 Comp "Sana AudioPulse"
 Comment1 "Ben Nahill <bnahill@gmail.com>"
@@ -361,17 +361,6 @@ Wire Wire Line
 	4600 4200 4850 4200
 Wire Wire Line
 	4850 4100 4600 4100
-$Comp
-L +5V #PWR?
-U 1 1 524DA2C8
-P 4100 2900
-F 0 "#PWR?" H 4100 2990 20  0001 C CNN
-F 1 "+5V" H 4100 2990 30  0000 C CNN
-F 2 "" H 4100 2900 60  0000 C CNN
-F 3 "" H 4100 2900 60  0000 C CNN
-	1    4100 2900
-	1    0    0    -1  
-$EndComp
 Connection ~ 4300 3000
 Wire Wire Line
 	4100 2900 4100 3300
@@ -429,4 +418,15 @@ Text Notes 6400 4300 0    40   ~ 0
 >Fs*48
 Text Notes 6400 4200 0    40   ~ 0
 Fs*2
+$Comp
+L +5V #PWR?
+U 1 1 524DA2C8
+P 4100 2900
+F 0 "#PWR?" H 4100 2990 20  0001 C CNN
+F 1 "+5V" H 4100 2990 30  0000 C CNN
+F 2 "" H 4100 2900 60  0000 C CNN
+F 3 "" H 4100 2900 60  0000 C CNN
+	1    4100 2900
+	1    0    0    -1  
+$EndComp
 $EndSCHEMATC

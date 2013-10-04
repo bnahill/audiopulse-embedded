@@ -37,7 +37,7 @@ $Descr A 11000 8500
 encoding utf-8
 Sheet 4 5
 Title "Android DPOAE Interface"
-Date "3 oct 2013"
+Date "4 oct 2013"
 Rev "1a"
 Comp "Sana AudioPulse"
 Comment1 "Ben Nahill <bnahill@gmail.com>"
@@ -252,31 +252,9 @@ Wire Wire Line
 	6300 4000 6300 4700
 Wire Wire Line
 	6300 4000 6200 4000
-$Comp
-L +5V #PWR?
-U 1 1 523BCA51
-P 5150 2800
-F 0 "#PWR?" H 5150 2890 20  0001 C CNN
-F 1 "+5V" H 5150 2890 30  0000 C CNN
-F 2 "" H 5150 2800 60  0000 C CNN
-F 3 "" H 5150 2800 60  0000 C CNN
-	1    5150 2800
-	1    0    0    -1  
-$EndComp
 Wire Wire Line
 	5150 2800 5150 2900
 Connection ~ 5150 2900
-$Comp
-L +5V #PWR?
-U 1 1 523BCA59
-P 6400 4050
-F 0 "#PWR?" H 6400 4140 20  0001 C CNN
-F 1 "+5V" H 6400 4140 30  0000 C CNN
-F 2 "" H 6400 4050 60  0000 C CNN
-F 3 "" H 6400 4050 60  0000 C CNN
-	1    6400 4050
-	1    0    0    -1  
-$EndComp
 Wire Wire Line
 	6400 4050 6400 4400
 Wire Wire Line
@@ -337,4 +315,26 @@ Wire Wire Line
 	5500 4600 5500 4950
 Wire Wire Line
 	5400 4950 5400 4600
+$Comp
+L +5VA #PWR?
+U 1 1 524E45D1
+P 6400 4050
+F 0 "#PWR?" H 6400 4180 20  0001 C CNN
+F 1 "+5VA" H 6400 4150 30  0000 C CNN
+F 2 "" H 6400 4050 60  0000 C CNN
+F 3 "" H 6400 4050 60  0000 C CNN
+	1    6400 4050
+	1    0    0    -1  
+$EndComp
+$Comp
+L +5VA #PWR?
+U 1 1 524E45E8
+P 5150 2800
+F 0 "#PWR?" H 5150 2930 20  0001 C CNN
+F 1 "+5VA" H 5150 2900 30  0000 C CNN
+F 2 "" H 5150 2800 60  0000 C CNN
+F 3 "" H 5150 2800 60  0000 C CNN
+	1    5150 2800
+	1    0    0    -1  
+$EndComp
 $EndSCHEMATC
