@@ -37,7 +37,7 @@ $Descr A 11000 8500
 encoding utf-8
 Sheet 1 6
 Title "Android DPOAE Interface"
-Date "4 oct 2013"
+Date "6 oct 2013"
 Rev "1a"
 Comp "Sana AudioPulse"
 Comment1 "Ben Nahill <bnahill@gmail.com>"
@@ -356,4 +356,61 @@ U 524EE3EB
 F0 "Power" 50
 F1 "power.sch" 50
 $EndSheet
+$Comp
+L TP TP?
+U 1 1 5251A00C
+P 3400 5400
+F 0 "TP?" H 3400 5300 60  0000 C CNN
+F 1 "TP_VUSB" H 3400 5500 60  0000 C CNN
+F 2 "~" H 3400 5400 60  0000 C CNN
+F 3 "~" H 3400 5400 60  0000 C CNN
+	1    3400 5400
+	0    -1   -1   0   
+$EndComp
+Wire Wire Line
+	3400 5500 3400 5600
+Wire Wire Line
+	3400 5600 3200 5600
+$Comp
+L CONN_2 J?
+U 1 1 5251A6D0
+P 6950 5250
+F 0 "J?" V 6900 5250 40  0000 C CNN
+F 1 "CONN_2" V 7000 5250 40  0000 C CNN
+F 2 "~" H 6950 5250 60  0000 C CNN
+F 3 "~" H 6950 5250 60  0000 C CNN
+	1    6950 5250
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	6600 5150 6400 5150
+Wire Wire Line
+	6400 5150 6400 5200
+Wire Wire Line
+	6400 5200 6100 5200
+Wire Wire Line
+	6100 5300 6400 5300
+Wire Wire Line
+	6400 5300 6400 5350
+Wire Wire Line
+	6400 5350 6600 5350
+$Comp
+L TP TP?
+U 1 1 5251B035
+P 3600 6200
+F 0 "TP?" H 3600 6100 60  0000 C CNN
+F 1 "TP_USB_ID" H 3600 6300 60  0000 C CNN
+F 2 "~" H 3600 6200 60  0000 C CNN
+F 3 "~" H 3600 6200 60  0000 C CNN
+	1    3600 6200
+	0    1    1    0   
+$EndComp
+Wire Wire Line
+	3600 6100 3600 5900
+Wire Wire Line
+	3600 5900 3200 5900
+Text Notes 3650 5950 0    60   ~ 0
+Floating for USB device
+Text Notes 3550 5400 0    60   ~ 0
+Don't want to use\npower from Android\ndevice. Also don't\nwant to supply (yet).
 $EndSCHEMATC
