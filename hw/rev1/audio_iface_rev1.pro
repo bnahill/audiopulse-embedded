@@ -1,6 +1,6 @@
-update=Sun 06 Oct 2013 10:06:46 PM EDT
+update=Fri 11 Oct 2013 05:17:35 PM EDT
 version=1
-last_client=eeschema
+last_client=pcbnew
 [cvpcb]
 version=1
 NetIExt=net
@@ -8,28 +8,6 @@ NetIExt=net
 EquName1=devcms
 [general]
 version=1
-[pcbnew]
-version=1
-LastNetListRead=
-UseCmpFile=1
-PadDrill="    0.000000"
-PadDrillOvalY="    0.000000"
-PadSizeH="    0.350000"
-PadSizeV="    0.500000"
-PcbTextSizeV="    1.500000"
-PcbTextSizeH="    1.500000"
-PcbTextThickness="    0.300000"
-ModuleTextSizeV="    1.000000"
-ModuleTextSizeH="    1.000000"
-ModuleTextSizeThickness="    0.150000"
-SolderMaskClearance="    0.000000"
-SolderMaskMinWidth="    0.000000"
-DrawSegmentWidth="    0.200000"
-BoardOutlineThickness="    0.100000"
-ModuleOutlineThickness="    0.150000"
-[pcbnew/libraries]
-LibDir=
-LibName1=../lib/footprints
 [eeschema]
 version=1
 LibDir=
@@ -70,3 +48,27 @@ LibName28=opto
 LibName29=atmel
 LibName30=contrib
 LibName31=valves
+[pcbnew]
+version=1
+LastNetListRead=audio_iface_rev1.net
+UseCmpFile=1
+PadDrill="    0.000000"
+PadDrillOvalY="    0.000000"
+PadSizeH="    1.700000"
+PadSizeV="    2.400000"
+PcbTextSizeV="    1.500000"
+PcbTextSizeH="    1.500000"
+PcbTextThickness="    0.300000"
+ModuleTextSizeV="    1.000000"
+ModuleTextSizeH="    1.000000"
+ModuleTextSizeThickness="    0.150000"
+SolderMaskClearance="    0.000000"
+SolderMaskMinWidth="    0.000000"
+DrawSegmentWidth="    0.200000"
+BoardOutlineThickness="    0.100000"
+ModuleOutlineThickness="    0.150000"
+[pcbnew/libraries]
+LibDir=
+LibName1=../lib/footprints
+LibName2=../lib/oshw
+LibName3=../lib/ear

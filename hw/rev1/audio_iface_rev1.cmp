@@ -1,4 +1,4 @@
-Cmp-Mod V01 Created by CvPcb (2013-may-18)-stable date = Sun 06 Oct 2013 09:55:35 PM EDT
+Cmp-Mod V01 Created by CvPcb (2013-may-18)-stable date = Fri 11 Oct 2013 04:19:47 PM EDT
 
 BeginCmp
 TimeStamp = /523B0E12/523B12D6;
@@ -164,7 +164,7 @@ EndCmp
 BeginCmp
 TimeStamp = /523B943D/523B94B7;
 Reference = C301;
-ValeurCmp = 10u;
+ValeurCmp = 1u;
 IdModule  = SMD0402;
 EndCmp
 
@@ -449,6 +449,20 @@ IdModule  = HDR_2X1_50MIL;
 EndCmp
 
 BeginCmp
+TimeStamp = /52581553;
+Reference = J106;
+ValeurCmp = CONN_2;
+IdModule  = HDR_2X1_50MIL;
+EndCmp
+
+BeginCmp
+TimeStamp = /523BF69D;
+Reference = J107;
+ValeurCmp = USBMICROCONN;
+IdModule  = FCI_10118194;
+EndCmp
+
+BeginCmp
 TimeStamp = /523BF424/5251A967;
 Reference = J501;
 ValeurCmp = CONN_6;
@@ -463,14 +477,14 @@ IdModule  = HDR_2X1_100MIL;
 EndCmp
 
 BeginCmp
-TimeStamp = /523B0E12/523B11D8;
+TimeStamp = /523B0E12/52521E4F;
 Reference = Q201;
 ValeurCmp = BC550;
 IdModule  = TO92-STRAIGHT-CBE;
 EndCmp
 
 BeginCmp
-TimeStamp = /523B0E12/523B11E5;
+TimeStamp = /523B0E12/52521E42;
 Reference = Q202;
 ValeurCmp = BC550;
 IdModule  = TO92-STRAIGHT-CBE;
@@ -729,29 +743,8 @@ IdModule  = SB_3;
 EndCmp
 
 BeginCmp
-TimeStamp = /523B943D/524DBFC1;
+TimeStamp = /523B943D/5257A840;
 Reference = SB301;
-ValeurCmp = SB_2-1;
-IdModule  = SB_2-1;
-EndCmp
-
-BeginCmp
-TimeStamp = /523B943D/524DBFCE;
-Reference = SB302;
-ValeurCmp = SB_2-1;
-IdModule  = SB_2-1;
-EndCmp
-
-BeginCmp
-TimeStamp = /523B943D/524DBFD4;
-Reference = SB303;
-ValeurCmp = SB_2-1;
-IdModule  = SB_2-1;
-EndCmp
-
-BeginCmp
-TimeStamp = /523B943D/524DC0F5;
-Reference = SB304;
 ValeurCmp = SB_2-1;
 IdModule  = SB_2-1;
 EndCmp
@@ -773,21 +766,21 @@ EndCmp
 BeginCmp
 TimeStamp = /523BF424/5251B955;
 Reference = TP501;
-ValeurCmp = TP_PTA1;
+ValeurCmp = TP_PTB3;
 IdModule  = TP_HOLE;
 EndCmp
 
 BeginCmp
 TimeStamp = /523BF424/5251B77F;
 Reference = TP502;
-ValeurCmp = TP_PTA4;
+ValeurCmp = TP_PTB16;
 IdModule  = TP_HOLE;
 EndCmp
 
 BeginCmp
 TimeStamp = /523BF424/5251BBAF;
 Reference = TP503;
-ValeurCmp = TP_PTD5;
+ValeurCmp = TP_PTE0;
 IdModule  = TP_HOLE;
 EndCmp
 
@@ -796,13 +789,6 @@ TimeStamp = /524EE3EB/5251C94C;
 Reference = TP601;
 ValeurCmp = TP_5VEN;
 IdModule  = TP_HOLE;
-EndCmp
-
-BeginCmp
-TimeStamp = /523BF69D;
-Reference = U101;
-ValeurCmp = USBMICROCONN;
-IdModule  = FCI_10118194;
 EndCmp
 
 BeginCmp
@@ -834,10 +820,10 @@ IdModule  = TPA8130A2-QFN20;
 EndCmp
 
 BeginCmp
-TimeStamp = /523BF424/524D92E1;
+TimeStamp = /523BF424/5255CF3B;
 Reference = U501;
-ValeurCmp = MK20DX128VFM5;
-IdModule  = FREESCALE_QFN32;
+ValeurCmp = K20X7_QFP64;
+IdModule  = FREESCALE_QFP64;
 EndCmp
 
 BeginCmp
@@ -851,7 +837,7 @@ BeginCmp
 TimeStamp = /523BF424/524D93F7;
 Reference = X501;
 ValeurCmp = XTAL;
-IdModule  = XRCGB_F_N;
+IdModule  = TXC_7A;
 EndCmp
 
 EndListe
