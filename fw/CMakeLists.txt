@@ -1,6 +1,6 @@
 # CMakeLists for STM32F4 using the Sourcery toolchain and OpenOCD with both
 # C and C++ sources
-# 
+#
 # To adapt this for any other STM32 chip should be trivial
 # To adapt to any other ARM controller shouldn't be much worse
 #
@@ -145,6 +145,7 @@ set(FREESCALE_SOURCES
 set(APP_SOURCES
 	src/main.cpp
 	src/bsp/platform.cpp
+	src/bsp/codec.cpp
 	src/bsp/usb.cpp
 	src/bsp/clocks.cpp
 	src/bsp/startup.s
