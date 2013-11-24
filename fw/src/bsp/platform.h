@@ -3,6 +3,7 @@
 #include <bsp/clocks.h>
 #include <bsp/usb.h>
 #include <bsp/gpio.h>
+#include <bsp/codec.h>
 
 using namespace K20;
 
@@ -29,6 +30,8 @@ public:
 				  | SIM_SCGC5_PORTE_MASK);
 
 		USB::lateInit();
+
+		AK4621::init();
 	}
 };
 

@@ -21,11 +21,34 @@ public:
 
 		i2s_init();
 
+		spi_init();
+
 		__enable_irq();
+
+		spi_write_reg(REG_RESET, 0x02); // ADC only for now
+
+		spi_write_reg(REG_POWER_DOWN, 0x07);
+		spi_write_reg(REG_CLK_FORMAT, 0x40); // MCLK = 256fs, fs = 48k
+		spi_write_reg(REG_DEEM_VOL, 0x02); // 48k de-emph
 	}
 
 protected:
+	typedef enum {
+		REG_POWER_DOWN  = 0,
+		REG_RESET       = 1,
+		REG_CLK_FORMAT  = 2,
+		REG_DEEM_VOL    = 3,
+		REG_LCH_DATT    = 6,
+		REG_RCH_DATT    = 7,
+		REG_LCH_EXT     = 8,
+		REG_RCH_EXT     = 9
+	} reg_t;
+
 	static void gpio_init(){
+		PDN.configure(GPIOPin::MUX_GPIO, true);
+		PDN.make_output();
+		PDN.clear();
+
 		MOSI.configure(MOSI_mux);
 		SCLK.configure(SCLK_mux);
 		NCS.configure(NCS_mux);
@@ -36,32 +59,58 @@ protected:
 		SDO.configure(SDO_mux, true);
 		SDIN.configure(SDIN_mux, true);
 
-		PDN.configure(GPIOPin::MUX_GPIO, true);
-		PDN.make_output();
+		// Turn on
+		PDN.set();
+	}
+
+	static void spi_init(){
+		SPI->MCR =
+				SPI_MCR_MSTR_MASK |    // Master
+				SPI_MCR_DCONF(0) |     // SPI mode
+				SPI_MCR_PCSIS(0xF) |   // All nCS idle high
+				SPI_MCR_DIS_RXF_MASK | // No RX FIFO
+				SPI_MCR_SMPL_PT(0);    // Sample on clock edge
+
+		SPI->CTAR[0] =
+				SPI_CTAR_FMSZ(7) |     // 8 bit frames
+				SPI_CTAR_CPOL_MASK |   // Clock idle high
+				SPI_CTAR_CPHA_MASK |   // Sample following edge
+				SPI_CTAR_PCSSCK(2) |   // PCS to SCK prescaler = 5
+				SPI_CTAR_PASC(2)   |   // Same delay before end of PCS
+				SPI_CTAR_PDT(2)    |   // Same delay after end of PCS
+				SPI_CTAR_PBR(0)    |   // Use sysclk / 2
+				SPI_CTAR_CSSCK(2)  |   // Base delay is 8*Tsys
+				SPI_CTAR_ASC(1)    |   // Unit delay before end of PCS
+				SPI_CTAR_DT(1)     |   // Same after end of PCS
+				SPI_CTAR_BR(4);        // Scale by 16
+	}
+
+	static void spi_write_reg(reg_t reg, uint8_t value){
+		SPI->PUSHR = reg | SPI_PUSHR_PCS(1) | SPI_PUSHR_CONT_MASK;
+		SPI->PUSHR = value | SPI_PUSHR_EOQ_MASK | SPI_PUSHR_PCS(1);
+		while((SPI->SR & SPI_SR_EOQF_MASK) == 0); // Wait for end of queue
+		SPI->SR = SPI_SR_EOQF_MASK; // Clear flag
 	}
 
 	static void i2s_init(){
-		I2S->MDR =
-				I2S_MDR_FRACT(mclk_gen_frac - 1) |
-				I2S_MDR_DIVIDE(mclk_gen_div - 1);
 
-		I2S->MCR =
-				I2S_MCR_MOE_MASK | // Enable MCLK output
-				I2S_MCR_MICS(3);   // Use PLL for input - could use 0 (sys)
+		I2S->MCR = 0;
+		I2S->RCSR = I2S_RCSR_SR_MASK | I2S_RCSR_FR_MASK;
+		I2S->TCSR = I2S_TCSR_SR_MASK | I2S_TCSR_FR_MASK;
 
 		////////////////
 		/// RECEIVER
 		////////////////
 
 		I2S->RCR5 =                 // Receiver configuration
-				I2S_RCR5_WNW(24 - 1) |  // Has to be >= W0W
-				I2S_RCR5_W0W(24 - 1);   // One 24-bit word
+				I2S_RCR5_WNW(32 - 1) |  // Has to be >= W0W
+				I2S_RCR5_W0W(32 - 1);   // One 32-bit word
 
 		I2S->RCR4 =                 // Receiver configuration
-				I2S_RCR4_FRSZ(0) |  // One word per frame
-				I2S_RCR4_SYWD(24 - 1) | // 24-bit frames
+				I2S_RCR4_FRSZ(1) |  // Two word per frame
+				I2S_RCR4_SYWD(32 - 1) | // 32-bit frames
 				I2S_RCR4_MF_MASK |  // MSB first
-				I2S_RCR4_FSE_MASK | // Frame sync one bit early -- THIS COULD BE WRONG
+				//I2S_RCR4_FSE_MASK | // Frame sync one bit early -- THIS COULD BE WRONG
 				I2S_RCR4_FSP_MASK;  // FS active high; figure this out later
 
 		I2S->RCR3 =                 // Receiver configuration
@@ -74,9 +123,9 @@ protected:
 				I2S_RCR2_BCP_MASK;  // Sample on rising BCLK
 
 		I2S->RCSR =
-				I2S_RCSR_RE_MASK |  // Transmit enable
+				I2S_RCSR_RE_MASK |  // Receive enable
 				I2S_RCSR_DBGE_MASK |// Continue on debug halt
-				I2S_RCSR_BCE_MASK | // Enable bit clock transmit
+				//I2S_RCSR_BCE_MASK | // Enable bit clock transmit
 				I2S_RCSR_FRDE_MASK; // Enable FIFO DMA request
 
 		////////////////
@@ -85,15 +134,14 @@ protected:
 
 
 		I2S->TCR5 =                 // Transmit configuration
-				I2S_TCR5_WNW(24 - 1) |  // Has to be >= W0W
-				I2S_TCR5_W0W(24 - 1);   // One 24-bit word
-
+				I2S_TCR5_WNW(32 - 1) |  // Has to be >= W0W
+				I2S_TCR5_W0W(32 - 1);   // One 24-bit word
 
 		I2S->TCR4 =                 // Transmit configuration
-				I2S_TCR4_FRSZ(0) |  // One word per frame
-				I2S_TCR4_SYWD(24 - 1) | // 24-bit frames
+				I2S_TCR4_FRSZ(1) |  // Two word per frame
+				I2S_TCR4_SYWD(32 - 1) | // 32-bit frames
 				I2S_TCR4_MF_MASK |  // MSB first
-				I2S_TCR4_FSE_MASK | // Frame sync one bit early -- THIS COULD BE WRONG
+				//I2S_TCR4_FSE_MASK | // Frame sync one bit early -- THIS COULD BE WRONG
 				I2S_TCR4_FSP_MASK | // FS active high; figure this out later
 				I2S_TCR4_FSD_MASK;  // Generate FS
 
@@ -106,13 +154,29 @@ protected:
 				I2S_TCR2_MSEL(0) |  // Derive clock from bus clock (48MHz)
 				I2S_TCR2_BCP_MASK | // Sample on rising BCLK
 				I2S_TCR2_BCD_MASK | // BCLK is output
-				I2S_TCR2_DIV((mclk_hz / bclk_hz) / 2 - 1);
+				I2S_TCR2_DIV((mclk_hz / bclk_hz) * 2 - 1);
+									// This derivation is in conflict with
+									// documentation, but it works
 
 		I2S->TCSR =
 				I2S_TCSR_TE_MASK |  // Transmit enable
 				I2S_TCSR_DBGE_MASK |// Continue on debug halt
 				I2S_TCSR_BCE_MASK | // Enable bit clock transmit
 				I2S_TCSR_FRDE_MASK; // Enable FIFO DMA request
+
+		////////////////
+		/// MCLK
+		////////////////
+
+		I2S->MDR =
+				I2S_MDR_FRACT(mclk_gen_frac - 1) |
+				I2S_MDR_DIVIDE(mclk_gen_div - 1);
+
+		I2S->MCR =
+				I2S_MCR_MOE_MASK | // Enable MCLK output
+				I2S_MCR_MICS(0);   // Use PLL for input - could use 0 (sys)
+
+
 	}
 
 
@@ -140,11 +204,11 @@ protected:
 
 	static constexpr I2S_MemMapPtr I2S = I2S0_BASE_PTR;
 
-	static constexpr uint32_t mclk_hz = 24576000;
-	static constexpr uint32_t bclk_hz = 3072000;
+	static constexpr uint32_t mclk_hz = 24576000/2;
 	static constexpr uint32_t lrck_hz = 48000;
+	static constexpr uint32_t bclk_hz = 64 * lrck_hz;
 
-	static constexpr uint32_t mclk_gen_frac = 64;
+	static constexpr uint32_t mclk_gen_frac = 32;
 	static constexpr uint32_t mclk_gen_div = 125;
 };
 
