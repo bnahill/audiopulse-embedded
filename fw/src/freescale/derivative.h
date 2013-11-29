@@ -7,6 +7,7 @@
 #include <ARMCM4.h>
 #include <core_cm4.h>
 #include <core_cm4_simd.h>
+#include <stdint.h>
 
 #include <MK20D7.h>
 

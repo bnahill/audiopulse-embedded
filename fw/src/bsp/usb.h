@@ -2,6 +2,7 @@
 #define __APULSE_USB_H_
 
 #include <derivative.h>
+#include <usb_class.h>
 
 namespace K20 {
 
@@ -27,11 +28,25 @@ public:
 		NVICISER2 = (1 << 9);	// Enable interrupts from USB module
 	}
 	
+	static void hidClassInit();
 	static void audioClassInit();
 	static void audioSend();
 private:
 	static void callback(uint8_t controller_ID,
 	                     uint8_t event_type, void * val);
+
+	/*!
+	 * \brief callback_param
+	 * \param request [IN] request type
+	 * \param value [IN] report type and ID
+	 * \param data [OUT] pointer to the data
+	 * \param size [OUT] size of the transfer
+	 * \return
+	 */
+	static uint8_t callback_param(uint8_t request, uint16_t value,
+	                              uint16_t iface, uint8_t ** data,
+	                              USB_PACKET_SIZE * size);
+
 	static void prepare_data();
 };
 

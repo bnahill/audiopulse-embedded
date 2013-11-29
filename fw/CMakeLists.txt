@@ -131,15 +131,17 @@ set(FREESCALE_SOURCES
 	src/freescale/vectors.c
 	src/usb_descriptor.c
 	#src/audio_generator.c
-	src/audio_data.c
+	#src/audio_data.c
 	#${USB_DIR}/Source/Device/app/common/kinetis/kinetis_sysinit.c
-	${USB_DIR}/Source/Device/source/class/usb_audio.c
 	${USB_DIR}/Source/Device/source/common/usb_class.c
 	${USB_DIR}/Source/Device/source/driver/kinetis/usb_dci_kinetis.c
 	${USB_DIR}/Source/Device/source/driver/usb_driver.c
 	${USB_DIR}/Source/Device/source/common/usb_framework.c
 	${USB_DIR}/Source/Device/app/common/kinetis/wdt_kinetis.c
 	${USB_DIR}/Source/Device/app/common/kinetis/RealTimerCounter_kinetis.c
+
+	#${USB_DIR}/Source/Device/source/class/usb_audio.c
+	${USB_DIR}/Source/Device/source/class/usb_hid.c
 )
 
 set(APP_SOURCES

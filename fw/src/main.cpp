@@ -36,11 +36,12 @@ void main(){
 	Platform::lateInit();
 
 	TimerQInitialize(0);
-	USB::audioClassInit();
+	//USB::audioClassInit();
+	USB::hidClassInit();
 
 	while(true){
 		// Call the application task
-		USB::audioSend();
+		// USB::audioSend();
     }
 } 
 
