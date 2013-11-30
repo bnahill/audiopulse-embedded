@@ -22,7 +22,7 @@ public:
 		USB0_USBTRC0 = 0x40;
 		
 		// Configure enable USB regulator for device
-		SIM_SOPT1 |= SIM_SOPT1_USBREGEN_MASK;
+		// SIM_SOPT1 |= SIM_SOPT1_USBREGEN_MASK;
 
 		NVICICPR2 = (1 << 9);	// Clear any pending interrupts on USB
 		NVICISER2 = (1 << 9);	// Enable interrupts from USB module

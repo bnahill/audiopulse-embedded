@@ -1,3 +1,6 @@
+#ifndef __APULSE_PLATFORM_H_
+#define __APULSE_PLATFORM_H_
+
 #ifdef __cplusplus
 
 #include <bsp/clocks.h>
@@ -15,27 +18,19 @@ public:
 	 * @note Since this may be done before data initialization, it may only use
 	 * constants
 	 */
-	static void earlyInit(){
-		Clock::setupClocks();
-	}
+	static void earlyInit();
 
 	static void lateInit(){
-		// This shouldn't really be here but it is until later
-
-		// Enable all of the GPIO ports
-		SIM_SCGC5 |= (SIM_SCGC5_PORTA_MASK
-				  | SIM_SCGC5_PORTB_MASK
-				  | SIM_SCGC5_PORTC_MASK
-				  | SIM_SCGC5_PORTD_MASK
-				  | SIM_SCGC5_PORTE_MASK);
 
 		USB::lateInit();
 
 		AK4621::init();
 	}
+	
+	static constexpr GPIOPin led = {PTB_BASE_PTR, 19};
 };
 
-#endif
+#endif // __cplusplus
 
 
 #ifdef __cplusplus
@@ -48,3 +43,6 @@ void earlyInitC();
 #ifdef __cplusplus
 };
 #endif
+
+#endif // __APULSE_PLATFORM_H_
+

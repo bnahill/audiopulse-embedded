@@ -1,4 +1,5 @@
 #include <bsp/usb.h>
+#include <bsp/platform.h>
 
 using namespace K20;
 
@@ -111,8 +112,10 @@ uint8_t USB::callback_param(uint8_t request, uint16_t value, uint16_t iface,
 
 	switch(request){
 	case USB_HID_GET_REPORT_REQUEST:
+		Platform::led.clear();
 		break;
 	case USB_HID_SET_REPORT_REQUEST:
+		Platform::led.set();
 		break;
 	case USB_HID_SET_IDLE_REQUEST:
 		break;

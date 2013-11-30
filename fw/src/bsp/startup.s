@@ -12,14 +12,16 @@
 __reset_vector:
 
   /* Disable WDT */
-  mov.w r0, 0x2000
-  movt  r0, 0x4006
-  movw r1, 0xC520
-  movw r2, 0xD928
-  strh r1, [r0, #14] /* Unlock 1 */
-  strh r2, [r0, #14] /* Unlock 2 */
-  mov.w r1, 0x01D2
-  strh r1, [r0, #0]  /* Disable  */
+;  mov.w r0, 0x2000
+;  movt  r0, 0x4005
+;  movw r1, 0xC520
+;  movw r2, 0xD928
+;  strh r1, [r0, #14] /* Unlock 1 */
+;  strh r2, [r0, #14] /* Unlock 2 */
+;  ;mov.w r1, 0x01D2
+;  mov.w r1, 0x4000
+;  add r1, 0x10
+;  strh r1, [r0, #0]  /* Disable  */
 
   bl earlyInitC      /* Go initialize low-level stuff */
 
