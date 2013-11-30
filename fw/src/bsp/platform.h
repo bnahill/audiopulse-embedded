@@ -20,13 +20,19 @@ public:
 	 */
 	static void earlyInit();
 
+	/*!
+	 @brief Initialize peripherals and devices that depend on clocks and data initialization
+	 */
 	static void lateInit(){
 
 		USB::lateInit();
 
 		AK4621::init();
+		
+		led.set();
 	}
 	
+	//! The one debug LED
 	static constexpr GPIOPin led = {PTB_BASE_PTR, 19};
 };
 

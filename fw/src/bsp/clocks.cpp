@@ -21,8 +21,6 @@ void Clock::switchFEItoFBE(){
 	
 	// Wait for oscillator startup
 	while (!(MCG_S & MCG_S_OSCINIT0_MASK));
-	
-	Platform::led.set();
 
 	// Switch to oscillator, bypassing FLL
 	MCG_C1 = MCG_C1_CLKS(2) | MCG_C1_FRDIV(3);
