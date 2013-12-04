@@ -21,19 +21,24 @@ public:
 
 		gpio_init();
 
-		i2s_init();
-
 		spi_init();
 
 
-
+		for(uint32_t volatile a = 0xFFFF; a; a--);
+		// Turn on
+		PDN.set();
+		
 		__enable_irq();
 
-		spi_write_reg(REG_RESET, 0x02); // ADC only for now
-
-		spi_write_reg(REG_POWER_DOWN, 0x07);
+		
 		spi_write_reg(REG_CLK_FORMAT, 0x40); // MCLK = 256fs, fs = 48k
 		spi_write_reg(REG_DEEM_VOL, 0x02); // 48k de-emph
+		
+		//spi_write_reg(REG_POWER_DOWN, 0x07); // These are defaults...
+		
+		spi_write_reg(REG_RESET, 0x03); // Enable stuff
+		
+		i2s_init();
 	}
 
 
@@ -78,24 +83,15 @@ protected:
 		BCLK.configure(BCLK_mux, true);
 		SDO.configure(SDO_mux, true);
 		SDIN.configure(SDIN_mux, true);
-
-		// Turn on
-		PDN.set();
 	}
 
 	static void spi_init(){
+		SPI->MCR = SPI_MCR_HALT_MASK;
+		
 		/*
 		 So the AK4621 specifies that the first clock edge it sees is rising and
 		 that it will register on that rising edge. CPOL=CPHA=0
 		 */
-		SPI->MCR =
-				SPI_MCR_MSTR_MASK |    // Master
-				SPI_MCR_DCONF(0) |     // SPI mode
-				SPI_MCR_PCSIS(0xF) |   // All nCS idle high
-				SPI_MCR_DIS_RXF_MASK | // No RX FIFO
-				SPI_MCR_SMPL_PT(0);    // Sample on clock edge
-
-
 		SPI->CTAR[0] =
 				SPI_CTAR_FMSZ(7) |     // 8 bit frames
 				// SPI_CTAR_CPOL_MASK |   // Clock idle high
@@ -108,11 +104,27 @@ protected:
 				SPI_CTAR_ASC(1)    |   // Unit delay before end of PCS
 				SPI_CTAR_DT(1)     |   // Same after end of PCS
 				SPI_CTAR_BR(4);        // Scale by 16
+
+		SPI->MCR =
+				SPI_MCR_MSTR_MASK |    // Master
+				SPI_MCR_DCONF(0) |     // SPI mode
+				SPI_MCR_PCSIS(1) |     // All nCS idle high
+				SPI_MCR_DIS_RXF_MASK | // No RX FIFO
+				SPI_MCR_CLR_TXF_MASK | // Clear TX FIFO
+				SPI_MCR_SMPL_PT(0);    // Sample on clock edge
 	}
 
 	static void spi_write_reg(reg_t reg, uint8_t value){
-		SPI->PUSHR = reg | SPI_PUSHR_PCS(1) | SPI_PUSHR_CONT_MASK;
-		SPI->PUSHR = value | SPI_PUSHR_EOQ_MASK | SPI_PUSHR_PCS(1);
+// 		while((SPI->SR & SPI_SR_TFFF_MASK) == 0);
+// 		SPI->PUSHR = SPI_PUSHR_TXDATA(reg)   | SPI_PUSHR_PCS(1) | SPI_PUSHR_CONT_MASK;
+// 		while((SPI->SR & SPI_SR_TFFF_MASK) == 0);
+// 		SPI->PUSHR = SPI_PUSHR_TXDATA(reg)   | SPI_PUSHR_PCS(1) | SPI_PUSHR_CONT_MASK;
+// 		while((SPI->SR & SPI_SR_TFFF_MASK) == 0);
+// 		SPI->PUSHR = SPI_PUSHR_TXDATA(reg)   | SPI_PUSHR_PCS(1) | SPI_PUSHR_CONT_MASK;
+		while((SPI->SR & SPI_SR_TFFF_MASK) == 0);
+		SPI->PUSHR = SPI_PUSHR_TXDATA(reg)   | SPI_PUSHR_PCS(1) | SPI_PUSHR_CONT_MASK;
+		while((SPI->SR & SPI_SR_TFFF_MASK) == 0);
+		SPI->PUSHR = SPI_PUSHR_TXDATA(value) | SPI_PUSHR_PCS(1) | SPI_PUSHR_EOQ_MASK;
 		while((SPI->SR & SPI_SR_EOQF_MASK) == 0); // Wait for end of queue
 		SPI->SR = SPI_SR_EOQF_MASK; // Clear flag
 	}
