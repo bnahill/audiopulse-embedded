@@ -8,7 +8,7 @@ class AK4621 {
 public:
 	static void init(){
 		__disable_irq();
-		SIM_SCGC6 |= SIM_SCGC6_I2S_MASK;
+		SIM_SCGC6 |= SIM_SCGC6_I2S_MASK | SIM_SCGC6_DMAMUX_MASK;
 		if(SPI == SPI0_BASE_PTR){
 			SIM_SCGC6 |= SIM_SCGC6_SPI0_MASK;
 		} else if(SPI == SPI1_BASE_PTR){
@@ -17,11 +17,15 @@ public:
 			while(true);
 		}
 
+		SIM_SCGC7 |= SIM_SCGC7_DMA_MASK;
+
 		gpio_init();
 
 		i2s_init();
 
 		spi_init();
+
+
 
 		__enable_irq();
 
@@ -32,6 +36,22 @@ public:
 		spi_write_reg(REG_DEEM_VOL, 0x02); // 48k de-emph
 	}
 
+
+	static void test_read(){
+		uint32_t samples[256];
+		uint32_t sample;
+
+		for(uint32_t i = 0; i < 256; i++){
+			while(true){
+				sample = I2S->RFR[0];
+				if(sample){
+					samples[i] = sample;
+					break;
+				}
+			}
+		}
+	}
+	
 protected:
 	typedef enum {
 		REG_POWER_DOWN  = 0,
@@ -64,6 +84,10 @@ protected:
 	}
 
 	static void spi_init(){
+		/*
+		 So the AK4621 specifies that the first clock edge it sees is rising and
+		 that it will register on that rising edge. CPOL=CPHA=0
+		 */
 		SPI->MCR =
 				SPI_MCR_MSTR_MASK |    // Master
 				SPI_MCR_DCONF(0) |     // SPI mode
@@ -71,10 +95,11 @@ protected:
 				SPI_MCR_DIS_RXF_MASK | // No RX FIFO
 				SPI_MCR_SMPL_PT(0);    // Sample on clock edge
 
+
 		SPI->CTAR[0] =
 				SPI_CTAR_FMSZ(7) |     // 8 bit frames
-				SPI_CTAR_CPOL_MASK |   // Clock idle high
-				SPI_CTAR_CPHA_MASK |   // Sample following edge
+				// SPI_CTAR_CPOL_MASK |   // Clock idle high
+				// SPI_CTAR_CPHA_MASK |   // Sample following edge
 				SPI_CTAR_PCSSCK(2) |   // PCS to SCK prescaler = 5
 				SPI_CTAR_PASC(2)   |   // Same delay before end of PCS
 				SPI_CTAR_PDT(2)    |   // Same delay after end of PCS
@@ -93,7 +118,6 @@ protected:
 	}
 
 	static void i2s_init(){
-
 		I2S->MCR = 0;
 		I2S->RCSR = I2S_RCSR_SR_MASK | I2S_RCSR_FR_MASK;
 		I2S->TCSR = I2S_TCSR_SR_MASK | I2S_TCSR_FR_MASK;
@@ -177,8 +201,16 @@ protected:
 				I2S_MCR_MICS(0);   // Use PLL for input - could use 0 (sys)
 
 
-	}
+		DMA_TCD0_SADDR = (uint32_t)&I2S->TFR[0];
+		DMA_TCD0_SOFF = 0;
+		DMA_TCD0_ATTR = 0x202; //Source and destination size 32bit, no modulo
+		DMA_TCD0_NBYTES_MLNO = 0x4;
+		DMA_TCD0_NBYTES_MLOFFNO = 0x4;
+		DMA_TCD0_NBYTES_MLOFFYES = 0x4;
+		DMA_TCD0_SLAST = 0;
 
+		DMAMUX_CHCFG0 = 0;
+	}
 
 	static constexpr SPI_MemMapPtr SPI = SPI0_BASE_PTR;
 	static constexpr GPIOPin MOSI = {PTD_BASE_PTR, 2};
