@@ -6,41 +6,7 @@
 
 class AK4621 {
 public:
-	static void init(){
-		__disable_irq();
-		SIM_SCGC6 |= SIM_SCGC6_I2S_MASK | SIM_SCGC6_DMAMUX_MASK;
-		if(SPI == SPI0_BASE_PTR){
-			SIM_SCGC6 |= SIM_SCGC6_SPI0_MASK;
-		} else if(SPI == SPI1_BASE_PTR){
-			SIM_SCGC6 |= SIM_SCGC6_SPI1_MASK;
-		} else {
-			while(true);
-		}
-
-		SIM_SCGC7 |= SIM_SCGC7_DMA_MASK;
-
-		gpio_init();
-
-		spi_init();
-
-
-		for(uint32_t volatile a = 0xFFFF; a; a--);
-		// Turn on
-		PDN.set();
-		
-		__enable_irq();
-
-		
-		spi_write_reg(REG_CLK_FORMAT, 0x40); // MCLK = 256fs, fs = 48k
-		spi_write_reg(REG_DEEM_VOL, 0x02); // 48k de-emph
-		
-		//spi_write_reg(REG_POWER_DOWN, 0x07); // These are defaults...
-		
-		spi_write_reg(REG_RESET, 0x03); // Enable stuff
-		
-		i2s_init();
-	}
-
+	static void init();
 
 	static void test_read(){
 		uint32_t samples[256];
@@ -56,6 +22,11 @@ public:
 			}
 		}
 	}
+
+	typedef uint32_t sample_t;
+	typedef void (*audio_cb_t)(sample_t, uint32_t);
+	static void set_in_cb(audio_cb_t new_cb);
+	static void set_out_cb(audio_cb_t new_cb);
 	
 protected:
 	typedef enum {
@@ -69,160 +40,13 @@ protected:
 		REG_RCH_EXT     = 9
 	} reg_t;
 
-	static void gpio_init(){
-		PDN.configure(GPIOPin::MUX_GPIO, true);
-		PDN.make_output();
-		PDN.clear();
+	static void gpio_init();
 
-		MOSI.configure(MOSI_mux);
-		SCLK.configure(SCLK_mux);
-		NCS.configure(NCS_mux);
+	static void spi_init();
 
-		MCLK.configure(MCLK_mux, true);
-		LRCK.configure(LRCK_mux, true);
-		BCLK.configure(BCLK_mux, true);
-		SDO.configure(SDO_mux, true);
-		SDIN.configure(SDIN_mux, true);
-	}
+	static void spi_write_reg(reg_t reg, uint8_t value);
 
-	static void spi_init(){
-		SPI->MCR = SPI_MCR_HALT_MASK;
-		
-		/*
-		 So the AK4621 specifies that the first clock edge it sees is rising and
-		 that it will register on that rising edge. CPOL=CPHA=0
-		 */
-		SPI->CTAR[0] =
-				SPI_CTAR_FMSZ(7) |     // 8 bit frames
-				// SPI_CTAR_CPOL_MASK |   // Clock idle high
-				// SPI_CTAR_CPHA_MASK |   // Sample following edge
-				SPI_CTAR_PCSSCK(2) |   // PCS to SCK prescaler = 5
-				SPI_CTAR_PASC(2)   |   // Same delay before end of PCS
-				SPI_CTAR_PDT(2)    |   // Same delay after end of PCS
-				SPI_CTAR_PBR(0)    |   // Use sysclk / 2
-				SPI_CTAR_CSSCK(2)  |   // Base delay is 8*Tsys
-				SPI_CTAR_ASC(1)    |   // Unit delay before end of PCS
-				SPI_CTAR_DT(1)     |   // Same after end of PCS
-				SPI_CTAR_BR(4);        // Scale by 16
-
-		SPI->MCR =
-				SPI_MCR_MSTR_MASK |    // Master
-				SPI_MCR_DCONF(0) |     // SPI mode
-				SPI_MCR_PCSIS(1) |     // All nCS idle high
-				SPI_MCR_DIS_RXF_MASK | // No RX FIFO
-				SPI_MCR_CLR_TXF_MASK | // Clear TX FIFO
-				SPI_MCR_SMPL_PT(0);    // Sample on clock edge
-	}
-
-	static void spi_write_reg(reg_t reg, uint8_t value){
-// 		while((SPI->SR & SPI_SR_TFFF_MASK) == 0);
-// 		SPI->PUSHR = SPI_PUSHR_TXDATA(reg)   | SPI_PUSHR_PCS(1) | SPI_PUSHR_CONT_MASK;
-// 		while((SPI->SR & SPI_SR_TFFF_MASK) == 0);
-// 		SPI->PUSHR = SPI_PUSHR_TXDATA(reg)   | SPI_PUSHR_PCS(1) | SPI_PUSHR_CONT_MASK;
-// 		while((SPI->SR & SPI_SR_TFFF_MASK) == 0);
-// 		SPI->PUSHR = SPI_PUSHR_TXDATA(reg)   | SPI_PUSHR_PCS(1) | SPI_PUSHR_CONT_MASK;
-		while((SPI->SR & SPI_SR_TFFF_MASK) == 0);
-		SPI->PUSHR = SPI_PUSHR_TXDATA(reg)   | SPI_PUSHR_PCS(1) | SPI_PUSHR_CONT_MASK;
-		while((SPI->SR & SPI_SR_TFFF_MASK) == 0);
-		SPI->PUSHR = SPI_PUSHR_TXDATA(value) | SPI_PUSHR_PCS(1) | SPI_PUSHR_EOQ_MASK;
-		while((SPI->SR & SPI_SR_EOQF_MASK) == 0); // Wait for end of queue
-		SPI->SR = SPI_SR_EOQF_MASK; // Clear flag
-	}
-
-	static void i2s_init(){
-		I2S->MCR = 0;
-		I2S->RCSR = I2S_RCSR_SR_MASK | I2S_RCSR_FR_MASK;
-		I2S->TCSR = I2S_TCSR_SR_MASK | I2S_TCSR_FR_MASK;
-
-		////////////////
-		/// RECEIVER
-		////////////////
-
-		I2S->RCR5 =                 // Receiver configuration
-				I2S_RCR5_WNW(32 - 1) |  // Has to be >= W0W
-				I2S_RCR5_W0W(32 - 1);   // One 32-bit word
-
-		I2S->RCR4 =                 // Receiver configuration
-				I2S_RCR4_FRSZ(1) |  // Two word per frame
-				I2S_RCR4_SYWD(32 - 1) | // 32-bit frames
-				I2S_RCR4_MF_MASK |  // MSB first
-				//I2S_RCR4_FSE_MASK | // Frame sync one bit early -- THIS COULD BE WRONG
-				I2S_RCR4_FSP_MASK;  // FS active high; figure this out later
-
-		I2S->RCR3 =                 // Receiver configuration
-				I2S_RCR3_RCE(3) |   // Enable channel
-				I2S_RCR3_WDFL(1);   // Send once each channel has a frame?
-
-
-		I2S->RCR2 =                 // Receiver configuration
-				I2S_RCR2_SYNC(1) |  // Sync mode with transmitter
-				I2S_RCR2_BCP_MASK;  // Sample on rising BCLK
-
-		I2S->RCSR =
-				I2S_RCSR_RE_MASK |  // Receive enable
-				I2S_RCSR_DBGE_MASK |// Continue on debug halt
-				//I2S_RCSR_BCE_MASK | // Enable bit clock transmit
-				I2S_RCSR_FRDE_MASK; // Enable FIFO DMA request
-
-		////////////////
-		/// TRANSMITTER
-		////////////////
-
-
-		I2S->TCR5 =                 // Transmit configuration
-				I2S_TCR5_WNW(32 - 1) |  // Has to be >= W0W
-				I2S_TCR5_W0W(32 - 1);   // One 24-bit word
-
-		I2S->TCR4 =                 // Transmit configuration
-				I2S_TCR4_FRSZ(1) |  // Two word per frame
-				I2S_TCR4_SYWD(32 - 1) | // 32-bit frames
-				I2S_TCR4_MF_MASK |  // MSB first
-				//I2S_TCR4_FSE_MASK | // Frame sync one bit early -- THIS COULD BE WRONG
-				I2S_TCR4_FSP_MASK | // FS active high; figure this out later
-				I2S_TCR4_FSD_MASK;  // Generate FS
-
-		I2S->TCR3 =                 // Transmit configuration
-				I2S_TCR3_TCE(3) |   // Enable both channels?
-				I2S_TCR3_WDFL(1);   // Send once each channel has a frame?
-
-		I2S->TCR2 =                 // Transmit configuration
-				I2S_TCR2_SYNC(0) |  // Async mode -- receiver will run off this
-				I2S_TCR2_MSEL(0) |  // Derive clock from bus clock (48MHz)
-				I2S_TCR2_BCP_MASK | // Sample on rising BCLK
-				I2S_TCR2_BCD_MASK | // BCLK is output
-				I2S_TCR2_DIV((mclk_hz / bclk_hz) * 2 - 1);
-									// This derivation is in conflict with
-									// documentation, but it works
-
-		I2S->TCSR =
-				I2S_TCSR_TE_MASK |  // Transmit enable
-				I2S_TCSR_DBGE_MASK |// Continue on debug halt
-				I2S_TCSR_BCE_MASK | // Enable bit clock transmit
-				I2S_TCSR_FRDE_MASK; // Enable FIFO DMA request
-
-		////////////////
-		/// MCLK
-		////////////////
-
-		I2S->MDR =
-				I2S_MDR_FRACT(mclk_gen_frac - 1) |
-				I2S_MDR_DIVIDE(mclk_gen_div - 1);
-
-		I2S->MCR =
-				I2S_MCR_MOE_MASK | // Enable MCLK output
-				I2S_MCR_MICS(0);   // Use PLL for input - could use 0 (sys)
-
-
-		DMA_TCD0_SADDR = (uint32_t)&I2S->TFR[0];
-		DMA_TCD0_SOFF = 0;
-		DMA_TCD0_ATTR = 0x202; //Source and destination size 32bit, no modulo
-		DMA_TCD0_NBYTES_MLNO = 0x4;
-		DMA_TCD0_NBYTES_MLOFFNO = 0x4;
-		DMA_TCD0_NBYTES_MLOFFYES = 0x4;
-		DMA_TCD0_SLAST = 0;
-
-		DMAMUX_CHCFG0 = 0;
-	}
+	static void i2s_init();
 
 	static constexpr SPI_MemMapPtr SPI = SPI0_BASE_PTR;
 	static constexpr GPIOPin MOSI = {PTD_BASE_PTR, 2};
@@ -248,12 +72,25 @@ protected:
 
 	static constexpr I2S_MemMapPtr I2S = I2S0_BASE_PTR;
 
-	static constexpr uint32_t mclk_hz = 24576000/2;
+	static constexpr uint32_t mclk_hz = 12288000;
 	static constexpr uint32_t lrck_hz = 48000;
 	static constexpr uint32_t bclk_hz = 64 * lrck_hz;
 
 	static constexpr uint32_t mclk_gen_frac = 32;
 	static constexpr uint32_t mclk_gen_div = 125;
+
+	//! @name DMA Buffers
+	//! @{
+	static constexpr uint32_t buffer_size = 128;
+
+	static sample_t buffer_inA[128];
+	static sample_t buffer_inB[128];
+	static sample_t buffer_outA[128];
+	static sample_t buffer_outB[128];
+	//! @}
+
+	static void (*cb_in)(sample_t const *);
+	static void (*cb_out)(sample_t const *);
 };
 
 #endif // __APULSE_CODEC_H_

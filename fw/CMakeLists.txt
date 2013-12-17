@@ -73,7 +73,7 @@ set(LTO )#"-flto")
 
 set(MCU cortex-m4)
 
-set(MCFLAGS "-mcpu=${MCU} -g -mthumb -fomit-frame-pointer -D__NEWLIB__")
+set(MCFLAGS "-mcpu=${MCU} -g3 -mthumb -fomit-frame-pointer -D__NEWLIB__")
 
 
 
