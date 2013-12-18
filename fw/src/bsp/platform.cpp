@@ -7,7 +7,6 @@ void earlyInitC(){
 	Platform::earlyInit();
 }
 
-
 void Platform::earlyInit(){
 	// Enable all of the GPIO ports
 	SIM_SCGC5 |= (SIM_SCGC5_PORTA_MASK
@@ -20,7 +19,7 @@ void Platform::earlyInit(){
 	led.make_output();
 	led.clear();
 	led.configure(GPIOPin::MUX_GPIO, true);
-	
+
 	Clock::setupClocks();
 }
 

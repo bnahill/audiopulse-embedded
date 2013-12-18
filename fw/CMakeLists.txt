@@ -216,15 +216,15 @@ add_custom_target(assembly_output ALL DEPENDS ${TARGET}.lst)
 #svd_load ${CMAKE_SOURCE_DIR}/svd/STM32F40x.svd")
 #endif(${DEBUG_USE_SVD})
 
-#configure_file(${CMAKE_SOURCE_DIR}/start.gdb.in ${CMAKE_CURRENT_BINARY_DIR}/start.gdb)
-#set(GDB_ARGS -x start.gdb)
+configure_file(${CMAKE_SOURCE_DIR}/start.gdb.in ${CMAKE_CURRENT_BINARY_DIR}/start.gdb)
+set(GDB_ARGS -x start.gdb)
 
 ##############################################################
 # Configuration for GDB
 ##############################################################
 
-#set(GDB    ${TC_PREFIX}gdb)
-#set(GDBTUI ${TC_PREFIX}gdbtui)
+set(GDB    "${TC_PREFIX}gdb")
+set(GDBTUI ${TC_PREFIX}gdb -tui -ex \"layout split\")
 
 #if(${DETECTED_HOST} STREQUAL "Windows")
 #endif(${DETECTED_HOST} STREQUAL "Windows")
@@ -233,8 +233,8 @@ add_custom_target(assembly_output ALL DEPENDS ${TARGET}.lst)
 ##configure_file(${CMAKE_SOURCE_DIR}/start.gdb.in ${CMAKE_CURRENT_BINARY_DIR}/.gdbinit)
 #endif(${DETECTED_HOST} STREQUAL "Linux")
 
-#add_custom_target(gdb COMMAND ${GDB} ${GDB_ARGS})
-#add_custom_target(gdbtui COMMAND ${GDBTUI} ${GDB_ARGS})
+add_custom_target(gdb COMMAND ${GDB} ${GDB_ARGS})
+add_custom_target(gdbtui COMMAND ${GDBTUI} ${GDB_ARGS})
 #add_custom_target(ddd COMMAND ddd --gdb --debugger \"${GDB} ${GDB_ARGS}\" > /dev/null 2>&1 &
 	#COMMENT "Launching DDD"
 #)

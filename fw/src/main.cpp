@@ -38,8 +38,12 @@ void main(){
 	TimerQInitialize(0);
 	//USB::audioClassInit();
 	USB::hidClassInit();
+	
+	AK4621::start();
 
 	while(true){
+		static volatile uint32_t a = 0;
+		a += 1;
 		// Call the application task
 		// USB::audioSend();
     }
