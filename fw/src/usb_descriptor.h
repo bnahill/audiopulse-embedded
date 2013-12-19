@@ -73,8 +73,8 @@
 /* string descriptors sizes */
 #define USB_STR_DESC_SIZE               (2)
 #define USB_STR_0_SIZE                  (2)
-#define USB_STR_1_SIZE                  (56)
-#define USB_STR_2_SIZE                  (38)
+#define USB_STR_1_SIZE                  (38)
+#define USB_STR_2_SIZE                  (34)
 #define USB_STR_n_SIZE                  (32)
 
 /* descriptors codes */

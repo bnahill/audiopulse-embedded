@@ -32,13 +32,12 @@
 #endif
 #endif
 /* Below two MACROS are required for Mouse Application to execute */
+// Commented out because some guy online had a problem with them
 #define LONG_SEND_TRANSACTION       /* support to send large data pkts */
 #define LONG_RECEIVE_TRANSACTION    /* support to receive large data pkts */
-#ifndef _MC9S08JS16_H
-#define USB_OUT_PKT_SIZE 32			/* Define the maximum data length received from the host */
-#else
-#define USB_OUT_PKT_SIZE 16			/* Define the maximum data length received from the host */
-#endif
+
+#define USB_OUT_PKT_SIZE 64			/* Define the maximum data length received from the host */
+
 
 /* User Defined MACRO to set number of Timer Objects */
 #define MAX_TIMER_OBJECTS		    5

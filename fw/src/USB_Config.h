@@ -47,7 +47,7 @@
 /*****************************************************************************/
 /* 								Function's Prototypes						 */
 /*****************************************************************************/
-extern void USB_Service_Hid (PTR_USB_DEV_EVENT_STRUCT event); /* Changed by Allan */
+extern void USB_Service_Hid_IN (PTR_USB_DEV_EVENT_STRUCT event); /* Changed by Allan */
 extern void USB_Service_Hid_OUT (PTR_USB_DEV_EVENT_STRUCT event); /* Added by Allan */
 extern void USB_NULL_CALLBACK (PTR_USB_DEV_EVENT_STRUCT event);
 
@@ -62,8 +62,8 @@ extern void USB_NULL_CALLBACK (PTR_USB_DEV_EVENT_STRUCT event);
 
 /* Event callbacks assignation */
 #define  USB_EP0_CALLBACK				USB_Control_Service
-#define  USB_EP1_CALLBACK				USB_Service_Hid  /* Changed by Allan */
-#define  USB_EP2_CALLBACK				USB_Service_Hid_OUT /* Changed by Allan */
+#define  USB_EP1_CALLBACK				USB_Service_Hid_IN
+#define  USB_EP2_CALLBACK				USB_Service_Hid_OUT
 #define  USB_EP3_CALLBACK				USB_NULL_CALLBACK
 #define  USB_EP4_CALLBACK				USB_NULL_CALLBACK
 #define  USB_EP5_CALLBACK				USB_NULL_CALLBACK

@@ -67,8 +67,8 @@ uint_8 USB_DESC_CONST g_device_descriptor[DEVICE_DESCRIPTOR_SIZE] =
                                               in the interface descriptors  */
     0x00,                                 /*  Device Protocol               */
     CONTROL_MAX_PACKET_SIZE,              /*  Max Packet size               */
-    0xAA,0x09,                            /*  Vendor ID   Intersil 0x09AA   */
-    0x2B,0x20,                            /*  Product ID (0x0101 for KBD) Intersil 0x202B   */
+    0xA2,0x15,                            /*  Vendor ID   Freescale?        */
+    0xEF,0xBE,                            /*  Product ID    0xBEEF          */
     0x02,0x00,                            /*  BCD Device version            */
     0x01,                                 /*  Manufacturer string index     */
     0x02,                                 /*  Product string index          */
@@ -166,70 +166,48 @@ uint_8 USB_DESC_CONST USB_STR_0[USB_STR_0_SIZE+USB_STR_DESC_SIZE] =
 uint_8 USB_DESC_CONST USB_STR_1[USB_STR_1_SIZE+USB_STR_DESC_SIZE]
                           = {  sizeof(USB_STR_1),
                                USB_STRING_DESCRIPTOR,
-                               'I',0,
-                               'N',0,
-                               'T',0,
-                               'E',0,
-                               'R',0,
-                               'S',0,
-                               'I',0,
-                               'L',0,
-                               ' ',0,
-                               'F',0,
-                               'R',0,
-                               'E',0,
-                               'E',0,
-                               'S',0,
-                               'C',0,
-                               'A',0,
-                               'L',0,
-                               'E',0,
-                               ' ',0,
-                               'S',0,
-                               'Y',0,
-                               'S',0,
-                               'T',0,
-                               'E',0,
-                               'M',0,
-                               ' ',0,
                                'B',0,
-                               'D',0
+                               'R',0,
+                               'N',0,
+                               ' ',0,
+                               'S',0,
+                               'A',0,
+                               'N',0,
+                               'A',0,
+                               ' ',0,
+                               'A',0,
+                               'U',0,
+                               'D',0,
+                               'I',0,
+                               'O',0,
+                               'P',0,
+                               'U',0,
+                               'L',0,
+                               'S',0,
+                               'E',0
                           };
 
 
 uint_8 USB_DESC_CONST USB_STR_2[USB_STR_2_SIZE+USB_STR_DESC_SIZE]
                           = {  sizeof(USB_STR_2),
                                USB_STRING_DESCRIPTOR,
-                               ' ',0,
-                               ' ',0,
-							#ifdef __MK_xxx_H__
-							   'M',0,
-							   'K',0,                               
-							#elif (defined __MCF52xxx_H__)
-							   'C',0,
-							   'F',0, 
-							#elif (defined MCU_mcf51jf128)
-							   'J',0,
-							   'F',0,                              
-							#else     
-							   'J',0,
-							   'M',0,
-							#endif              
-                               ' ',0,
-                               'D',0,
+                               'O',0,
                                'A',0,
+                               'E',0,
+                               ' ',0,
+                               'I',0,
+                               'N',0,
                                'T',0,
-                               'A',0,
-                               ' ',0,
+                               'E',0,
+                               'R',0,
+                               'F',0,
                                'A',0,
                                'C',0,
-                               'K',0,
-                               ' ',0,
-                               'D',0,
                                'E',0,
-                               'M',0,
-                               'O',0,
-                               ' ',0
+							   ' ',0,
+                               'R',0,
+                               '1',0,
+                               'A',0
                           };
 
 uint_8 USB_DESC_CONST USB_STR_n[USB_STR_n_SIZE+USB_STR_DESC_SIZE]

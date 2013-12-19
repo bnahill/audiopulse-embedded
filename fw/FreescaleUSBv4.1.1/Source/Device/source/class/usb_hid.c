@@ -130,7 +130,7 @@ static uint_8 USB_Map_Ep_To_Struct_Index (
  * This function is called from lower layer when data is transfer is completed
  * on HID endpoint (non control endpoint)
  *****************************************************************************/
-void USB_Service_Hid (
+void USB_Service_Hid_IN (
     PTR_USB_DEV_EVENT_STRUCT event /* [IN] Pointer to USB Event Structure */
 )
 {
@@ -264,7 +264,7 @@ void USB_Service_Hid_OUT (
             /* register callback service for the endpoint */
             (void)_usb_device_register_service(controller_ID,
                                   (uint_8)(USB_SERVICE_EP0+ep_struct->ep_num),
-                                                             USB_Service_Hid);
+                                                             USB_Service_Hid_IN);
 
 
             /* set the EndPoint Status as Idle in the device layer */

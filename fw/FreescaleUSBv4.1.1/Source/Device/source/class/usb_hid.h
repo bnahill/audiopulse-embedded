@@ -145,6 +145,6 @@ extern uint_8 USB_Class_HID_Send_Data (
 
 #define USB_Class_HID_Periodic_Task USB_Class_Periodic_Task
 
-void USB_Service_Hid (PTR_USB_DEV_EVENT_STRUCT event);
+void USB_Service_Hid_IN (PTR_USB_DEV_EVENT_STRUCT event);
 
 #endif
