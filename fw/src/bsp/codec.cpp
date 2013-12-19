@@ -3,13 +3,11 @@
 AK4621::sample_t AK4621::buffer_in[buffer_size * 2];
 AK4621::sample_t AK4621::buffer_out[buffer_size * 2];
 
-void (*AK4621::cb_in)(sample_t const *) = nullptr;
-void (*AK4621::cb_out)(sample_t const *) = nullptr;
+void (*AK4621::cb_in)(sample_t *) = nullptr;
+void (*AK4621::cb_out)(sample_t *) = nullptr;
 
 uint_fast8_t AK4621::rx_buffer_sel;
 uint_fast8_t AK4621::tx_buffer_sel;
-
-static int32_t tmpdata[1024];
 
 void AK4621::init(){
 	__disable_irq();
@@ -54,7 +52,6 @@ void AK4621::init(){
 
 	spi_write_reg(REG_RESET, 0x00); // Reset
 	spi_write_reg(REG_CLK_FORMAT, 0x40); // MCLK = 256fs, fs = 48k
-	spi_write_reg(REG_CLK_FORMAT, 0x44); // Don't use this
 	//spi_write_reg(REG_DEEM_VOL, 0x02); // 48k de-emph
 
 	//spi_write_reg(REG_POWER_DOWN, 0x07); // These are defaults...
@@ -151,14 +148,14 @@ void AK4621::i2s_init(){
 	
 	I2S->RCR3 =                 // Receiver configuration
 		I2S_RCR3_RCE(1) |       // Enable channel
-		(I2S_RCR3_WDFL(1) & 0);       // Send once each channel has a frame?
+		I2S_RCR3_WDFL(0);       // Send once each channel has a frame?
 
 	I2S->RCR4 =                 // Receiver configuration
 		I2S_RCR4_FRSZ(1) |      // Two word per frame
 		I2S_RCR4_SYWD(word_width - 1) | // 32-bit frames
 		I2S_RCR4_MF_MASK |      // MSB first
-		I2S_RCR4_FSE_MASK |   // Frame sync one bit early -- THIS COULD BE WRONG
-		(I2S_RCR4_FSP_MASK & 0) |     // FS active high; figure this out later
+		(I2S_RCR4_FSE_MASK & 0) |   // Frame sync not one bit early
+		(I2S_RCR4_FSP_MASK & 0) |   // FS active low; figure this out later
 		I2S_RCR4_FSD_MASK;      // Master mode but frame clock internal?
 
 	I2S->RCR5 =                 // Receiver configuration
@@ -191,7 +188,7 @@ void AK4621::i2s_init(){
 		I2S_TCR4_FRSZ(nwords - 1) |  // Two word per frame
 		I2S_TCR4_SYWD(word_width - 1) | // 32-bit frames
 		I2S_TCR4_MF_MASK |      // MSB first
-		I2S_TCR4_FSE_MASK |     // Frame sync one bit early -- THIS SHOULD BE GOOD
+		(I2S_TCR4_FSE_MASK & 0) |     // Frame sync not one bit early
 		I2S_TCR4_FSD_MASK;      // Generate FS
 
 	I2S->TCR5 =                 // Transmit configuration
@@ -202,14 +199,14 @@ void AK4621::i2s_init(){
 	I2S->RCSR =
 		I2S_RCSR_FR_MASK |      // Reset FIFO
 		I2S_RCSR_RE_MASK |      // Receive enable
-		(I2S_RCSR_DBGE_MASK & 0) |    // Continue on debug halt
+		(I2S_RCSR_DBGE_MASK & 0) |    // Stop on debug halt
 		I2S_RCSR_BCE_MASK |     // Enable bit clock transmit
 		I2S_RCSR_FRDE_MASK;     // Enable FIFO DMA request
 
 	I2S->TCSR =
 		I2S_TCSR_FR_MASK |      // Reset FIFO
 		I2S_TCSR_TE_MASK |      // Transmit enable
-		(I2S_TCSR_DBGE_MASK & 0) |    // Continue on debug halt
+		(I2S_TCSR_DBGE_MASK & 0) |    // Stop on debug halt
 		I2S_TCSR_BCE_MASK |     // Enable bit clock transmit
 		I2S_TCSR_FRDE_MASK;     // Enable FIFO DMA request
 }
@@ -246,7 +243,7 @@ void AK4621::i2s_dma_init(){
 	
 	DMA_TCD1_CSR = DMA_CSR_INTMAJOR_MASK | // Major loop IRQ
 	               DMA_CSR_INTHALF_MASK | // Also at half
-                   DMA_CSR_BWC(3); // 8-cycle delay
+                   DMA_CSR_BWC(0); // 0-cycle delay
 	
 	DMA_SERQ = DMA_SERQ_SERQ(1); // Enable ch 1 requests
 	
@@ -280,7 +277,7 @@ void AK4621::i2s_dma_init(){
 
 	DMA_TCD0_CSR = DMA_CSR_INTMAJOR_MASK | // Major loop IRQ
 	               DMA_CSR_INTHALF_MASK | // Also at half
-                   DMA_CSR_BWC(3); // 8-cycle delay
+                   DMA_CSR_BWC(0); // 0-cycle delay
 	
 	DMA_SERQ = DMA_SERQ_SERQ(0); // Enable ch 0 requests
 	
@@ -292,6 +289,11 @@ void AK4621::i2s_dma_init(){
 }
 
 void AK4621::start(){
+	if(cb_out)
+		cb_out(&buffer_out[0]);
+	if(cb_out)
+		cb_out(&buffer_out[buffer_size]);
+	
 	I2S->RCSR |=
 		I2S_RCSR_FEF_MASK |
 		I2S_RCSR_SEF_MASK |

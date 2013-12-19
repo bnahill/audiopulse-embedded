@@ -9,55 +9,79 @@
 
 class AK4621 {
 public:
-	static void init();
-
-	static void test_read(){
-		uint32_t samples[256];
-		uint32_t sample;
-
-		for(uint32_t i = 0; i < 256; i++){
-			while(true){
-				sample = I2S->RFR[0];
-				if(sample){
-					samples[i] = sample;
-					break;
-				}
-			}
-		}
-	}
-
-	typedef uint32_t sample_t;
-	typedef void (*audio_cb_t)(sample_t, uint32_t);
-	static void set_in_cb(audio_cb_t new_cb);
-	static void set_out_cb(audio_cb_t new_cb);
+	//! A single audio sample
+	typedef int32_t sample_t;
+	//! A callback for handling either unused or full data buffers
+	typedef void (*audio_cb_t)(sample_t *);
 	
+	/*!
+	 @brief Initialize all hardware and software elements for full-duplex stereo
+	 audio
+	 
+	 This involves initializing GPIO pins, SPI, I2S, and DMA. I2S streaming by
+	 DMA will not begin until \ref start() is called.
+	 */
+	static void init();
+	
+	/*!
+	 @brief Set callback for new input data
+	 
+	 The function provided will be called with a pointer to the new data, which
+	 will be of length \ref buffer_size
+	 */
+	static void set_in_cb(audio_cb_t new_cb){cb_in = new_cb;}
+	
+	/*!
+	 @brief Set callback for free output buffer
+	 
+	 The function provided will be called with a pointer to the free buffer,
+	 which will be of length \ref buffer_size
+	 
+	 @note If called before starting output, both buffers will be presented for
+	 population before the stream begins
+	 */
+	static void set_out_cb(audio_cb_t new_cb){cb_out= new_cb;}
+	
+	/*!
+	 @brief Interrupt service routine for outgoing data buffer empty
+	 
+	 @warning Please don't actually call this unless from interrupt context
+	 */
 	static void dma_tx_isr(){
 		if(cb_out){
-			if(tx_buffer_sel){
-				cb_out(&buffer_out[buffer_size]);
-			} else {
-				cb_out(&buffer_out[0]);
-			}
-			tx_buffer_sel = (tx_buffer_sel + 1) & 1;
+			cb_out(&buffer_out[buffer_size * tx_buffer_sel]);
+			tx_buffer_sel ^= 1;
 		}
 		DMA_CINT = DMA_CINT_CINT(0);
 		NVIC_ClearPendingIRQ(DMA_CH0_IRQn);
 	}
 	
+	/*!
+	 @brief Interrupt service routine for new incoming data
+	 
+	 @warning Please don't actually call this unless from interrupt context
+	 */
 	static void dma_rx_isr(){
 		if(cb_in){
-			if(rx_buffer_sel){
-				cb_in(&buffer_in[buffer_size]);
-			} else {
-				cb_in(&buffer_in[0]);
-			}
-			rx_buffer_sel = (rx_buffer_sel + 1) & 1;
+			cb_in(&buffer_in[buffer_size * rx_buffer_sel]);
+			rx_buffer_sel ^= 1;
 		}
 		DMA_CINT = DMA_CINT_CINT(1);
 		NVIC_ClearPendingIRQ(DMA_CH1_IRQn);
 	}
 	
+	/*!
+	 @brief Start the audio codec streaming
+	 
+	 @note Right now there is no corresponding 'stop'
+	 */
 	static void start();
+	
+	/*!
+	 @brief The number of samples stored in each buffer (there are two for each
+	 direction...
+	 */
+	static constexpr uint32_t buffer_size = 512;
 
 protected:
 	typedef enum {
@@ -119,7 +143,7 @@ protected:
 	static constexpr uint32_t mclk_gen_frac = 32;
 	static constexpr uint32_t mclk_gen_div = 125;
 	
-	static constexpr bool enable_dma_tx = true;
+	static constexpr bool enable_dma_tx = false;
 	static constexpr bool enable_dma_rx = true;
 	
 	static uint_fast8_t rx_buffer_sel;
@@ -127,14 +151,12 @@ protected:
 
 	//! @name DMA Buffers
 	//! @{
-	static constexpr uint32_t buffer_size = 128;
-
 	static sample_t buffer_in[buffer_size * 2];
 	static sample_t buffer_out[buffer_size * 2];
 	//! @}
 
-	static void (*cb_in)(sample_t const *);
-	static void (*cb_out)(sample_t const *);
+	static void (*cb_in)(sample_t *);
+	static void (*cb_out)(sample_t *);
 };
 
 extern "C" {
