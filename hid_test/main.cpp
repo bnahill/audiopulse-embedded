@@ -10,7 +10,7 @@ static constexpr uint16_t INTERFACE = 0;
 static constexpr uint16_t PACKET_CTRL_LEN = 64;
 static constexpr uint16_t PACKET_INT_LEN = 64;
 static constexpr uint8_t EP_IN  = 0x81;
-static constexpr uint8_t EP_OUT = 0x02;
+static constexpr uint8_t EP_OUT = 0x01;
 
 static constexpr uint16_t TIMEOUT = 1000;
 
@@ -39,6 +39,55 @@ static int find_lvr_hidusb(void) {
 	return devh ? 0 : -EIO;
 }
 
+static int ben_test(){
+	int r,i;
+	uint8_t answer[PACKET_CTRL_LEN];
+	uint8_t question[PACKET_CTRL_LEN];
+	int transferred;
+	
+	for (i=0;i<PACKET_CTRL_LEN; i++) question[i]=0x20+i;
+	
+	r = libusb_control_transfer(
+			devh,
+			CTRL_OUT ,
+			HID_SET_REPORT,
+			(HID_REPORT_TYPE_FEATURE<<8)|0x00,
+			INTERFACE,
+			question,
+			63,
+			TIMEOUT);
+	if (r < 0) {
+		fprintf(stderr, "Control SET_REPORT failed %d\n", r);
+		return r;
+	} else {
+		fprintf(stderr, "Control SET_REPORT succeeded %d\n", r);
+	}
+	
+	r = libusb_control_transfer(devh,CTRL_IN,HID_GET_REPORT,(HID_REPORT_TYPE_INPUT<<8)|0x00,0, answer,PACKET_CTRL_LEN, TIMEOUT);
+	if (r < 0) {
+		fprintf(stderr, "Control GET_REPORT error %d\n", r);
+		return r;
+	} else {
+		fprintf(stderr, "Control GET_REPORT success! %d\n", r);
+		printf("\n");
+		for(auto &a : answer)
+			printf("0x%02X\n", a);
+	}
+	
+	r = libusb_interrupt_transfer(
+				devh,
+				EP_IN,
+				answer,
+				64,
+				&transferred,
+				TIMEOUT);
+	if (r < 0) {
+		fprintf(stderr, "Interrupt GET_REPORT error %d\n", r);
+		return r;
+	} else {
+		fprintf(stderr, "Interrupt GET_REPORT success! %d\n", r);
+	}
+}
 
 static int test_control_transfer(void)
 {
@@ -47,16 +96,22 @@ static int test_control_transfer(void)
 	uint8_t question[PACKET_CTRL_LEN];
 	for (i=0;i<PACKET_CTRL_LEN; i++) question[i]=0x20+i;
 
-	r = libusb_control_transfer(devh, CTRL_OUT,HID_SET_REPORT,(HID_REPORT_TYPE_OUTPUT<<8)|0x00, 0, question, PACKET_CTRL_LEN,TIMEOUT);
-	if (r < 0) {
-		fprintf(stderr, "Control Out error %d\n", r);
-		return r;
-	}
 	r = libusb_control_transfer(devh,CTRL_IN,HID_GET_REPORT,(HID_REPORT_TYPE_INPUT<<8)|0x00,0, answer,PACKET_CTRL_LEN, TIMEOUT);
 	if (r < 0) {
 		fprintf(stderr, "Control IN error %d\n", r);
 		return r;
+	} else {
+		fprintf(stderr, "Control IN success! %d\n", r);
 	}
+	
+	r = libusb_control_transfer(devh, CTRL_OUT, HID_SET_REPORT, (HID_REPORT_TYPE_OUTPUT<<8)|0x00, 0, question, PACKET_CTRL_LEN,TIMEOUT);
+	if (r < 0) {
+		fprintf(stderr, "Control Out error %d\n", r);
+		return r;
+	} else {
+		
+	}
+	
 	for(i = 0;i < PACKET_CTRL_LEN; i++) {
 		if(i%8 == 0)
 			printf("\n");
@@ -80,7 +135,10 @@ static int test_interrupt_transfer(void)
 	if (r < 0) {
 		fprintf(stderr, "Interrupt read error %d\n", r);
 		return r;
+	} else {
+		fprintf(stderr, "Successfully read %d\n", r);
 	}
+	
 	if (transferred < PACKET_INT_LEN) {
 		fprintf(stderr, "Interrupt transfer short read (%d)\n", r);
 		return -1;
@@ -163,8 +221,8 @@ int main(int argc, char **argv) {
 
 	//printf("Testing control transfer using loop back test of feature report");
 	//test_control_transfer();
-	printf("Testing interrupt transfer using loop back test of input/output report");
-	test_interrupt_transfer();
+	printf("Testing control transfer using loop back test of input/output report");
+	ben_test();
 
 	libusb_release_interface(devh, 0);
 out:

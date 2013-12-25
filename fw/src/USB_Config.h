@@ -47,7 +47,7 @@
 /*****************************************************************************/
 /* 								Function's Prototypes						 */
 /*****************************************************************************/
-extern void USB_Service_Hid_IN (PTR_USB_DEV_EVENT_STRUCT event);
+extern void USB_Service_Hid (PTR_USB_DEV_EVENT_STRUCT event);
 extern void USB_NULL_CALLBACK (PTR_USB_DEV_EVENT_STRUCT event);
 
 /*****************************************************************************/
@@ -61,7 +61,7 @@ extern void USB_NULL_CALLBACK (PTR_USB_DEV_EVENT_STRUCT event);
 
 /* Event callbacks assignation */
 #define  USB_EP0_CALLBACK				USB_Control_Service
-#define  USB_EP1_CALLBACK				USB_Service_Hid_IN
+#define  USB_EP1_CALLBACK				USB_Service_Hid
 #define  USB_EP2_CALLBACK				USB_NULL_CALLBACK
 #define  USB_EP3_CALLBACK				USB_NULL_CALLBACK
 #define  USB_EP4_CALLBACK				USB_NULL_CALLBACK
@@ -90,12 +90,12 @@ extern void USB_NULL_CALLBACK (PTR_USB_DEV_EVENT_STRUCT event);
 #define USB_EP0_ENABLE              TRUE
 #define USB_EP0_DIR                 EP_CTRL
 #define USB_EP0_HSHK                TRUE
-#define USB_EP0_SIZE                32
+#define USB_EP0_SIZE                64
 
 #define USB_EP1_ENABLE              TRUE
 #define USB_EP1_DIR                 EP_IN
 #define USB_EP1_HSHK                TRUE
-#define USB_EP1_SIZE                8
+#define USB_EP1_SIZE                64
 
 #define USB_EP2_ENABLE              FALSE
 #define USB_EP2_DIR                 EP_OUT

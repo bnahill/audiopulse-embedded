@@ -60,7 +60,7 @@ uint_8 USB_DESC_CONST g_device_descriptor[DEVICE_DESCRIPTOR_SIZE] =
     0x00,                                 /*  Device Protocol               */
     CONTROL_MAX_PACKET_SIZE,              /*  Max Packet size               */
     0xA2,0x15,                            /*  Vendor ID                     */
-    0x01,0x01,                            /*  Product ID (0x0101 for KBD)   */
+    0xEF,0xBE,                            /*  Product ID (0x0101 for KBD)   */
     0x02,0x00,                            /*  BCD Device version            */
     0x01,                                 /*  Manufacturer string index     */
     0x02,                                 /*  Product string index          */
@@ -88,8 +88,8 @@ uint_8 USB_DESC_CONST g_config_descriptor[CONFIG_DESC_SIZE] =
    0x00,
    HID_DESC_ENDPOINT_COUNT,
    0x03,
-   0x01,
-   0x01, /* 0x01 for keyboard */
+   0x00,
+   0x00,
    0x00,
 
    /* HID descriptor */
@@ -113,38 +113,28 @@ uint_8 USB_DESC_CONST g_config_descriptor[CONFIG_DESC_SIZE] =
 
 uint_8 USB_DESC_CONST g_report_descriptor[REPORT_DESC_SIZE] =
 {
-    0x05, 0x01,                    /* USAGE_PAGE (Generic Desktop) */
-    0x09, 0x06,                    /* USAGE (Keyboard) */
-    0xa1, 0x01,                    /* COLLECTION (Application) */
-    0x05, 0x07,                    /*   USAGE_PAGE (Keyboard) */
-    0x19, 0xe0,                    /*   USAGE_MINIMUM (Keyboard LeftControl) */
-    0x29, 0xe7,                    /*   USAGE_MAXIMUM (Keyboard Right GUI) */
-    0x15, 0x00,                    /*   LOGICAL_MINIMUM (0) */
-    0x25, 0x01,                    /*   LOGICAL_MAXIMUM (1) */
-    0x75, 0x01,                    /*   REPORT_SIZE (1) */
-    0x95, 0x08,                    /*   REPORT_COUNT (8) */
-    0x81, 0x02,                    /*   INPUT (Data,Var,Abs) modifier keys (CTRL, ALT, etc...*/
-    0x95, 0x01,                    /*   REPORT_COUNT (1) */
-    0x75, 0x08,                    /*   REPORT_SIZE (8) */
-    0x81, 0x01,                    /*   INPUT (Cnst,Var,Abs) filupp to byte boundary */
-    0x95, 0x05,                    /*   REPORT_COUNT (5) */
-    0x75, 0x01,                    /*   REPORT_SIZE (1) */
-    0x05, 0x08,                    /*   USAGE_PAGE (LEDs) */
-    0x19, 0x01,                    /*   USAGE_MINIMUM (Num Lock) */
-    0x29, 0x05,                    /*   USAGE_MAXIMUM (Kana) */
-    0x91, 0x02,                    /*   OUTPUT (Data,Var,Abs) pc->kbd */
-    0x95, 0x01,                    /*   REPORT_COUNT (1) */
-    0x75, 0x03,                    /*   REPORT_SIZE (3 */
-    0x91, 0x01,                    /*   OUTPUT (Cnst,Var,Abs) filupp to byte boundary */
-    0x95, 0x06,                    /*   REPORT_COUNT (6) */
-    0x75, 0x08,                    /*   REPORT_SIZE (8) */
-    0x15, 0x00,                    /*   LOGICAL_MINIMUM (0) */
-    0x25, 0x65,                    /*   LOGICAL_MAXIMUM (101) */
-    0x05, 0x07,                    /*   USAGE_PAGE (Keyboard) */
-    0x19, 0x00,                    /*   USAGE_MINIMUM (Reserved (no event indicated)) */
-    0x29, 0x65,                    /*   USAGE_MAXIMUM (Keyboard Application) */
-    0x81, 0x00,                    /*   INPUT (Data,Ary,Abs) array for pressed keys */
-    0xc0                           /* END_COLLECTION */
+	0x06, 0x00, 0xff, // USAGE_PAGE (Vendordefined 0xFF00) Freescale 0x01, 0xff
+	0x09, 0x01, // USAGE (Vendor-defined 0x0001)
+	0xa1, 0x01, // COLLECTION (Application)
+
+	/*IN Report */
+	0x85, 0x01, // Report ID
+	0x09, 0x01, // USAGE (Vendor Usage 1 0x0001)
+	0x15, 0x00, // LOGICAL_MINIMUM (0 for signed byte?)
+	0x26, 0x00, 0xff, // LOGICAL_MAXIMUM (255 for signed byte?)
+	0x75, 0x08, // REPORT_SIZE (8)
+	0x95, 0x3f, // REPORT_COUNT (63) Freescale 0x40 (64)
+	0x81, 0x02, // INPUT (Data,Var,Abs) Freescale 0x00 INPUT (Data, Ary, Abs)
+
+	// OUT Report
+	0x85, 0x01, // Report ID
+	0x09, 0x01, // USAGE (Vendor Usage 1 0x0002)
+	0x15, 0x00, // LOGICAL_MINIMUM (0)
+	0x26, 0x00, 0xff, // LOGICAL_MAXIMUM (255)
+	0x75, 0x08, // REPORT_SIZE (8)
+	0x95, 0x3f, // REPORT_COUNT (63)         Freescale 0x40 (64)
+	0x91, 0x02, // OUTPUT (Data,Ary,Abs) Freescale 0x00 INPUT (Data, Ary, Abs)
+	0xc0        // END_COLLECTION
 };
 
 
@@ -158,70 +148,48 @@ uint_8 USB_DESC_CONST USB_STR_0[USB_STR_0_SIZE+USB_STR_DESC_SIZE] =
 uint_8 USB_DESC_CONST USB_STR_1[USB_STR_1_SIZE+USB_STR_DESC_SIZE]
                           = {  sizeof(USB_STR_1),
                                USB_STRING_DESCRIPTOR,
-                               'F',0,
+                               'B',0,
                                'R',0,
-                               'E',0,
-                               'E',0,
+                               'N',0,
+                               ' ',0,
                                'S',0,
-                               'C',0,
                                'A',0,
-                               'L',0,
-                               'E',0,
-                               ' ',0,
-                               'S',0,
-                               'E',0,
-                               'M',0,
-                               'I',0,
-                               'C',0,
-                               'O',0,
                                'N',0,
-                               'D',0,
+                               'A',0,
+                               ' ',0,
+                               'A',0,
                                'U',0,
-                               'C',0,
-                               'T',0,
-                               'O',0,
-                               'R',0,
-                               ' ',0,
+                               'D',0,
                                'I',0,
-                               'N',0,
-                               'C',0,
-                               '.',0
+                               'O',0,
+                               'P',0,
+                               'U',0,
+                               'L',0,
+                               'S',0,
+                               'E',0
                           };
 
 
 uint_8 USB_DESC_CONST USB_STR_2[USB_STR_2_SIZE+USB_STR_DESC_SIZE]
                           = {  sizeof(USB_STR_2),
                                USB_STRING_DESCRIPTOR,
-                               ' ',0,
-                               ' ',0,
-							#ifdef __MK_xxx_H__
-							   'M',0,
-							   'K',0,
-							#elif (defined __MCF52xxx_H__)
-							   'C',0,
-							   'F',0,
-							#elif (defined MCU_mcf51jf128)
-							   'J',0,
-							   'F',0,
-							#else
-							   'J',0,
-							   'M',0,
-							#endif
-                               ' ',0,
-                               'K',0,
-                               'E',0,
-                               'Y',0,
-                               'B',0,
                                'O',0,
                                'A',0,
-                               'R',0,
-                               'D',0,
-                               ' ',0,
-                               'D',0,
                                'E',0,
-                               'M',0,
-                               'O',0,
-                               ' ',0
+                               ' ',0,
+                               'I',0,
+                               'N',0,
+                               'T',0,
+                               'E',0,
+                               'R',0,
+                               'F',0,
+                               'A',0,
+                               'C',0,
+                               'E',0,
+                               ' ',0,
+                               'R',0,
+                               '1',0,
+                               'A',0
                           };
 
 uint_8 USB_DESC_CONST USB_STR_n[USB_STR_n_SIZE+USB_STR_DESC_SIZE]
