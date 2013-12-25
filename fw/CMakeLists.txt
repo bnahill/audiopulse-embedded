@@ -224,7 +224,7 @@ set(GDB_ARGS -x start.gdb)
 ##############################################################
 
 set(GDB    "${TC_PREFIX}gdb")
-set(GDBTUI ${TC_PREFIX}gdb -tui -ex \"layout split\")
+set(GDBTUI ${TC_PREFIX}gdb -tui -ex \"layout split\" -ex \"focus CMD\")
 
 #if(${DETECTED_HOST} STREQUAL "Windows")
 #endif(${DETECTED_HOST} STREQUAL "Windows")

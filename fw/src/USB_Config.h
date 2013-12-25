@@ -47,8 +47,7 @@
 /*****************************************************************************/
 /* 								Function's Prototypes						 */
 /*****************************************************************************/
-extern void USB_Service_Hid_IN (PTR_USB_DEV_EVENT_STRUCT event); /* Changed by Allan */
-extern void USB_Service_Hid_OUT (PTR_USB_DEV_EVENT_STRUCT event); /* Added by Allan */
+extern void USB_Service_Hid_IN (PTR_USB_DEV_EVENT_STRUCT event);
 extern void USB_NULL_CALLBACK (PTR_USB_DEV_EVENT_STRUCT event);
 
 /*****************************************************************************/
@@ -63,7 +62,7 @@ extern void USB_NULL_CALLBACK (PTR_USB_DEV_EVENT_STRUCT event);
 /* Event callbacks assignation */
 #define  USB_EP0_CALLBACK				USB_Control_Service
 #define  USB_EP1_CALLBACK				USB_Service_Hid_IN
-#define  USB_EP2_CALLBACK				USB_Service_Hid_OUT
+#define  USB_EP2_CALLBACK				USB_NULL_CALLBACK
 #define  USB_EP3_CALLBACK				USB_NULL_CALLBACK
 #define  USB_EP4_CALLBACK				USB_NULL_CALLBACK
 #define  USB_EP5_CALLBACK				USB_NULL_CALLBACK
@@ -78,12 +77,12 @@ extern void USB_NULL_CALLBACK (PTR_USB_DEV_EVENT_STRUCT event);
 #define  USB_EP14_CALLBACK				USB_NULL_CALLBACK
 #define  USB_EP15_CALLBACK				USB_NULL_CALLBACK
 
-#define  USB_BUS_RESET_CALLBACK			        USB_Reset_Service
-#define  USB_SUSPEND_CALLBACK			        USB_NULL_CALLBACK
+#define  USB_BUS_RESET_CALLBACK			USB_Reset_Service
+#define  USB_SUSPEND_CALLBACK			USB_Suspend_Service
 #define  USB_SOF_CALLBACK				USB_Sof_Service
-#define  USB_RESUME_CALLBACK			        USB_Resume_Service
+#define  USB_RESUME_CALLBACK			USB_Resume_Service
 #define  USB_SLEEP_CALLBACK				USB_Suspend_Service
-#define  USB_SPEED_DETECTION_CALLBACK	                USB_NULL_CALLBACK
+#define  USB_SPEED_DETECTION_CALLBACK	USB_NULL_CALLBACK
 #define  USB_ERROR_CALLBACK				USB_Error_Service
 #define  USB_STALL_CALLBACK				USB_Stall_Service
 
@@ -91,17 +90,17 @@ extern void USB_NULL_CALLBACK (PTR_USB_DEV_EVENT_STRUCT event);
 #define USB_EP0_ENABLE              TRUE
 #define USB_EP0_DIR                 EP_CTRL
 #define USB_EP0_HSHK                TRUE
-#define USB_EP0_SIZE                32    
+#define USB_EP0_SIZE                32
 
 #define USB_EP1_ENABLE              TRUE
 #define USB_EP1_DIR                 EP_IN
 #define USB_EP1_HSHK                TRUE
-#define USB_EP1_SIZE                64     /* change by Allan from 8 to 64 */
+#define USB_EP1_SIZE                8
 
-#define USB_EP2_ENABLE              TRUE   /* change by Allan from FALSE to TRUE */
+#define USB_EP2_ENABLE              FALSE
 #define USB_EP2_DIR                 EP_OUT
 #define USB_EP2_HSHK                TRUE
-#define USB_EP2_SIZE                64     /*change by Allan from 0 to 64 */
+#define USB_EP2_SIZE                0
 
 #define USB_EP3_ENABLE              FALSE
 #define USB_EP3_DIR                 EP_IN

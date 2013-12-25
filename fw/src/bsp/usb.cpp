@@ -25,6 +25,8 @@ void USB::hidClassInit(){
 	
 	for(auto &a : test) a = 'p';
 	USB_Class_HID_Send_Data(CONTROLLER_ID, 0, test, 64);
+	USB_Class_HID_Send_Data(CONTROLLER_ID, 1, test, 64);
+	USB_Class_HID_Send_Data(CONTROLLER_ID, 0x81, test, 64);
 }
 
 void USB::callback(uint8_t controller_ID, uint8_t event_type, void *val){

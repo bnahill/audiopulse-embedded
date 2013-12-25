@@ -3,16 +3,16 @@
 #include <stdint.h>
 
 #define VERSION "0.1.0"
-static uint16_t constexpr VENDOR_ID = 0x15A2;
-static uint16_t constexpr PRODUCT_ID = 0xBEEF;
-static uint16_t constexpr INTERFACE = 0;
+static constexpr uint16_t VENDOR_ID = 0x15A2;
+static constexpr uint16_t PRODUCT_ID = 0xBEEF;
+static constexpr uint16_t INTERFACE = 0;
 
-static uint16_t constexpr PACKET_CTRL_LEN = 64;
-static uint16_t constexpr PACKET_INT_LEN = 64;
-static uint8_t constexpr EP_IN  = 0x81;
-static uint8_t constexpr EP_OUT = 0x02;
+static constexpr uint16_t PACKET_CTRL_LEN = 64;
+static constexpr uint16_t PACKET_INT_LEN = 64;
+static constexpr uint8_t EP_IN  = 0x81;
+static constexpr uint8_t EP_OUT = 0x02;
 
-static uint16_t constexpr TIMEOUT = 1000;
+static constexpr uint16_t TIMEOUT = 1000;
 
 
 
@@ -75,15 +75,36 @@ static int test_interrupt_transfer(void)
 	uint8_t question[PACKET_INT_LEN];
 	for (i=0;i<PACKET_INT_LEN; i++) question[i]=0x40+i;
 
+	r = libusb_interrupt_transfer(devh, EP_IN, answer,PACKET_INT_LEN,
+								  &transferred, TIMEOUT);
+	if (r < 0) {
+		fprintf(stderr, "Interrupt read error %d\n", r);
+		return r;
+	}
+	if (transferred < PACKET_INT_LEN) {
+		fprintf(stderr, "Interrupt transfer short read (%d)\n", r);
+		return -1;
+	}
 
 	r = libusb_interrupt_transfer(devh, EP_OUT, question, PACKET_INT_LEN,
-								  &transferred,TIMEOUT);
+								  &transferred, TIMEOUT);
 	if (r < 0) {
 		fprintf(stderr, "Interrupt write error %d\n", r);
 		return r;
 	} else {
 		fprintf(stderr, "Interrupt write succeeded %d\n", r);
 	}
+
+	// Do it again!
+	r = libusb_interrupt_transfer(devh, EP_OUT, question, PACKET_INT_LEN,
+								  &transferred, TIMEOUT);
+	if (r < 0) {
+		fprintf(stderr, "Interrupt write error %d\n", r);
+		return r;
+	} else {
+		fprintf(stderr, "Interrupt write succeeded %d\n", r);
+	}
+
 	r = libusb_interrupt_transfer(devh, EP_IN, answer,PACKET_INT_LEN,
 								  &transferred, TIMEOUT);
 	if (r < 0) {

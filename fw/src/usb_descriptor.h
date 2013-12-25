@@ -8,14 +8,14 @@
  *
  * @file usb_descriptor.h
  *
-* @author: Allan Robinson
+ * @author
  *
- * @version 1.0
+ * @version
  *
- * @date April-03-2013
+ * @date May-28-2009
  *
- * @brief The file is a header file for USB Descriptors required for
- *        Intersil_Freescale Application
+ * @brief The file is a header file for USB Descriptors required for Keyboard
+ *        Application
  *
  *****************************************************************************/
 
@@ -40,9 +40,9 @@
 
 /* Various descriptor sizes */
 #define DEVICE_DESCRIPTOR_SIZE            (18)
-#define CONFIG_DESC_SIZE                  (41) /*Allan change to OUT endpoint */
+#define CONFIG_DESC_SIZE                  (34)
 #define DEVICE_QUALIFIER_DESCRIPTOR_SIZE  (10)
-#define REPORT_DESC_SIZE                  (38) /*Allan change report descriptor so size changed */
+#define REPORT_DESC_SIZE                  (63)
 #define CONFIG_ONLY_DESC_SIZE             (9)
 #define IFACE_ONLY_DESC_SIZE              (9)
 #define HID_ONLY_DESC_SIZE                (9)
@@ -63,18 +63,16 @@
 #define USB_MAX_LANGUAGES_SUPPORTED       (1)
 
 
-#define HID_DESC_ENDPOINT_COUNT         (2) /* Allan changed from 1 to 2 */
-#define HID_IN_ENDPOINT                 (1)
-#define HID_OUT_ENDPOINT                (2) /* Allan added for OUT endpoint */
-#define HID_IN_ENDPOINT_PACKET_SIZE     (64) /*Allan changed from 8 to 64 */
-#define HID_OUT_ENDPOINT_PACKET_SIZE    (64) /*Allan changed from 8 to 64 */
+#define HID_DESC_ENDPOINT_COUNT         (1)
+#define HID_ENDPOINT                    (1)
+#define HID_ENDPOINT_PACKET_SIZE        (8)
 
 
 /* string descriptors sizes */
 #define USB_STR_DESC_SIZE               (2)
 #define USB_STR_0_SIZE                  (2)
-#define USB_STR_1_SIZE                  (38)
-#define USB_STR_2_SIZE                  (34)
+#define USB_STR_1_SIZE                  (56)
+#define USB_STR_2_SIZE                  (38)
 #define USB_STR_n_SIZE                  (32)
 
 /* descriptors codes */
