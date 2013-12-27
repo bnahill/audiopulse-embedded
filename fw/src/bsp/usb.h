@@ -48,6 +48,8 @@ private:
 	                              USB_PACKET_SIZE * size);
 
 	static void prepare_data();
+
+	static constexpr uint8_t CONTROLLER_ID = 0;
 };
 
 }

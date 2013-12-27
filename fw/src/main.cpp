@@ -20,10 +20,9 @@
 #include <stdint.h>
 #include <derivative.h>
 #include <bsp/platform.h>
+#include <controller.h>
 
 extern "C" {
-	#include <RealTimerCounter.h>
-	#include <audio_generator.h>
 	void main();
 }
 
@@ -32,20 +31,24 @@ extern "C" {
  * @brief Application entry point
  */
 void main(){
+	struct pt pt_dsp, pt_command_parser, pt_wavegen;
+
+	PT_INIT(&pt_dsp);
+	PT_INIT(&pt_command_parser);
+	PT_INIT(&pt_wavegen);
+
 	// Perform late initializations
 	Platform::lateInit();
 
-	TimerQInitialize(0);
 	//USB::audioClassInit();
 	USB::hidClassInit();
 	
 	AK4621::start();
 
 	while(true){
-		static volatile uint32_t a = 0;
-		a += 1;
-		// Call the application task
-		// USB::audioSend();
+		APulseController::pt_command_parser(&pt_command_parser);
+		APulseController::pt_dsp(&pt_dsp);
+		APulseController::pt_wavegen(&pt_wavegen);
     }
 } 
 

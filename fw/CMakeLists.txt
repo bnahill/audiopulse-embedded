@@ -55,6 +55,7 @@ cmake_minimum_required(VERSION 2.8)
 set(CMSIS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/CMSIS)
 set(DSP_SRC ${CMSIS_DIR}/DSP_Lib/Source)
 set(USB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/FreescaleUSBv4.1.1)
+set(PT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/pt-1.4)
 
 
 
@@ -119,6 +120,7 @@ include_directories(
 	${USB_DIR}/Source/Device/source/class
 	${USB_DIR}/Source/Device/app/common
 	${USB_DIR}/Source/Device/app/common/kinetis
+	${PT_DIR}
 )
 
 

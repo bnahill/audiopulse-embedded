@@ -7,6 +7,7 @@
 #include <bsp/usb.h>
 #include <bsp/gpio.h>
 #include <bsp/codec.h>
+#include <pt.h>
 
 using namespace K20;
 

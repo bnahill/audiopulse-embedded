@@ -1,12 +1,11 @@
 #include <bsp/usb.h>
 #include <bsp/platform.h>
+#include <controller.h>
 
 using namespace K20;
 
 extern "C" {
-	//#include "usb_audio.h"
 	#include "usb_hid.h"
-	#include "audio_generator.h"
 };
 
 
@@ -56,7 +55,7 @@ uint8_t USB::callback_param(uint8_t request, uint16_t value, uint16_t iface,
 	static uint8_t idle_req = 0;
 	
 	uint8_t status = USB_OK;
-	uint8_t direction =  (uint8_t)((request & USB_HID_REQUEST_DIR_MASK) >>3);
+	
 	uint8_t index = (uint8_t)((request - 2) & USB_HID_REQUEST_TYPE_MASK);
                                          // index == 0 for get/set idle,
                                          // index == 1 for get/set protocol
