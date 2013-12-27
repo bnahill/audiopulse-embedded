@@ -3,7 +3,6 @@
 
 #include <derivative.h>
 
-namespace K20 {
 
 class Clock {
 public:
@@ -28,8 +27,6 @@ private:
 	static constexpr uint32_t clk_bus_div = 1;
 	static constexpr uint32_t clk_flexbus_div = 1;
 	static constexpr uint32_t clk_flash_div = 2; // Max 25MHz
-};
-
 };
 
 #endif // __APULSE_CLOCKS_H_

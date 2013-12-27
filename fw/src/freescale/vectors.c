@@ -1,6 +1,6 @@
 #include "derivative.h" /* include peripheral declarations */
 #include "user_config.h"
-#include "bsp/codec.h"
+#include "driver/codec.h"
 
 /*--------------------------------------------------------------*/
 typedef void (*const tIsrFunc)(void);

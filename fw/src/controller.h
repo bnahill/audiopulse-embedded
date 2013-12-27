@@ -1,7 +1,8 @@
 #ifndef __APULSE_CONTROLLER_H_
 #define __APULSE_CONTROLLER_H_
 
-#include <bsp/platform.h>
+#include <driver/platform.h>
+#include <driver/codec.h>
 
 
 class APulseController {
@@ -77,7 +78,8 @@ public:
 		return nullptr;
 	}
 
-	static int pt_dsp(struct pt * pt){
+
+	static PT_THREAD(pt_command_parser(struct pt * pt)){
 		PT_BEGIN(pt);
 
 		while(true){
@@ -87,17 +89,7 @@ public:
 		PT_END(pt);
 	}
 
-	static int pt_command_parser(struct pt * pt){
-		PT_BEGIN(pt);
-
-		while(true){
-			PT_YIELD(pt);
-		}
-
-		PT_END(pt);
-	}
-
-	static int pt_wavegen(struct pt * pt){
+	static PT_THREAD(pt_wavegen(struct pt * pt)){
 		PT_BEGIN(pt);
 
 		while(true){

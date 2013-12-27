@@ -3,13 +3,11 @@
 
 #ifdef __cplusplus
 
-#include <bsp/clocks.h>
-#include <bsp/usb.h>
-#include <bsp/gpio.h>
-#include <bsp/codec.h>
+#include <driver/clocks.h>
+#include <driver/usb.h>
+#include <driver/gpio.h>
+#include <driver/codec.h>
 #include <pt.h>
-
-using namespace K20;
 
 class Platform {
 public:

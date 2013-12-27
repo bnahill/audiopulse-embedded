@@ -5,7 +5,7 @@
 
 #if __cplusplus
 
-#include <bsp/gpio.h>
+#include <driver/gpio.h>
 
 class AK4621 {
 public:
@@ -27,7 +27,7 @@ public:
 	 @brief Set callback for new input data
 	 
 	 The function provided will be called with a pointer to the new data, which
-	 will be of length \ref buffer_size
+	 will be of length \ref in_buffer_size
 	 */
 	static void set_in_cb(audio_cb_t new_cb){cb_in = new_cb;}
 	
@@ -35,7 +35,7 @@ public:
 	 @brief Set callback for free output buffer
 	 
 	 The function provided will be called with a pointer to the free buffer,
-	 which will be of length \ref buffer_size
+	 which will be of length \ref out_buffer_size
 	 
 	 @note If called before starting output, both buffers will be presented for
 	 population before the stream begins
@@ -49,7 +49,7 @@ public:
 	 */
 	static void dma_tx_isr(){
 		if(cb_out){
-			cb_out(&buffer_out[buffer_size * tx_buffer_sel]);
+			cb_out(&buffer_out[out_buffer_size * tx_buffer_sel]);
 			tx_buffer_sel ^= 1;
 		}
 		DMA_CINT = DMA_CINT_CINT(0);
@@ -63,7 +63,7 @@ public:
 	 */
 	static void dma_rx_isr(){
 		if(cb_in){
-			cb_in(&buffer_in[buffer_size * rx_buffer_sel]);
+			cb_in(&buffer_in[in_buffer_size * rx_buffer_sel]);
 			rx_buffer_sel ^= 1;
 		}
 		DMA_CINT = DMA_CINT_CINT(1);
@@ -77,11 +77,35 @@ public:
 	 */
 	static void start();
 	
+	typedef enum {
+		CH_MIC = (1 << 0),
+		CH_EXT = (1 << 1)
+	} channels_t;
+	
 	/*!
-	 @brief The number of samples stored in each buffer (there are two for each
-	 direction...
+	 @brief Select which channels are enabled
+	 @param channels The bitwise OR of \ref channels_t to enable
+	 
+	 @note This may be set before or after start, but will cause some corruption
+	 in the current DMA frame only if changed while active
+	 
+	 @note The channel configuration is initialized to all channels disabled,
+	 allowing for the first assignment to occur after initialization.
 	 */
-	static constexpr uint32_t buffer_size = 512;
+	static void set_channels(uint32_t channels){
+		AK4621::channels = channels;
+		I2S->RMR = ~channels;
+	}
+	
+	/*!
+	 @brief The number of samples in a single incoming buffer (there are two)
+	 */
+	static constexpr uint32_t in_buffer_size = 768;
+	
+	/*!
+	 @brief The number of samples in a single outgoing buffer (there are two)
+	 */
+	static constexpr uint32_t out_buffer_size = 128;
 
 protected:
 	typedef enum {
@@ -148,11 +172,13 @@ protected:
 	
 	static uint_fast8_t rx_buffer_sel;
 	static uint_fast8_t tx_buffer_sel;
+	
+	static uint32_t channels;
 
 	//! @name DMA Buffers
 	//! @{
-	static sample_t buffer_in[buffer_size * 2];
-	static sample_t buffer_out[buffer_size * 2];
+	static sample_t buffer_in[in_buffer_size * 2];
+	static sample_t buffer_out[out_buffer_size * 2];
 	//! @}
 
 	static void (*cb_in)(sample_t *);

@@ -1,8 +1,7 @@
-#include <bsp/usb.h>
-#include <bsp/platform.h>
+#include <driver/usb.h>
+#include <driver/platform.h>
 #include <controller.h>
 
-using namespace K20;
 
 extern "C" {
 	#include "usb_hid.h"

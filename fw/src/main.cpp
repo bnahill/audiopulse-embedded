@@ -19,8 +19,9 @@
 
 #include <stdint.h>
 #include <derivative.h>
-#include <bsp/platform.h>
+#include <driver/platform.h>
 #include <controller.h>
+#include <input_dsp.h>
 
 extern "C" {
 	void main();
@@ -40,14 +41,13 @@ void main(){
 	// Perform late initializations
 	Platform::lateInit();
 
-	//USB::audioClassInit();
 	USB::hidClassInit();
 	
 	AK4621::start();
-
+	
 	while(true){
 		APulseController::pt_command_parser(&pt_command_parser);
-		APulseController::pt_dsp(&pt_dsp);
+		InputDSP::pt_dsp(&pt_dsp);
 		APulseController::pt_wavegen(&pt_wavegen);
     }
 } 

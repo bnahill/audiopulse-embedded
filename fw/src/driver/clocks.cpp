@@ -1,6 +1,4 @@
-#include <bsp/platform.h>
-
-namespace K20 {
+#include <driver/platform.h>
 
 void Clock::setupClocks(){
 	SIM_CLKDIV1 = SIM_CLKDIV1_OUTDIV1(clk_core_div - 1) |
@@ -51,5 +49,3 @@ void Clock::switchPBEtoPEE(){
 	MCG_C1 = MCG_C1_CLKS(0);
 	while(((MCG_S & MCG_S_CLKST_MASK) >> 2) != 3);
 }
-
-};

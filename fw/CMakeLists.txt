@@ -148,18 +148,21 @@ set(FREESCALE_SOURCES
 
 set(APP_SOURCES
 	src/main.cpp
-	src/bsp/platform.cpp
-	src/bsp/codec.cpp
-	src/bsp/usb.cpp
-	src/bsp/clocks.cpp
-	src/bsp/startup.s
+	src/controller.cpp
+	src/input_dsp.cpp
+	src/driver/platform.cpp
+	src/driver/codec.cpp
+	src/driver/usb.cpp
+	src/driver/clocks.cpp
+	src/startup.s
 )
 
-set_property(SOURCE src/bsp/startup.s PROPERTY LANGUAGE C)
+set_property(SOURCE src/startup.s PROPERTY LANGUAGE C)
 
 # Add required CMSIS-DSP sources as needed
 set(DSP_SOURCES
-	${DSP_SRC}/BasicMathFunctions/arm_abs_f32.c
+	${DSP_SRC}/FilteringFunctions/arm_fir_decimate_init_q31.c
+	${DSP_SRC}/FilteringFunctions/arm_fir_decimate_fast_q31.c
 )
 
 ##############################################################

@@ -1,13 +1,15 @@
-#include <bsp/codec.h>
+#include <driver/codec.h>
 
-AK4621::sample_t AK4621::buffer_in[buffer_size * 2];
-AK4621::sample_t AK4621::buffer_out[buffer_size * 2];
+AK4621::sample_t AK4621::buffer_in[in_buffer_size * 2];
+AK4621::sample_t AK4621::buffer_out[out_buffer_size * 2];
 
 void (*AK4621::cb_in)(sample_t *) = nullptr;
 void (*AK4621::cb_out)(sample_t *) = nullptr;
 
 uint_fast8_t AK4621::rx_buffer_sel;
 uint_fast8_t AK4621::tx_buffer_sel;
+
+uint32_t AK4621::channels = 0;
 
 void AK4621::init(){
 	__disable_irq();
@@ -38,7 +40,7 @@ void AK4621::init(){
 
 	for(auto &i : buffer_in) i = 0xA5A51111;
 	//for(auto &i : buffer_out) i = 0xFF00FF00;
-	for(uint32_t i = 0; i < buffer_size * 2; i++){
+	for(uint32_t i = 0; i < out_buffer_size * 2; i++){
 		if(i & 0x10){
 			buffer_out[i] = 0xFF00FF00;
 		} else {
@@ -134,7 +136,7 @@ void AK4621::i2s_init(){
 	/// RECEIVER
 	////////////////
 	
-	I2S->RMR = 0;
+	I2S->RMR = ~channels;
 	
 	I2S->RCR1 =
 		I2S_RCR1_RFW(nwords - 1);    // FIFO watermark
@@ -235,11 +237,11 @@ void AK4621::i2s_dma_init(){
 	                DMA_ATTR_DMOD(0) | DMA_ATTR_DSIZE(2);  // 32-bit dst
 	DMA_TCD1_NBYTES_MLNO = 4;
 	// CITER and BITER must be the same
-	DMA_TCD1_CITER_ELINKNO = DMA_CITER_ELINKNO_CITER(buffer_size * 2);
-	DMA_TCD1_BITER_ELINKNO = DMA_BITER_ELINKNO_BITER(buffer_size * 2);
+	DMA_TCD1_CITER_ELINKNO = DMA_CITER_ELINKNO_CITER(in_buffer_size * 2);
+	DMA_TCD1_BITER_ELINKNO = DMA_BITER_ELINKNO_BITER(in_buffer_size * 2);
 	DMA_TCD1_SLAST = 0;
 	
-	DMA_TCD1_DLASTSGA = -(buffer_size * 2 * 4);
+	DMA_TCD1_DLASTSGA = -(in_buffer_size * 2 * 4);
 	
 	DMA_TCD1_CSR = DMA_CSR_INTMAJOR_MASK | // Major loop IRQ
 	               DMA_CSR_INTHALF_MASK | // Also at half
@@ -269,9 +271,9 @@ void AK4621::i2s_dma_init(){
 	DMA_TCD0_NBYTES_MLOFFNO = 4;
 	DMA_TCD0_NBYTES_MLOFFYES = 4;
 	// CITER and BITER must be the same
-	DMA_TCD0_CITER_ELINKNO = DMA_CITER_ELINKNO_CITER(buffer_size * 2);
-	DMA_TCD0_BITER_ELINKNO = DMA_BITER_ELINKNO_BITER(buffer_size * 2);
-	DMA_TCD0_SLAST = -(buffer_size * 2 * 4);
+	DMA_TCD0_CITER_ELINKNO = DMA_CITER_ELINKNO_CITER(out_buffer_size * 2);
+	DMA_TCD0_BITER_ELINKNO = DMA_BITER_ELINKNO_BITER(out_buffer_size * 2);
+	DMA_TCD0_SLAST = -(out_buffer_size * 2 * 4);
 	
 	DMA_TCD0_DLASTSGA = 0;
 
@@ -292,7 +294,7 @@ void AK4621::start(){
 	if(cb_out)
 		cb_out(&buffer_out[0]);
 	if(cb_out)
-		cb_out(&buffer_out[buffer_size]);
+		cb_out(&buffer_out[out_buffer_size]);
 	
 	I2S->RCSR |=
 		I2S_RCSR_FEF_MASK |

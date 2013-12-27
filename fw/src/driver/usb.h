@@ -4,8 +4,6 @@
 #include <derivative.h>
 #include <usb_class.h>
 
-namespace K20 {
-
 class USB {
 public:
 	static void lateInit(){
@@ -52,6 +50,5 @@ private:
 	static constexpr uint8_t CONTROLLER_ID = 0;
 };
 
-}
 
 #endif // __APULSE_USB_H_
