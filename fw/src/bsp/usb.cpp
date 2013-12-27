@@ -24,9 +24,6 @@ void USB::hidClassInit(){
 	__enable_irq();
 	
 	for(auto &a : test) a = 'p';
-	USB_Class_HID_Send_Data(CONTROLLER_ID, 0, test, 64);
-	USB_Class_HID_Send_Data(CONTROLLER_ID, 1, test, 64);
-	USB_Class_HID_Send_Data(CONTROLLER_ID, 0x81, test, 64);
 }
 
 void USB::callback(uint8_t controller_ID, uint8_t event_type, void *val){
@@ -54,7 +51,7 @@ void USB::callback(uint8_t controller_ID, uint8_t event_type, void *val){
 uint8_t USB::callback_param(uint8_t request, uint16_t value, uint16_t iface,
                             uint8_t **data, uint_16 *size){
 	// Request buffers
-	static uint8_t report_buf[64] = {0};
+	static uint8_t report_buf[64] = {'a','b','a','a','c'};
 	static uint8_t protocol_req = 0;
 	static uint8_t idle_req = 0;
 	
@@ -72,6 +69,7 @@ uint8_t USB::callback_param(uint8_t request, uint16_t value, uint16_t iface,
 //		*data = &rpt_buf[0]; /* point to the report to send */
 //		*size = KEYBOARD_BUFF_SIZE; /* report size */
 		*data = report_buf;
+		report_buf[0] = 'z';
 		*size = 64;
 		break;
 	case USB_HID_SET_REPORT_REQUEST :
