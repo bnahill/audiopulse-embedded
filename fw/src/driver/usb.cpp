@@ -70,7 +70,7 @@ void USB::callback(uint8_t controller_ID, uint8_t event_type, void *val){
 uint8_t USB::callback_param(uint8_t request, uint16_t value, uint16_t iface,
                             uint8_t **data, uint_16 *size){
 	// Request buffers
-	static uint8_t report_buf[64] = {'a','b','a','a','c'};
+	//static uint8_t report_buf[64] = {'a','b','a','a','c'};
 	static uint8_t protocol_req = 0;
 	static uint8_t idle_req = 0;
 	
@@ -85,11 +85,10 @@ uint8_t USB::callback_param(uint8_t request, uint16_t value, uint16_t iface,
 	switch(request){
 	case USB_HID_GET_REPORT_REQUEST :
 		Platform::led.clear();
-//		*data = &rpt_buf[0]; /* point to the report to send */
-//		*size = KEYBOARD_BUFF_SIZE; /* report size */
-		*data = report_buf;
-		report_buf[0] = 'z';
-		*size = 64;
+// 		*data = report_buf;
+// 		report_buf[0] = 'z';
+// 		*size = 64;
+		*data = APulseController::get_response(*size);
 		break;
 	case USB_HID_SET_REPORT_REQUEST :
 		//for(index = 0; index < KEYBOARD_BUFF_SIZE ; index++)
@@ -97,9 +96,10 @@ uint8_t USB::callback_param(uint8_t request, uint16_t value, uint16_t iface,
 		//    rpt_buf[index] = *(*data + index);
 		//}
 		Platform::led.set();
-		for(uint32_t i = 0; i < 64; i++){
-			report_buf[i] = (*data)[i];
-		}
+		APulseController::handle_data(*data, *size);
+// 		for(uint32_t i = 0; i < 64; i++){
+// 			report_buf[i] = (*data)[i];
+// 		}
 		
 		if(**data & 0x01) {	// turn NumLock led on request from HOST
 			

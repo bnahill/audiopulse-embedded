@@ -42,7 +42,8 @@ void Clock::switchFEItoFBE(){
 	while (!(MCG_S & MCG_S_OSCINIT0_MASK));
 
 	// Switch to oscillator, bypassing FLL
-	MCG_C1 = MCG_C1_CLKS(2) | MCG_C1_FRDIV(3);
+	MCG_C1 = MCG_C1_CLKS(2) | MCG_C1_FRDIV(3) |
+	         MCG_C1_IREFS_MASK | MCG_C1_IRCLKEN_MASK;
 
 	// Wait for switch
 	while(((MCG_S & MCG_S_CLKST_MASK) >> 2) != 2);
@@ -67,6 +68,9 @@ void Clock::switchPBEtoPEE(){
 	MCG_C6 = MCG_C6_VDIV0(clk_pll_mul - 24) | MCG_C6_PLLS_MASK;
 
 	// Switch main clock to PLL
-	MCG_C1 = MCG_C1_CLKS(0);
+	MCG_C1 = MCG_C1_CLKS(0) | MCG_C1_IREFS_MASK | MCG_C1_IRCLKEN_MASK;
+	
+	// Switch internal reference back to 32k
+	MCG_C2 = MCG_C2_RANGE0(1) | MCG_C2_EREFS0_MASK;
 	while(((MCG_S & MCG_S_CLKST_MASK) >> 2) != 3);
 }

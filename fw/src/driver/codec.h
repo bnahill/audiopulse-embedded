@@ -127,6 +127,8 @@ public:
 	 @brief The number of samples in a single outgoing buffer (there are two)
 	 */
 	static constexpr uint32_t out_buffer_size = 128;
+	
+	static constexpr uint32_t fs = 48000;
 
 protected:
 	typedef enum {

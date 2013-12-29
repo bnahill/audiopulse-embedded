@@ -18,11 +18,16 @@
  @brief
  @author Ben Nahill <bnahill@gmail.com>
  */
+
 #ifndef __APULSE_WAVEGEN_H_
 #define __APULSE_WAVEGEN_H_
 
 #include <driver/platform.h>
 #include <driver/codec.h>
+#include <controller.h>
+#include <arm_math.h>
+#include <core_cm4.h>
+#include <apulse_math.h>
 
 class WaveGen {
 public:
@@ -31,7 +36,7 @@ public:
 	/*!
 	 * 
 	 * @brief A callback to get samples
-	 * @param dst The destination buffer (size known)
+	 * @param dst The destination buffer (size known from \ref AK4621)
 	 * 
 	 * @note This should be called from interrupt or locked context
 	 * 
@@ -47,20 +52,26 @@ public:
 		if(silent)
 			return;
 		
-		for(auto &generator : generators){
-			sample_t * iter = dst;
+		auto t = APulseController::get_time_ms();
+		
+		for(generator_t &generator : generators){
 			switch(generator.type){
 			case GEN_OFF:
 				// Don't care
 				continue;
 			case GEN_FIXED:
 				// Go add a fixed wave to the appropriate channels
+				generate_wave(generator, dst + generator.ch, t);
 				break;
 			case GEN_CHIRP:
+				generate_chirp(generator, dst + generator.ch, t);
 				break;
+			// Add other signal generation handlers here if anything else req'd
 			}
 		}
 	}
+	
+
 	
 	static void zero4(sample_t * dst, uint32_t n){
 		register uint32_t loops = (n + 15) >> 4;
@@ -100,6 +111,7 @@ protected:
 	static constexpr uint32_t buffer_size = AK4621::out_buffer_size;
 	static constexpr uint32_t wavetable_len = 4096;
 	static const sample_t wavetable[wavetable_len];
+	static constexpr uint32_t fs = AK4621::fs;
 	
 	static bool silent;
 	
@@ -112,17 +124,64 @@ protected:
 	static constexpr uint32_t num_generators = 3;
 	typedef struct {
 		gen_type_t type;
-		uint16_t f1;     //!< Start frequency
-		uint16_t f2;     //!< End frequency (chirp only)
+		uint16_t w1;     //!< Start normalized angular rate
+		uint16_t w2;     //!< End angular rate (chirp)
 		uint16_t t1;     //!< The start time
 		uint16_t t2;     //!< The finish time
 		uint16_t theta;  //!< Current phase in wavetable
-		uint16_t f_current; //!< Theta for frequency in chirp
-		uint8_t ch;
+		uint16_t w_current; //!< Theta for angular rate in chirp, might not use
+		uint8_t ch;      //!< Which channel is it?
 		sample_t gain;   //!< Gain applied to each full-scale sample
 	} generator_t;
 	
 	static generator_t generators[num_generators];
+	
+	/*!
+	 @brief Generate a waveform
+	 @param generator The generator to use
+	 @param dst The start destination
+	 @param t The start time of the frame to fill
+	 
+	 This will generate \ref buffer_size / 2 samples and add them to @ref dst
+	 in alternating slots (to apply to a single channel only)
+	 */
+	static void generate_wave(generator_t &generator, sample_t * dst, uint16_t t){
+		if(t < generator.t1 || t > generator.t2)
+			return;
+		
+		// Just some temporary storage
+		sample_t s;
+		uint32_t theta = generator.theta;
+		q31_t gain = generator.gain;
+		for(uint32_t i = 0; i < buffer_size / 2; i++){
+			s = wavetable[theta & (wavetable_len - 1)];
+			// Negate for second half-wave
+			if(theta & wavetable_len)
+				s *= -1;
+			
+			s = __SSAT((((q63_t) s * gain) >> 32),31);
+			
+			// Add this sample to the output
+			*dst += s;
+			dst += 2;
+			
+			theta = (theta + generator.w1) & (wavetable_len * 2 - 1);
+		}
+		generator.theta = theta;
+	}
+	
+	/*!
+	 @brief Generate a chirp
+	 @param generator The generator to use
+	 @param dst The start destination
+	 @param t The start time of the frame to fill
+	 
+	 This will generate \ref buffer_size / 2 samples and add them to @ref dst
+	 in alternating slots (to apply to a single channel only)
+	 */
+	static void generate_chirp(generator_t &generator, sample_t * dst, uint16_t t){
+		
+	}
 };
 
 #endif // __APULSE_WAVEGEN_H_

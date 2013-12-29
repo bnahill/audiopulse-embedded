@@ -24,6 +24,7 @@
 
 #include <driver/platform.h>
 #include <driver/codec.h>
+#include <driver/timer.h>
 
 
 class APulseController {
@@ -94,9 +95,13 @@ public:
 
 	 This response should already be prepared
 	 */
-	static uint8_t const * get_response(uint8_t &size){
-
+	static uint8_t * get_response(uint16_t &size){
+		size = 0;
 		return nullptr;
+	}
+	
+	static uint16_t get_time_ms(){
+		return timer.get_count();
 	}
 
 
@@ -112,6 +117,10 @@ public:
 
 	static PT_THREAD(pt_wavegen(struct pt * pt)){
 		PT_BEGIN(pt);
+		
+		// Run from 32kHz/32 clock
+		timer.configure(Timer::CLKS_FIXED, Timer::PS_32, 0);
+		timer.reset_count(0);
 
 		while(true){
 			PT_YIELD(pt);
@@ -119,6 +128,8 @@ public:
 
 		PT_END(pt);
 	}
+	
+	static constexpr Timer timer = FTM0_BASE_PTR;
 };
 
 #endif // __APULSE_CONTROLLER_H_
