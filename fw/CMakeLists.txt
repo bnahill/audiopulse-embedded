@@ -1,3 +1,25 @@
+#
+# (C) Copyright 2013 Ben Nahill
+# 
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ 
+# @file
+# @brief
+# @author Ben Nahill <bnahill@gmail.com>
+#
+
+
 # CMakeLists for STM32F4 using the Sourcery toolchain and OpenOCD with both
 # C and C++ sources
 #
@@ -150,6 +172,7 @@ set(APP_SOURCES
 	src/main.cpp
 	src/controller.cpp
 	src/input_dsp.cpp
+	src/wavegen.cpp
 	src/driver/platform.cpp
 	src/driver/codec.cpp
 	src/driver/usb.cpp
@@ -163,14 +186,17 @@ set_property(SOURCE src/startup.s PROPERTY LANGUAGE C)
 set(DSP_SOURCES
 	${DSP_SRC}/FilteringFunctions/arm_fir_decimate_init_q31.c
 	${DSP_SRC}/FilteringFunctions/arm_fir_decimate_fast_q31.c
+	${DSP_SRC}/BasicMathFunctions/arm_shift_q31.c
 )
 
 ##############################################################
 # Executable and library targets
 ##############################################################
 
-add_executable(${OUTFILE} ${APP_SOURCES} ${DSP_SOURCES} ${FREESCALE_SOURCES})
-target_link_libraries(${OUTFILE} gcc c)
+link_directories(${CMSIS_DIR}/Lib/G++)
+
+add_executable(${OUTFILE} ${APP_SOURCES}  ${FREESCALE_SOURCES}) #${DSP_SOURCES}
+target_link_libraries(${OUTFILE} gcc c libarm_cortexM4l_math.a)
 
 
 # Warnings only for application code -- Optimizations only on ST/ARM code

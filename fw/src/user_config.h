@@ -2,6 +2,7 @@
  *
  * Freescale Semiconductor Inc.
  * (c) Copyright 2004-2009 Freescale Semiconductor, Inc.
+ * Modifications (c) Copyright 2013 Ben Nahill
  * ALL RIGHTS RESERVED.
  *
  **************************************************************************//*!
