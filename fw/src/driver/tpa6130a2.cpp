@@ -1,5 +1,5 @@
 /*!
- (C) Copyright 2013, Ben Nahill
+ (C) Copyright 2013 Ben Nahill
  
  This program is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -19,4 +19,22 @@
  @author Ben Nahill <bnahill@gmail.com>
  */
 
-#include <controller.h>
+#include <driver/tpa6130a2.h>
+
+void TPA6130A2::write_reg (uint8_t addr, uint8_t val ) {
+	I2C->C1 |= I2C_C1_MST_MASK; // Assert start
+	I2C->D = i2c_addr; // Write bus address
+	
+	while((I2C->S & I2C_S_IICIF_MASK) == 0); // Wait for 
+	I2C->S |= I2C_S_IICIF_MASK; // Clear
+
+	I2C->D = addr; // Write register address
+
+	while((I2C->S & I2C_S_IICIF_MASK) == 0); // Wait for 
+	I2C->S |= I2C_S_IICIF_MASK; // Clear
+
+	I2C->D = val; // Write value
+
+	while((I2C->S & I2C_S_IICIF_MASK) == 0); // Wait for 
+	I2C->S |= I2C_S_IICIF_MASK; // Clear        
+}

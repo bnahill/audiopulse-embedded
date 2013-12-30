@@ -126,7 +126,7 @@ public:
 	/*!
 	 @brief The number of samples in a single outgoing buffer (there are two)
 	 */
-	static constexpr uint32_t out_buffer_size = 128;
+	static constexpr uint32_t out_buffer_size = 256;
 	
 	static constexpr uint32_t fs = 48000;
 
@@ -190,7 +190,7 @@ protected:
 	static constexpr uint32_t mclk_gen_frac = 32;
 	static constexpr uint32_t mclk_gen_div = 125;
 	
-	static constexpr bool enable_dma_tx = false;
+	static constexpr bool enable_dma_tx = true;
 	static constexpr bool enable_dma_rx = true;
 	
 	static uint_fast8_t rx_buffer_sel;

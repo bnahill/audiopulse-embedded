@@ -20,10 +20,16 @@
  */
 
 #include <wavegen.h>
+#include <controller.h>
 
 bool WaveGen::silent = true;
 
-WaveGen::generator_t WaveGen::generators[num_generators] = {{WaveGen::GEN_OFF}};
+Generator WaveGen::generators[num_generators];
+
+uint16_t WaveGen::get_time_ms() {
+	return APulseController::get_time_ms();
+}
+
 
 /*
  * Generated with numpy:

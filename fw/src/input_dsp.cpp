@@ -130,7 +130,7 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 	// Prepare FIR decimation
 	////////////////////////////
 	static_assert(AK4621::in_buffer_size == 768, "Wrong buffer size for DSP");
-	arm_fir_decimate_init_q31(&decimate, decimate_fir_order, 3,
+	arm_fir_decimate_init_q31(&decimate, 5, 3,//decimate_fir_order, 3,
 	                          (q31_t*)decimate_coeffs,
 	                          decimate_buffer,
 	                          decimate_block_size);
@@ -155,9 +155,9 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 		
 		PT_YIELD(pt);
 		
-		while(num_decimated >= 256){
-			
-		}
+// 		while(num_decimated >= 256){
+// 			
+// 		}
 		
 	}
 

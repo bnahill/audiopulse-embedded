@@ -28,6 +28,7 @@
 #include <driver/usb.h>
 #include <driver/gpio.h>
 #include <driver/codec.h>
+#include <driver/tpa6130a2.h>
 #include <pt.h>
 
 class Platform {
@@ -48,6 +49,8 @@ public:
 		USB::lateInit();
 
 		AK4621::init();
+		
+		TPA6130A2::init();
 		
 		led.set();
 	}

@@ -91,7 +91,7 @@ set(BOARD_REVISION "1" CACHE STRING "Which revision is it? BB=1, SF=2")
 # Build Options
 ########################################################
 
-set(OPTIMIZATION "-Og")
+set(OPTIMIZATION "-O2")
 set(LTO )#"-flto")
 
 set(MCU cortex-m4)
@@ -177,6 +177,7 @@ set(APP_SOURCES
 	src/driver/codec.cpp
 	src/driver/usb.cpp
 	src/driver/clocks.cpp
+	src/driver/tpa6130a2.cpp
 	src/startup.s
 )
 

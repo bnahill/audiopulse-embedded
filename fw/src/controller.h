@@ -25,6 +25,8 @@
 #include <driver/platform.h>
 #include <driver/codec.h>
 #include <driver/timer.h>
+#include <driver/tpa6130a2.h>
+#include <wavegen.h>
 
 
 class APulseController {
@@ -72,14 +74,14 @@ class APulseController {
 	} __attribute__((packed)) tone_setup_pkt_t;
 
 	typedef struct {
-		uint8_t cmt;
+		uint8_t cmd;
 		//! Window overlap in Q8
 		uint8_t overlap;
 		//! Window function (ignored)
 		uint8_t window_function;
 		//! Number of windows to capture
 		uint16_t num_windows;
-	} __attribute__((packed)) poo_t;
+	} __attribute__((packed)) capture_config_pkt_t;
 
 public:
 
@@ -87,7 +89,18 @@ public:
 	 @brief Handle a USB command (or data sent)
 	 */
 	static void handle_data(uint8_t * data, uint8_t size){
-
+		if(size == 1 and data[0] == 0xA5){
+			WaveGen::mute();
+			WaveGen::set_tone(0, 0, 800, 1000, 10000, 65);
+			WaveGen::set_tone(1, 1, 1600, 1000, 10000, 65);
+			WaveGen::unmute();
+			TPA6130A2::enable();
+		} else if (size == 1 and data[0] == 0xAA){
+			TPA6130A2::disable();
+			WaveGen::mute();
+			WaveGen::set_off(0);
+			WaveGen::set_off(1);
+		}
 	}
 
 	/*!
@@ -121,6 +134,7 @@ public:
 		// Run from 32kHz/32 clock
 		timer.configure(Timer::CLKS_FIXED, Timer::PS_32, 0);
 		timer.reset_count(0);
+		AK4621::set_out_cb(WaveGen::get_samplesI);
 
 		while(true){
 			PT_YIELD(pt);

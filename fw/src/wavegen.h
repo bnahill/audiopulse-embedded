@@ -24,10 +24,33 @@
 
 #include <driver/platform.h>
 #include <driver/codec.h>
-#include <controller.h>
 #include <arm_math.h>
 #include <core_cm4.h>
 #include <apulse_math.h>
+
+	
+	
+class Generator {
+public:
+	Generator() :
+		type(GEN_OFF)
+		{}
+	typedef enum {
+		GEN_OFF = 0,
+		GEN_FIXED,
+		GEN_CHIRP
+	} gen_type_t;
+
+	gen_type_t type;
+	uint16_t w1;     //!< Start normalized angular rate
+	uint16_t w2;     //!< End angular rate (chirp)
+	uint16_t t1;     //!< The start time
+	uint16_t t2;     //!< The finish time
+	uint16_t theta;  //!< Current phase in wavetable
+	uint16_t w_current; //!< Theta for angular rate in chirp, might not use
+	uint8_t ch;      //!< Which channel is it?
+	AK4621::sample_t gain;   //!< Gain applied to each full-scale sample
+};
 
 class WaveGen {
 public:
@@ -52,18 +75,18 @@ public:
 		if(silent)
 			return;
 		
-		auto t = APulseController::get_time_ms();
+		auto t = get_time_ms();
 		
-		for(generator_t &generator : generators){
+		for(Generator &generator : generators){
 			switch(generator.type){
-			case GEN_OFF:
+			case Generator::GEN_OFF:
 				// Don't care
 				continue;
-			case GEN_FIXED:
+			case Generator::GEN_FIXED:
 				// Go add a fixed wave to the appropriate channels
 				generate_wave(generator, dst + generator.ch, t);
 				break;
-			case GEN_CHIRP:
+			case Generator::GEN_CHIRP:
 				generate_chirp(generator, dst + generator.ch, t);
 				break;
 			// Add other signal generation handlers here if anything else req'd
@@ -97,6 +120,32 @@ public:
 		}
 	}
 	
+	//! @name Tone selection functions
+	//! Use to adjust tones being played. Please mute before using...
+	//! @{
+	static void set_chirp(uint8_t idx, uint8_t ch, uint16_t f1, uint16_t f2,
+	               uint16_t t1, uint16_t t2, uFractional<8,8> gaindb){
+		
+	}
+	
+	static void set_tone(uint8_t idx, uint8_t ch, uint16_t f1,
+	              uint16_t t1, uint16_t t2, uFractional<8,8> gaindb){
+		Generator &gen = generators[idx];
+		gen.type = Generator::GEN_OFF;
+		gen.ch = ch;
+		gen.gain = 0x3FFFFFFF; // THIS IS NOT CORRECT
+		gen.t1 = t1;
+		gen.t2 = t2;
+		gen.w1 = f1 * wavetable_len * 2 / fs;
+		gen.theta = 0;
+		gen.type = Generator::GEN_FIXED;
+	}
+	
+	static void set_off(uint8_t idx){
+		generators[idx].type = Generator::GEN_OFF;
+	}
+	//! @}
+	
 	//! @name Muting functions
 	//! Mute all channels when altering parameters
 	//! @{
@@ -115,26 +164,8 @@ protected:
 	
 	static bool silent;
 	
-	typedef enum {
-		GEN_OFF = 0,
-		GEN_FIXED,
-		GEN_CHIRP
-	} gen_type_t;
-	
 	static constexpr uint32_t num_generators = 3;
-	typedef struct {
-		gen_type_t type;
-		uint16_t w1;     //!< Start normalized angular rate
-		uint16_t w2;     //!< End angular rate (chirp)
-		uint16_t t1;     //!< The start time
-		uint16_t t2;     //!< The finish time
-		uint16_t theta;  //!< Current phase in wavetable
-		uint16_t w_current; //!< Theta for angular rate in chirp, might not use
-		uint8_t ch;      //!< Which channel is it?
-		sample_t gain;   //!< Gain applied to each full-scale sample
-	} generator_t;
-	
-	static generator_t generators[num_generators];
+	static Generator generators[num_generators];
 	
 	/*!
 	 @brief Generate a waveform
@@ -145,9 +176,10 @@ protected:
 	 This will generate \ref buffer_size / 2 samples and add them to @ref dst
 	 in alternating slots (to apply to a single channel only)
 	 */
-	static void generate_wave(generator_t &generator, sample_t * dst, uint16_t t){
-		if(t < generator.t1 || t > generator.t2)
-			return;
+	static void generate_wave(Generator &generator, sample_t * dst, uint16_t t){
+// 		IGNORE THIS CHECK FOR NOW!
+// 		if(t < generator.t1 || t > generator.t2)
+// 			return;
 		
 		// Just some temporary storage
 		sample_t s;
@@ -179,9 +211,11 @@ protected:
 	 This will generate \ref buffer_size / 2 samples and add them to @ref dst
 	 in alternating slots (to apply to a single channel only)
 	 */
-	static void generate_chirp(generator_t &generator, sample_t * dst, uint16_t t){
+	static void generate_chirp(Generator &generator, sample_t * dst, uint16_t t){
 		
 	}
+	
+	static uint16_t get_time_ms();
 };
 
 #endif // __APULSE_WAVEGEN_H_
