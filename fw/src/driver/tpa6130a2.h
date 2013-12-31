@@ -24,57 +24,61 @@
 
 #include <driver/gpio.h>
 
+/*!
+ @brief A static class for controlling the TI TPA6130A2 headphone amplifier
+ */
 class TPA6130A2 {
 public:
 	/*!
-	 @brief 
+	 @brief Initialize the device
 	 */
-	static void init(){
-		nSD.clear();
-		nSD.configure(GPIOPin::MUX_GPIO);
-		nSD.make_output();
-		
-		SCL.configure(SCL_mux, true, true);
-		SDA.configure(SDA_mux, true, true);
-		
-		if(I2C == I2C0_BASE_PTR){
-			SIM_SCGC4 |= SIM_SCGC4_I2C0_MASK;
-		} else if(I2C == I2C1_BASE_PTR){
-			SIM_SCGC4 |= SIM_SCGC4_I2C1_MASK;
-		}
-		
-		I2C->F = I2C_F_MULT(2) |  // / 4  = 12MHz
-				 I2C_F_ICR(0x3C); // / 60 = 200kHz
-		I2C->C1 = I2C_C1_IICEN_MASK |
-		          I2C_C1_TX_MASK;
-		
-	}
+	static void init();
 	
+	/*!
+	 @brief Enable the device, taking it out of a low-power state
+
+	 @note This is done automatically now stupid, eh?
+	 */
 	static void enable(){
-		nSD.set();
-		// ENABLE IT
-		write_reg(1, 0xC0);
-		// Half volume
-		write_reg(2, 32);
+		// Always enabled for now...
 	}
 	
+	/*!
+	 @brief Disable the device, putting it in a low-power state
+
+	 @note This does nothing right now
+	 */
 	static void disable(){
-		nSD.clear();
+		//nSD.clear();
 	}
 	
 protected:
-	
+	/*!
+	 @brief Write a register over I2C
+	 */
 	static void write_reg(uint8_t addr, uint8_t val);
+
+	/*!
+	 @brief Read a single register over I2C
+
+	 @note This is not complete and may never be
+	 */
+	static uint8_t read_reg(uint8_t addr);
 	
+	//! @name Pin configuration
+	//! @{
 	static constexpr GPIOPin nSD = {PTB_BASE_PTR, 2};
 	static constexpr GPIOPin SDA = {PTB_BASE_PTR, 1};
 	static constexpr GPIOPin::mux_t SDA_mux = GPIOPin::MUX_ALT2;
 	static constexpr GPIOPin SCL = {PTB_BASE_PTR, 0};
 	static constexpr GPIOPin::mux_t SCL_mux = GPIOPin::MUX_ALT2;
+	//! @}
 
+	//! @name Hardware configuration
+	//! @{
 	static constexpr I2C_MemMapPtr I2C = I2C0_BASE_PTR;
-	
 	static constexpr uint8_t i2c_addr = 0b1100000 << 1;
+	//! @}
 };
 
 #endif // __APULSE_TPA6130_H_

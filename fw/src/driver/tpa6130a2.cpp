@@ -21,7 +21,35 @@
 
 #include <driver/tpa6130a2.h>
 
+void TPA6130A2::init(){
+	if(I2C == I2C0_BASE_PTR){
+		SIM_SCGC4 |= SIM_SCGC4_I2C0_MASK;
+	} else if(I2C == I2C1_BASE_PTR){
+		SIM_SCGC4 |= SIM_SCGC4_I2C1_MASK;
+	}
+
+	nSD.clear();
+	nSD.configure(GPIOPin::MUX_GPIO);
+	nSD.make_output();
+
+	SCL.configure(SCL_mux, true, true);
+	SDA.configure(SDA_mux, true, true);
+
+	I2C->F = I2C_F_MULT(0) |  // / 1 = 48MHz
+	         I2C_F_ICR(0x27); // / 480 = 100kHz
+
+	I2C->C1 = I2C_C1_IICEN_MASK;
+
+	nSD.set();
+	
+	// ENABLE IT
+	write_reg(1, 0xC0);
+	// Half volume
+	write_reg(2, 20);
+}
+
 void TPA6130A2::write_reg (uint8_t addr, uint8_t val ) {
+	I2C->C1 |= I2C_C1_TX_MASK;
 	I2C->C1 |= I2C_C1_MST_MASK; // Assert start
 	I2C->D = i2c_addr; // Write bus address
 	
@@ -36,5 +64,22 @@ void TPA6130A2::write_reg (uint8_t addr, uint8_t val ) {
 	I2C->D = val; // Write value
 
 	while((I2C->S & I2C_S_IICIF_MASK) == 0); // Wait for 
-	I2C->S |= I2C_S_IICIF_MASK; // Clear        
+	I2C->S |= I2C_S_IICIF_MASK; // Clear
+
+	I2C->C1 &= ~I2C_C1_MST_MASK;
+	I2C->C1 &= ~I2C_C1_TX_MASK;
+
+	while(I2C->S & I2C_S_BUSY_MASK); // Wait for STOP
 }
+
+uint8_t TPA6130A2::read_reg(uint8_t addr){
+	I2C->C1 |= I2C_C1_MST_MASK; // Assert start
+	I2C->D = i2c_addr | 1;
+
+	while((I2C->S & I2C_S_IICIF_MASK) == 0); // Wait for
+	I2C->S |= I2C_S_IICIF_MASK; // Clear
+
+	return 0;
+}
+
+

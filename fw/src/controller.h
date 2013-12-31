@@ -91,7 +91,7 @@ public:
 	static void handle_data(uint8_t * data, uint8_t size){
 		if(size == 1 and data[0] == 0xA5){
 			WaveGen::mute();
-			WaveGen::set_tone(0, 0, 800, 1000, 10000, 65);
+			//WaveGen::set_tone(0, 0, 800, 1000, 10000, 65);
 			WaveGen::set_tone(1, 1, 1600, 1000, 10000, 65);
 			WaveGen::unmute();
 			TPA6130A2::enable();

@@ -139,7 +139,7 @@ void AK4621::i2s_init(){
 	I2S->RMR = ~channels;
 	
 	I2S->RCR1 =
-		I2S_RCR1_RFW(nwords - 1);    // FIFO watermark
+		I2S_RCR1_RFW(0);        // Always request immediately
 
 	I2S->RCR2 =                 // Receiver configuration
 		I2S_RCR2_SYNC(1) |      // Sync mode with transmitter
@@ -172,7 +172,7 @@ void AK4621::i2s_init(){
 	I2S->TMR = 0;
 
 	I2S->TCR1 =
-		I2S_TCR1_TFW(nwords - 1);    // Same as FRSZ
+		I2S_TCR1_TFW(7);        // Maximum watermark (will try to keep full)
 
 
 	I2S->TCR2 =                 // Transmit configuration
