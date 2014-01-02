@@ -19,6 +19,9 @@
  @author Ben Nahill <bnahill@gmail.com>
  */
 
+#ifndef __APULSE_MATH_H_
+#define __APULSE_MATH_H_
+
 #include <stdint.h>
 
 /*!
@@ -104,7 +107,7 @@ public:
 		i(val * (1 << f_bits)){}
 	constexpr uFractional(const int &val) :
 		i(((unsigned int)val) << f_bits){}
-	double asDouble() const{
+	constexpr double asDouble() const{
 		return ((double)i) / (1 << f_bits);
 	}
 
@@ -112,7 +115,7 @@ public:
 	 * @brief Convert a fractional number to a different format
 	 */
 	template<size_t ni_bits, size_t nf_bits>
-	uFractional<ni_bits, nf_bits> normalize(){
+	constexpr uFractional<ni_bits, nf_bits> normalize() const {
 		typedef uFractional<ni_bits, nf_bits> n_t;
 		return n_t((typename n_t::internal_t) (i >> (f_bits - nf_bits)));
 	}
@@ -123,28 +126,28 @@ public:
 	 * This will not change the value unless it exceeds the final format
 	 */
 	template<size_t ni_bits>
-	uFractional<ni_bits, f_bits> resize(){
+	constexpr uFractional<ni_bits, f_bits> resize() const {
 		typedef uFractional<ni_bits, f_bits> n_t;
 		return n_t((typename n_t::internal_t) i);
 	}
 
 	template<size_t mi_bits, size_t mf_bits>
-	uFractional<mi_bits + i_bits, mf_bits + f_bits> operator * (uFractional<mi_bits, mf_bits> &m){
+	constexpr uFractional<mi_bits + i_bits, mf_bits + f_bits> operator * (uFractional<mi_bits, mf_bits> &m) const {
 		typedef typename IntLength<mi_bits + i_bits + mf_bits + f_bits>::unsigned_t res_t;
 		return (res_t)m.i * i;
 	}
 
 	template<size_t mi_bits, size_t mf_bits>
-	uFractional<max(mi_bits, i_bits), max(mf_bits, f_bits)> operator + (uFractional<mi_bits, mf_bits> &m){
+	constexpr uFractional<max(mi_bits, i_bits), max(mf_bits, f_bits)> operator + (uFractional<mi_bits, mf_bits> &m) const {
 		return m.i + i;
 	}
 
 	template<size_t mi_bits, size_t mf_bits>
-	uFractional<max(mi_bits, i_bits), max(mf_bits, f_bits)> operator - (uFractional<mi_bits, mf_bits> &m){
+	constexpr uFractional<max(mi_bits, i_bits), max(mf_bits, f_bits)> operator - (uFractional<mi_bits, mf_bits> &m) const {
 		return m.i - i;
 	}
 
-private:
+//private:
 	internal_t i : i_bits + f_bits;
 };
 
@@ -163,6 +166,8 @@ public:
 	constexpr sFractional(const sFractional<i_bits, f_bits> &val) :
 			 i(val.i){}
 
+	constexpr sFractional(){}
+
 	/*!
 	 * @brief Constructor for arbitrary signed fractionals
 	 */
@@ -177,7 +182,7 @@ public:
 		i(val * (1 << f_bits)){}
 	constexpr sFractional(const int &val) :
 		i(((signed int)val) << f_bits){}
-	double asDouble() const{
+	constexpr double asDouble() const{
 		return ((double)i) / (1 << f_bits);
 	}
 
@@ -185,7 +190,7 @@ public:
 	 * @brief Convert a fractional number to a different format
 	 */
 	template<size_t ni_bits, size_t nf_bits>
-	sFractional<ni_bits, nf_bits> normalize(){
+	constexpr sFractional<ni_bits, nf_bits> normalize() const {
 		typedef sFractional<ni_bits, nf_bits> n_t;
 		return n_t((typename n_t::internal_t) (i >> (f_bits - nf_bits)));
 	}
@@ -196,27 +201,180 @@ public:
 	 * This will not change the value unless it exceeds the final format
 	 */
 	template<size_t ni_bits>
-	sFractional<ni_bits, f_bits> resize(){
+	constexpr sFractional<ni_bits, f_bits> resize() const {
 		typedef sFractional<ni_bits, f_bits> n_t;
 		return n_t((typename n_t::internal_t) i);
 	}
 
 	template<size_t mi_bits, size_t mf_bits>
-	sFractional<mi_bits + i_bits, mf_bits + f_bits> operator * (sFractional<mi_bits, mf_bits> &m){
+	constexpr sFractional<mi_bits + i_bits, mf_bits + f_bits> operator * (sFractional<mi_bits, mf_bits> const &m) {
+		typedef typename IntLength<mi_bits + i_bits + mf_bits + f_bits + 1>::signed_t res_t;
+		return (res_t)m.i * i;
+	}
+
+
+	constexpr sFractional<2 * i_bits, 2 * f_bits> square() {
+		return *this * *this;
+	}
+
+	template<size_t mi_bits, size_t mf_bits>
+	constexpr sFractional<mi_bits + i_bits, mf_bits + f_bits> operator * (uFractional<mi_bits, mf_bits> const &m) {
 		typedef typename IntLength<mi_bits + i_bits + mf_bits + f_bits + 1>::signed_t res_t;
 		return (res_t)m.i * i;
 	}
 
 	template<size_t mi_bits, size_t mf_bits>
-	sFractional<max(mi_bits, i_bits), max(mf_bits, f_bits)> operator + (sFractional<mi_bits, mf_bits> &m){
+	constexpr sFractional<max(mi_bits, i_bits), max(mf_bits, f_bits)> operator + (sFractional<mi_bits, mf_bits> const &m) const {
 		return m.i + i;
 	}
 
 	template<size_t mi_bits, size_t mf_bits>
-	sFractional<max(mi_bits, i_bits), max(mf_bits, f_bits)> operator - (sFractional<mi_bits, mf_bits> &m){
+	constexpr sFractional<max(mi_bits, i_bits), max(mf_bits, f_bits)> operator - (sFractional<mi_bits, mf_bits> const &m) const {
 		return m.i - i;
 	}
 
-private:
+//private:
 	internal_t i : i_bits + f_bits + 1;
 };
+
+/*!
+ @brief Compute dst = a * B
+ */
+template<typename T>
+void vector_mult_scalar(T a, T const * B, T * dst, size_t n){
+	while(n >= 8){
+		T b1 = *B++;
+		T b2 = *B++;
+		T b3 = *B++;
+		T b4 = *B++;
+		T b5 = *B++;
+		T b6 = *B++;
+		T b7 = *B++;
+		T b8 = *B++;
+
+		T out1 = (b1 * a);
+		T out2 = (b2 * a);
+		T out3 = (b3 * a);
+		T out4 = (b4 * a);
+		T out5 = (b5 * a);
+		T out6 = (b6 * a);
+		T out7 = (b7 * a);
+		T out8 = (b8 * a);
+
+		*dst++ = out1;
+		*dst++ = out2;
+		*dst++ = out3;
+		*dst++ = out4;
+		*dst++ = out5;
+		*dst++ = out6;
+		*dst++ = out7;
+		*dst++ = out8;
+
+		n -= 8;
+	}
+	while(n){
+		*dst++ = (*B++ * a);
+		n -= 1;
+	}
+}
+
+/*!
+ @brief Compute dst = aX + bY
+
+ This performs each computation in groups of 4 outputs at a time.
+ This is more-or-less optimized for 32-bit types
+ */
+template<typename T>
+void vector_dual_mult_scalar_accumulate(T const a,
+                                        T const b,
+                                        T const * X,
+                                        T const * Y,
+                                        T * dst,
+                                        size_t n){
+	while(n >= 4){
+		T x1 = *X++;
+		T x2 = *X++;
+		T x3 = *X++;
+		T x4 = *X++;
+
+		T y1 = *Y++;
+		T y2 = *Y++;
+		T y3 = *Y++;
+		T y4 = *Y++;
+
+		T out1 = (x1 * a) + (y1 * b);
+		T out2 = (x2 * a) + (y2 * b);
+		T out3 = (x3 * a) + (y3 * b);
+		T out4 = (x4 * a) + (y4 * b);
+
+		*dst++ = out1;
+		*dst++ = out2;
+		*dst++ = out3;
+		*dst++ = out4;
+
+		n -= 4;
+	}
+	while(n){
+		*dst++ = (*X++ * a + *Y++ * b);
+		n -= 1;
+	}
+}
+
+template<typename T>
+void complex_power(T const * X, T * dst, size_t n){
+	while(n >= 8){
+		T x1 = *X++;
+		T x2 = *X++;
+		T x3 = *X++;
+		T x4 = *X++;
+		T x5 = *X++;
+		T x6 = *X++;
+		T x7 = *X++;
+		T x8 = *X++;
+
+		T out1 = (T)(x1*x1) + (T)(x2*x2);
+		T out2 = (T)(x3*x3) + (T)(x4*x4);
+		T out3 = (T)(x5*x5) + (T)(x6*x6);
+		T out4 = (T)(x7*x7) + (T)(x8*x8);
+
+
+		*dst++ = out1;
+		*dst++ = out2;
+		*dst++ = out3;
+		*dst++ = out4;
+
+		n -= 8;
+	}
+	while(n > 1){
+		T x1 = *X++;
+		T x2 = *X++;
+		*dst++ = (T)(x1*x1) + (T)(x2*x2);
+	}
+}
+
+template<typename T>
+void zero4(T * dst, uint32_t n){
+	register uint32_t loops = (n + 15) >> 4;
+	if(!n) return; // But why would anyone do this?
+	switch(n & 0xF){
+	case 0: do { *dst++ = 0;
+	case 15: *dst++ = 0;
+	case 14: *dst++ = 0;
+	case 13: *dst++ = 0;
+	case 12: *dst++ = 0;
+	case 11: *dst++ = 0;
+	case 10: *dst++ = 0;
+	case 9: *dst++ = 0;
+	case 8: *dst++ = 0;
+	case 7: *dst++ = 0;
+	case 6: *dst++ = 0;
+	case 5: *dst++ = 0;
+	case 4: *dst++ = 0;
+	case 3: *dst++ = 0;
+	case 2: *dst++ = 0;
+	case 1: *dst++ = 0;
+		} while(--loops > 0);
+	}
+}
+
+#endif // __APULSE_MATH_H_

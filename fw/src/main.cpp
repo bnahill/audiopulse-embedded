@@ -47,14 +47,13 @@ void main(){
 	
 	AK4621::start();
 	
-	uint8_t data = 0xA5;
-	
-	APulseController::handle_data(&data, 1);
+// 	uint8_t data = 0xA5;
+// 	APulseController::handle_dataI(&data, 1);
 	
 	while(true){
 		APulseController::pt_command_parser(&pt_command_parser);
 		InputDSP::pt_dsp(&pt_dsp);
-		APulseController::pt_wavegen(&pt_wavegen);
+		WaveGen::pt_wavegen(&pt_wavegen);
     }
 } 
 

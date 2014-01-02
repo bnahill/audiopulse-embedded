@@ -20,3 +20,6 @@
  */
 
 #include <controller.h>
+
+APulseController::cmd_t APulseController::state;
+uint32_t APulseController::cmd_idx;

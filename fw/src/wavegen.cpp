@@ -30,6 +30,9 @@ uint16_t WaveGen::get_time_ms() {
 	return APulseController::get_time_ms();
 }
 
+bool WaveGen::is_reset;
+bool WaveGen::pending_reset;
+
 
 /*
  * Generated with numpy:

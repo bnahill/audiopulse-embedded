@@ -41,7 +41,7 @@ void TPA6130A2::init(){
 	I2C->C1 = I2C_C1_IICEN_MASK;
 
 	nSD.set();
-	
+
 	// ENABLE IT
 	write_reg(1, 0xC0);
 	// Half volume

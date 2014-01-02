@@ -121,7 +121,7 @@ set(CXX_WARNINGS "${CXX_WARNINGS} -Wuninitialized -Wunknown-pragmas -Wunused-fun
 set(C_WARNINGS "-Wall")
 
 # Flags for both C and C++ compilers
-set(COMMON_FLAGS "${LTO} ${OPTIMIZATION} -ffunction-sections -ffreestanding -fdata-sections ${MCFLAGS}")
+set(COMMON_FLAGS "${LTO} -ffunction-sections -ffreestanding -fdata-sections ${MCFLAGS}")
 # Eliminate the need for a bunch of extra support code that may not work on the chip anyways
 set(CMAKE_CXX_FLAGS "--std=gnu++11 -fno-rtti -fno-exceptions ${CXX_WARNINGS} ${COMMON_FLAGS}")
 # Use the new C11 standard
@@ -188,6 +188,13 @@ set(DSP_SOURCES
 	${DSP_SRC}/FilteringFunctions/arm_fir_decimate_init_q31.c
 	${DSP_SRC}/FilteringFunctions/arm_fir_decimate_fast_q31.c
 	${DSP_SRC}/BasicMathFunctions/arm_shift_q31.c
+	${DSP_SRC}/BasicMathFunctions/arm_mult_q31.c
+	${DSP_SRC}/TransformFunctions/arm_rfft_init_q31.c
+	${DSP_SRC}/TransformFunctions/arm_cfft_radix4_init_q31.c
+	${DSP_SRC}/TransformFunctions/arm_cfft_radix4_q31.c
+	${DSP_SRC}/TransformFunctions/arm_rfft_q31.c
+	${DSP_SRC}/TransformFunctions/arm_bitreversal.c
+	${DSP_SRC}/CommonTables/arm_common_tables.c
 )
 
 ##############################################################
@@ -196,8 +203,13 @@ set(DSP_SOURCES
 
 link_directories(${CMSIS_DIR}/Lib/G++)
 
-add_executable(${OUTFILE} ${APP_SOURCES}  ${FREESCALE_SOURCES}) #${DSP_SOURCES}
-target_link_libraries(${OUTFILE} gcc c libarm_cortexM4l_math.a)
+add_library(dsp ${DSP_SOURCES})
+SET_TARGET_PROPERTIES(dsp PROPERTIES COMPILE_FLAGS "-O3")
+
+
+add_executable(${OUTFILE} ${APP_SOURCES}  ${FREESCALE_SOURCES})
+set_target_properties(${OUTFILE} PROPERTIES COMPILE_FLAGS "${OPTIMIZATION}")
+target_link_libraries(${OUTFILE} gcc c dsp)# libarm_cortexM4l_math.a)
 
 
 # Warnings only for application code -- Optimizations only on ST/ARM code

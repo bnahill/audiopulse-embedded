@@ -27,9 +27,13 @@
 #include <driver/timer.h>
 #include <driver/tpa6130a2.h>
 #include <wavegen.h>
+#include "input_dsp.h"
 
 
 class APulseController {
+	//! @name Commands
+	//! @{
+
 	typedef enum {
 		CMD_RESET = 0,   // Reset the controller
 		CMD_STARTUP = 1, // Enable CODEC and power-hungry crap
@@ -38,6 +42,8 @@ class APulseController {
 		CMD_GETSTATUS = 4,
 		CMD_GETDATA = 5,
 		CMD_START = 6,
+
+		CMD_NONE = 255,
 	} cmd_t;
 
 	/*!
@@ -75,23 +81,93 @@ class APulseController {
 
 	typedef struct {
 		uint8_t cmd;
-		//! Window overlap in Q8
+		//! Window overlap in samples
 		uint8_t overlap;
 		//! Window function (ignored)
 		uint8_t window_function;
 		//! Number of windows to capture
 		uint16_t num_windows;
+		//! The time in ms to start capturing
+		uint16_t start_time;
 	} __attribute__((packed)) capture_config_pkt_t;
 
+	typedef union {
+		capture_config_pkt_t capture_config_pkt;
+		tone_setup_pkt_t     tone_config_pkt;
+	} r_packet_t;
+
+	//! @}
+
+
+	//! @name Return messages
+	//! @{
+
+	typedef struct {
+		uint8_t version;
+		uint8_t is_capturing     : 1;
+		uint8_t is_playing       : 1;
+		uint8_t is_started       : 1;
+		uint8_t reset_wavegen    : 1;
+		uint8_t reset_input      : 1;
+		uint8_t reset_controller : 1;
+	} status_pkt_t;
+
+	typedef union {
+		status_pkt_t status_pkt;
+	} t_packet_t;
+
+	//! @}
 public:
 
 	/*!
 	 @brief Handle a USB command (or data sent)
+	 @param data A pointer tor the received data
+	 @param size The number of bytes in the packet
+
+	 @note THIS SHOULD BE CALLED FROM INTERRUPT OR LOCKED CONTEXT
 	 */
-	static void handle_data(uint8_t * data, uint8_t size){
+	static void handle_dataI(uint8_t * data, uint8_t size){
+		auto const a = reinterpret_cast<r_packet_t *>(data);
+		(void)a;
+		// First make sure there is data to parse
+		if(!size)
+			return;
+
+		static_assert(sizeof(tone_setup_pkt_t) == 29, "tone_setup_pkt_t wrong size");
+		static_assert(sizeof(status_pkt_t) == 2, "status_pkt_t wrong size");
+		static_assert(sizeof(capture_config_pkt_t) == 7, "capture_config_pkt wrong size");
+
+		switch(*data){
+		case CMD_RESET:
+			timer.stop();
+			timer.reset_count();
+
+			WaveGen::request_resetI();
+			InputDSP::request_resetI();
+			break;
+		case CMD_GETDATA:
+			break;
+		case CMD_GETSTATUS:
+
+			break;
+		case CMD_SETUPCAPTURE:
+
+			break;
+		case CMD_SETUPTONES:
+			break;
+		case CMD_STARTUP:
+			break;
+		case CMD_START:
+			timer.stop();
+			timer.reset_count();
+			timer.start();
+			break;
+		default:
+			return;
+		}
 		if(size == 1 and data[0] == 0xA5){
 			WaveGen::mute();
-			//WaveGen::set_tone(0, 0, 800, 1000, 10000, 65);
+			WaveGen::set_tone(0, 0, 800, 1000, 10000, 65);
 			WaveGen::set_tone(1, 1, 1600, 1000, 10000, 65);
 			WaveGen::unmute();
 			TPA6130A2::enable();
@@ -109,7 +185,33 @@ public:
 	 This response should already be prepared
 	 */
 	static uint8_t * get_response(uint16_t &size){
-		size = 0;
+		static union {
+			uint8_t data[64];
+			status_pkt_t status;
+		} p;
+
+		switch(state){
+		case CMD_GETSTATUS:
+		case CMD_RESET:
+			zero4(p.data, sizeof(status_pkt_t));
+			p.status.version = 0;
+			p.status.is_started = 1;
+			p.status.is_capturing = 1;
+			p.status.is_playing = 1;
+
+			p.status.reset_controller = 0;
+			p.status.reset_input = InputDSP::is_resetI() ? 1 : 0;
+			p.status.reset_wavegen = WaveGen::is_resetI() ? 1 : 0;
+			size = sizeof(status_pkt_t);
+			return p.data;
+			break;
+		case CMD_NONE:
+			size = 0;
+			break;
+		default:
+			size = 0;
+			break;
+		}
 		return nullptr;
 	}
 	
@@ -117,24 +219,15 @@ public:
 		return timer.get_count();
 	}
 
+	void request_resetI();
+
 
 	static PT_THREAD(pt_command_parser(struct pt * pt)){
 		PT_BEGIN(pt);
 
-		while(true){
-			PT_YIELD(pt);
-		}
-
-		PT_END(pt);
-	}
-
-	static PT_THREAD(pt_wavegen(struct pt * pt)){
-		PT_BEGIN(pt);
-		
 		// Run from 32kHz/32 clock
 		timer.configure(Timer::CLKS_FIXED, Timer::PS_32, 0);
 		timer.reset_count(0);
-		AK4621::set_out_cb(WaveGen::get_samplesI);
 
 		while(true){
 			PT_YIELD(pt);
@@ -144,6 +237,9 @@ public:
 	}
 	
 	static constexpr Timer timer = FTM0_BASE_PTR;
+private:
+	static cmd_t state;
+	static uint32_t cmd_idx;
 };
 
 #endif // __APULSE_CONTROLLER_H_

@@ -25,6 +25,7 @@
 #include <driver/platform.h>
 #include <driver/codec.h>
 #include <arm_math.h>
+#include <apulse_math.h>
 
 class InputDSP {
 public:
@@ -33,7 +34,10 @@ public:
 	 */
 	static PT_THREAD(pt_dsp(struct pt * pt));
 	
-	static void set_overlap(uint8_t overlap){InputDSP::overlap = overlap;}
+	static void configute(uint8_t overlap, uint16_t start_time_ms){
+		InputDSP::overlap = overlap;
+		InputDSP::start_time_ms = start_time_ms;
+	}
 		
 	/*!
 	 @brief Callback to receive new samples
@@ -41,23 +45,47 @@ public:
 	 @note MUST BE CALLED FROM INTERRUPT OR LOCKED CONTEXT
 	 */
 	static void put_samplesI(AK4621::sample_t * samples);
+
+	static void request_resetI(){
+		pending_reset = true;
+	}
+
+	static bool is_resetI(){
+		return is_reset;
+	}
 protected:
 	typedef AK4621::sample_t sample_t;
 	
+	static constexpr uint32_t transform_len = 512;
+
 	static AK4621::sample_t const * new_samples;
 	// MUST HAVE PROTECTED ACCESS
 	static uint32_t num_samples;
+
+	//! Start time
+	static uint16_t start_time_ms;
 	
 	//! @name Decimation variables and configuration
 	//! @{
+	//! The filter order for FIR decimation
 	static constexpr uint16_t decimate_fir_order = 21;
 	static sample_t const decimate_coeffs[decimate_fir_order];
+	// The number of samples processed in each iteration of ARM FIR decimate
 	static constexpr uint16_t decimate_block_size = 48;
+	// The number of output samples generated at a time
+	static constexpr uint16_t decimate_output_size = 256;
+	static constexpr uint32_t decimated_frame_buffer_size = 3 * transform_len / 2;
 	//! 
-	static sample_t decimated_frame_buffer[512];
+	static sample_t decimated_frame_buffer[decimated_frame_buffer_size];
 	//! The decimate state
 	static arm_fir_decimate_instance_q31 decimate;
 	static void do_decimate(sample_t * dst);
+
+	static uint32_t theta;
+	static uint8_t buffer_sel;
+
+	static sample_t decimate_buffer[decimate_block_size +
+	                                decimate_fir_order - 1];
 	//! @}
 	
 	//! @name Windowing and FFT variables and configuration
@@ -66,12 +94,38 @@ protected:
 	static uint16_t num_decimated;
 	//! The current window overlap setting (M)
 	static uint8_t overlap;
-	//! The constant 256 sample Q31 Hamming window
-	static sample_t const hamming256[256];
-	static void do_transform();
-	static void do_average();
+	//! The constant 512 sample Q31 Hamming window
+	static sample_t const hamming512[512];
+	static uint32_t num_before_end;
+	static sample_t transform_buffer[transform_len];
+	static sFractional<0,31> transform_out[transform_len];
+	static sample_t average_buffer[transform_len];
+	static sFractional<0,31> const one_over_len;
+	static sFractional<0,31> const len_minus_one_over_len;
+
+	static arm_rfft_instance_q31 rfft;
+	static arm_cfft_radix4_instance_q31 cfft;
 	//! @}
 	
+	static bool pending_reset, is_reset;
+
+	static void do_reset(){
+		num_samples = 0;
+		buffer_sel = 0;
+		theta = 0;
+		start_time_ms = -1;
+
+		// Decimated frame buffer really doesn't need to be zero'd...
+		for(auto &a : decimated_frame_buffer) a = 0;
+
+		arm_fir_decimate_init_q31(&decimate, 5, 3,//decimate_fir_order, 3,
+	                             (q31_t*)decimate_coeffs,
+	                             decimate_buffer,
+	                             decimate_block_size);
+
+		is_reset = true;
+		pending_reset = false;
+	}
 	
 	static constexpr bool debug = true;
 };

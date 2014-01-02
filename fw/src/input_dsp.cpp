@@ -21,16 +21,49 @@
 
 #include <input_dsp.h>
 #include <arm_math.h>
+#include <apulse_math.h>
+#include "controller.h"
 
 InputDSP::sample_t const * InputDSP::new_samples  = nullptr;
 uint32_t InputDSP::num_samples                    = 0;
 
 __attribute__((aligned(512)))
-InputDSP::sample_t InputDSP::decimated_frame_buffer[512];
+__attribute__((section(".m_data2")))
+InputDSP::sample_t InputDSP::decimated_frame_buffer[decimated_frame_buffer_size];
 
 uint16_t InputDSP::num_decimated;
 
 arm_fir_decimate_instance_q31 InputDSP::decimate;
+
+decltype(InputDSP::start_time_ms) InputDSP::start_time_ms = -1;
+
+bool InputDSP::is_reset, InputDSP::pending_reset;
+
+uint32_t InputDSP::theta = 0;
+uint8_t InputDSP::buffer_sel = 0;
+uint32_t InputDSP::num_before_end = 0;
+
+arm_rfft_instance_q31 InputDSP::rfft;
+arm_cfft_radix4_instance_q31 InputDSP::cfft;
+
+decltype(InputDSP::one_over_len) InputDSP::one_over_len = (1.0/(float)transform_len);
+decltype(InputDSP::len_minus_one_over_len) InputDSP::len_minus_one_over_len = ((float)transform_len - 1.0)/(float)transform_len;
+
+__attribute__((section(".m_data2")))
+InputDSP::sample_t InputDSP::transform_buffer[transform_len];
+
+__attribute__((section(".m_data2")))
+sFractional<0,31> InputDSP::transform_out[transform_len];
+
+__attribute__((section(".m_data2")))
+InputDSP::sample_t InputDSP::average_buffer[transform_len];
+
+__attribute__((section(".m_data2")))
+InputDSP::sample_t InputDSP::decimate_buffer[decimate_block_size +
+                                             decimate_fir_order - 1];
+
+
+decltype(InputDSP::overlap) InputDSP::overlap;
 
 /**
  * Generated coefficients from http://t-filter.appspot.com/fir/index.html
@@ -44,80 +77,17 @@ InputDSP::sample_t const InputDSP::decimate_coeffs[decimate_fir_order] = {
 	166081815, 232918033, -206371169
 };
 
-InputDSP::sample_t const InputDSP::hamming256[256] = {
-	171798691,  172098549,  172997940,  174496318,  176592773,
-	179286034,  182574464,  186456067,  190928488,  195989010,
-	201634561,  207861714,  214666689,  222045354,  229993230,
-	238505492,  247576971,  257202161,  267375218,  278089966,
-	289339900,  301118191,  313417688,  326230923,  339550119,
-	353367189,  367673744,  382461100,  397720279,  413442017,
-	429616769,  446234717,  463285770,  480759579,  498645533,
-	516932775,  535610204,  554666478,  574090031,  593869069,
-	613991586,  634445364,  655217986,  676296842,  697669134,
-	719321887,  741241957,  763416035,  785830660,  808472224,
-	831326981,  854381056,  877620453,  901031064,  924598677,
-	948308982,  972147587,  996100018, 1020151734, 1044288134,
-	1068494565, 1092756330, 1117058700, 1141386922, 1165726226,
-	1190061836, 1214378978, 1238662889, 1262898826, 1287072075,
-	1311167962, 1335171857, 1359069189, 1382845448, 1406486201,
-	1429977096, 1453303870, 1476452363, 1499408522, 1522158408,
-	1544688212, 1566984256, 1589033003, 1610821068, 1632335224,
-	1653562408, 1674489736, 1695104500, 1715394187, 1735346479,
-	1754949262, 1774190636, 1793058919, 1811542657, 1829630628,
-	1847311852, 1864575593, 1881411371, 1897808965, 1913758421,
-	1929250055, 1944274462, 1958822522, 1972885402, 1986454564,
-	1999521772, 2012079091, 2024118898, 2035633885, 2046617060,
-	2057061755, 2066961630, 2076310674, 2085103211, 2093333904,
-	2100997757, 2108090115, 2114606673, 2120543476, 2125896919,
-	2130663752, 2134841081, 2138426370, 2141417442, 2143812482,
-	2145610035, 2146809010, 2147408680, 2147408680, 2146809010,
-	2145610035, 2143812482, 2141417442, 2138426370, 2134841081,
-	2130663752, 2125896919, 2120543476, 2114606673, 2108090115,
-	2100997757, 2093333904, 2085103211, 2076310674, 2066961630,
-	2057061755, 2046617060, 2035633885, 2024118898, 2012079091,
-	1999521772, 1986454564, 1972885402, 1958822522, 1944274462,
-	1929250055, 1913758421, 1897808965, 1881411371, 1864575593,
-	1847311852, 1829630628, 1811542657, 1793058919, 1774190636,
-	1754949262, 1735346479, 1715394187, 1695104500, 1674489736,
-	1653562408, 1632335224, 1610821068, 1589033003, 1566984256,
-	1544688212, 1522158408, 1499408522, 1476452363, 1453303870,
-	1429977096, 1406486201, 1382845448, 1359069189, 1335171857,
-	1311167962, 1287072075, 1262898826, 1238662889, 1214378978,
-	1190061836, 1165726226, 1141386922, 1117058700, 1092756330,
-	1068494565, 1044288134, 1020151734,  996100018,  972147587,
-	948308982,  924598677,  901031064,  877620453,  854381056,
-	831326981,  808472224,  785830660,  763416035,  741241957,
-	719321887,  697669134,  676296842,  655217986,  634445364,
-	613991586,  593869069,  574090031,  554666478,  535610204,
-	516932775,  498645533,  480759579,  463285770,  446234717,
-	429616769,  413442017,  397720279,  382461100,  367673744,
-	353367189,  339550119,  326230923,  313417688,  301118191,
-	289339900,  278089966,  267375218,  257202161,  247576971,
-	238505492,  229993230,  222045354,  214666689,  207861714,
-	201634561,  195989010,  190928488,  186456067,  182574464,
-	179286034,  176592773,  174496318,  172997940,  172098549,
-	171798691
-};
-
 PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
-	PT_BEGIN(pt);
-	
-	static uint32_t theta = 0;
-	static uint8_t buffer_sel = 0;
 	static decltype(new_samples) old_new_samples;
-	
-	static sample_t decimate_buffer[decimate_block_size +
-	                                decimate_fir_order - 1];
+
+
+	PT_BEGIN(pt);
 	
 	////////////////////////////
 	// Reset buffers
 	////////////////////////////
 	
-	num_samples = 0;
-	buffer_sel = 0;
-	theta = 0;
-	for(auto &a : decimated_frame_buffer) a = 0;
-	for(auto &a : decimate_buffer) a = 0;
+	do_reset();
 	
 	////////////////////////////
 	// Configure CODEC
@@ -130,17 +100,28 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 	// Prepare FIR decimation
 	////////////////////////////
 	static_assert(AK4621::in_buffer_size == 768, "Wrong buffer size for DSP");
-	arm_fir_decimate_init_q31(&decimate, 5, 3,//decimate_fir_order, 3,
-	                          (q31_t*)decimate_coeffs,
-	                          decimate_buffer,
-	                          decimate_block_size);
+
+	////////////////////////////
+	// Prepare FFT
+	////////////////////////////
+
+	arm_rfft_init_q31(&rfft, &cfft, transform_len, 0, 0);
 
 	while(true){
-		PT_WAIT_UNTIL(pt, new_samples);
+		PT_WAIT_UNTIL(pt, (new_samples &&
+		                   (start_time_ms > APulseController::get_time_ms())) ||
+		                   pending_reset);
+
+		if(pending_reset){
+			// Do reset
+			do_reset();
+			continue;
+		}
+
 		old_new_samples = new_samples;
 		
-		do_decimate(&decimated_frame_buffer[buffer_sel * 256]);
-		buffer_sel ^= 1;
+		do_decimate(&decimated_frame_buffer[buffer_sel * decimate_output_size]);
+		buffer_sel = (buffer_sel + 1) % 3;
 		num_samples += 256;
 		
 		if(debug){
@@ -155,9 +136,71 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 		
 		PT_YIELD(pt);
 		
-// 		while(num_decimated >= 256){
-// 			
-// 		}
+		while(num_decimated >= 256){
+			// Multiply old sample average in place
+			vector_mult_scalar(len_minus_one_over_len,
+			                   (sFractional<0,31> *)average_buffer,
+			                   (sFractional<0,31> *)average_buffer,
+			                   transform_len);
+			// The number of samples remaining before the end of the decimated_frame_buffer
+			num_before_end = decimated_frame_buffer_size - theta;
+			if(num_before_end < 512){
+				// Split in two
+				arm_mult_q31((q31_t*)&decimated_frame_buffer[theta],
+				             (q31_t*)hamming512, (q31_t*)transform_buffer,
+				             num_before_end);
+				arm_mult_q31((q31_t*)&decimated_frame_buffer,
+				             (q31_t*)&hamming512[num_before_end],
+				             (q31_t*)&transform_buffer[num_before_end],
+				             512 - num_before_end);
+
+				vector_dual_mult_scalar_accumulate(
+					one_over_len,
+					len_minus_one_over_len,
+					(sFractional<0,31> const *) &decimated_frame_buffer[theta],
+					(sFractional<0,31> const *) average_buffer,
+					(sFractional<0,31> *) average_buffer,
+					num_before_end
+				);
+
+				vector_dual_mult_scalar_accumulate(
+					one_over_len,
+					len_minus_one_over_len,
+					(sFractional<0,31> const *) decimated_frame_buffer,
+					(sFractional<0,31> const *) &average_buffer[num_before_end],
+					(sFractional<0,31> *) &average_buffer[num_before_end],
+					512 - num_before_end
+				);
+
+			} else {
+				// All in one shot
+				arm_mult_q31((q31_t*)decimated_frame_buffer,
+				             (q31_t*)hamming512, (q31_t*)transform_buffer, 512);
+
+				vector_dual_mult_scalar_accumulate(
+					one_over_len,
+					len_minus_one_over_len,
+					(sFractional<0,31> const *) &decimated_frame_buffer[theta],
+					(sFractional<0,31> const *) &average_buffer,
+					(sFractional<0,31> *) &average_buffer,
+					512
+				);
+			}
+
+			num_decimated -= (transform_len - overlap);
+			theta = (theta + (transform_len - overlap)) &
+			        (decimated_frame_buffer_size - 1);
+
+			PT_YIELD(pt);
+
+			arm_rfft_q31(&rfft, (q31_t*)transform_buffer, (q31_t*)transform_out);
+
+			PT_YIELD(pt);
+
+			complex_power(transform_out, transform_out, transform_len);
+
+			PT_YIELD(pt);
+		}
 		
 	}
 
@@ -166,8 +209,7 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 
 
 
-void InputDSP::do_decimate(sample_t * dst 
-){
+void InputDSP::do_decimate(sample_t * dst){
 	static sample_t const * iter_in;
 	iter_in = new_samples;
 	for(auto i = 0; i < (768 / decimate_block_size); i++){
@@ -178,37 +220,114 @@ void InputDSP::do_decimate(sample_t * dst
 	}
 }
 
-// typedef struct {
-// 	uint32_t fftLenReal;                        /**< length of the real FFT. */
-// 	uint32_t fftLenBy2;                         /**< length of the complex FFT. */
-// 	uint8_t ifftFlagR;                          /**< flag that selects forward (ifftFlagR=0) or inverse (ifftFlagR=1) transform. */
-// 	uint8_t bitReverseFlagR;                        /**< flag that enables (bitReverseFlagR=1) or disables (bitReverseFlagR=0) bit reversal of output. */
-// 	uint32_t twidCoefRModifier;                 /**< twiddle coefficient modifier that supports different size FFTs with the same twiddle factor table. */
-// 	q31_t *pTwiddleAReal;                       /**< points to the real twiddle factor table. */
-// 	q31_t *pTwiddleBReal;                       /**< points to the imag twiddle factor table. */
-// 	arm_cfft_radix4_instance_q31 *pCfft;        /**< points to the complex FFT instance. */
-// } arm_rfft_radix2_instance_q31;
-// 
-// static void arm_rfft_radix2_init(
-// 	  arm_rfft_radix2_instance_q31 * S,
-// 	  arm_cfft_radix2_instance_q31 * S_CFFT,
-// 	  uint32_t fftLenReal,
-// 	  uint32_t ifftFlagR,
-// 	  uint32_t bitReverseFlag){
-// }
-
-void InputDSP::do_transform(){
-	arm_rfft_instance_q31 fft;
-	//arm_rfft_init_q31(&fft, )
-	sample_t buffer;
-}
-
-void InputDSP::do_average(){
-	
-}
-
-
 void InputDSP::put_samplesI(sample_t * samples){
 	new_samples = samples;
-	num_samples += AK4621::in_buffer_size;
+	num_samples = AK4621::in_buffer_size;
 }
+
+// np.round(signal.windows.hamming(512) * 2**31).astype(np.int32)
+InputDSP::sample_t const InputDSP::hamming512[512] = {
+	171798692,  171873366,  172097377,  172470691,  172993252,
+	173664981,  174485775,  175455512,  176574044,  177841202,
+	179256795,  180820609,  182532407,  184391930,  186398898,
+	188553007,  190853931,  193301322,  195894811,  198634005,
+	201518490,  204547830,  207721567,  211039221,  214500291,
+	218104253,  221850563,  225738654,  229767938,  233937807,
+	238247629,  242696753,  247284506,  252010195,  256873106,
+	261872503,  267007630,  272277711,  277681950,  283219528,
+	288889610,  294691337,  300623833,  306686200,  312877523,
+	319196864,  325643270,  332215764,  338913354,  345735026,
+	352679750,  359746476,  366934134,  374241640,  381667886,
+	389211752,  396872096,  404647760,  412537569,  420540330,
+	428654833,  436879851,  445214140,  453656441,  462205478,
+	470859957,  479618570,  488479993,  497442887,  506505896,
+	515667650,  524926765,  534281839,  543731459,  553274196,
+	562908608,  572633237,  582446614,  592347255,  602333663,
+	612404328,  622557728,  632792328,  643106580,  653498924,
+	663967791,  674511597,  685128747,  695817638,  706576652,
+	717404163,  728298535,  739258120,  750281260,  761366291,
+	772511535,  783715308,  794975915,  806291655,  817660817,
+	829081681,  840552522,  852071604,  863637187,  875247521,
+	886900852,  898595417,  910329449,  922101174,  933908811,
+	945750576,  957624678,  969529322,  981462709,  993423034,
+	1005408488, 1017417261, 1029447536, 1041497494, 1053565314,
+	1065649172, 1077747239, 1089857688, 1101978687, 1114108404,
+	1126245005, 1138386655, 1150531518, 1162677759, 1174823540,
+	1186967026, 1199106381, 1211239769, 1223365356, 1235481309,
+	1247585796, 1259676987, 1271753054, 1283812171, 1295852516,
+	1307872266, 1319869607, 1331842723, 1343789804, 1355709045,
+	1367598643, 1379456801, 1391281725, 1403071629, 1414824729,
+	1426539249, 1438213418, 1449845470, 1461433648, 1472976198,
+	1484471377, 1495917446, 1507312674, 1518655339, 1529943727,
+	1541176129, 1552350849, 1563466196, 1574520491, 1585512061,
+	1596439246, 1607300392, 1618093859, 1628818014, 1639471236,
+	1650051914, 1660558449, 1670989252, 1681342746, 1691617365,
+	1701811558, 1711923782, 1721952508, 1731896220, 1741753415,
+	1751522603, 1761202306, 1770791062, 1780287420, 1789689945,
+	1798997215, 1808207823, 1817320377, 1826333499, 1835245826,
+	1844056011, 1852762722, 1861364642, 1869860471, 1878248925,
+	1886528735, 1894698650, 1902757434, 1910703869, 1918536754,
+	1926254904, 1933857152, 1941342350, 1948709365, 1955957084,
+	1963084411, 1970090268, 1976973596, 1983733355, 1990368523,
+	1996878095, 2003261090, 2009516540, 2015643501, 2021641046,
+	2027508268, 2033244281, 2038848217, 2044319228, 2049656489,
+	2054859192, 2059926549, 2064857796, 2069652187, 2074308996,
+	2078827520, 2083207076, 2087447001, 2091546655, 2095505418,
+	2099322690, 2102997896, 2106530478, 2109919905, 2113165662,
+	2116267259, 2119224227, 2122036120, 2124702512, 2127222999,
+	2129597202, 2131824760, 2133905338, 2135838620, 2137624314,
+	2139262151, 2140751883, 2142093284, 2143286151, 2144330305,
+	2145225588, 2145971864, 2146569020, 2147016966, 2147315634,
+	2147464979, 2147464979, 2147315634, 2147016966, 2146569020,
+	2145971864, 2145225588, 2144330305, 2143286151, 2142093284,
+	2140751883, 2139262151, 2137624314, 2135838620, 2133905338,
+	2131824760, 2129597202, 2127222999, 2124702512, 2122036120,
+	2119224227, 2116267259, 2113165662, 2109919905, 2106530478,
+	2102997896, 2099322690, 2095505418, 2091546655, 2087447001,
+	2083207076, 2078827520, 2074308996, 2069652187, 2064857796,
+	2059926549, 2054859192, 2049656489, 2044319228, 2038848217,
+	2033244281, 2027508268, 2021641046, 2015643501, 2009516540,
+	2003261090, 1996878095, 1990368523, 1983733355, 1976973596,
+	1970090268, 1963084411, 1955957084, 1948709365, 1941342350,
+	1933857152, 1926254904, 1918536754, 1910703869, 1902757434,
+	1894698650, 1886528735, 1878248925, 1869860471, 1861364642,
+	1852762722, 1844056011, 1835245826, 1826333499, 1817320377,
+	1808207823, 1798997215, 1789689945, 1780287420, 1770791062,
+	1761202306, 1751522603, 1741753415, 1731896220, 1721952508,
+	1711923782, 1701811558, 1691617365, 1681342746, 1670989252,
+	1660558449, 1650051914, 1639471236, 1628818014, 1618093859,
+	1607300392, 1596439246, 1585512061, 1574520491, 1563466196,
+	1552350849, 1541176129, 1529943727, 1518655339, 1507312674,
+	1495917446, 1484471377, 1472976198, 1461433648, 1449845470,
+	1438213418, 1426539249, 1414824729, 1403071629, 1391281725,
+	1379456801, 1367598643, 1355709045, 1343789804, 1331842723,
+	1319869607, 1307872266, 1295852516, 1283812171, 1271753054,
+	1259676987, 1247585796, 1235481309, 1223365356, 1211239769,
+	1199106381, 1186967026, 1174823540, 1162677759, 1150531518,
+	1138386655, 1126245005, 1114108404, 1101978687, 1089857688,
+	1077747239, 1065649172, 1053565314, 1041497494, 1029447536,
+	1017417261, 1005408488,  993423034,  981462709,  969529322,
+	957624678,  945750576,  933908811,  922101174,  910329449,
+	898595417,  886900852,  875247521,  863637187,  852071604,
+	840552522,  829081681,  817660817,  806291655,  794975915,
+	783715308,  772511535,  761366291,  750281260,  739258120,
+	728298535,  717404163,  706576652,  695817638,  685128747,
+	674511597,  663967791,  653498924,  643106580,  632792328,
+	622557728,  612404328,  602333663,  592347255,  582446614,
+	572633237,  562908608,  553274196,  543731459,  534281839,
+	524926765,  515667650,  506505896,  497442887,  488479993,
+	479618570,  470859957,  462205478,  453656441,  445214140,
+	436879851,  428654833,  420540330,  412537569,  404647760,
+	396872096,  389211752,  381667886,  374241640,  366934134,
+	359746476,  352679750,  345735026,  338913354,  332215764,
+	325643270,  319196864,  312877523,  306686200,  300623833,
+	294691337,  288889610,  283219528,  277681950,  272277711,
+	267007630,  261872503,  256873106,  252010195,  247284506,
+	242696753,  238247629,  233937807,  229767938,  225738654,
+	221850563,  218104253,  214500291,  211039221,  207721567,
+	204547830,  201518490,  198634005,  195894811,  193301322,
+	190853931,  188553007,  186398898,  184391930,  182532407,
+	180820609,  179256795,  177841202,  176574044,  175455512,
+	174485775,  173664981,  172993252,  172470691,  172097377,
+	171873366,  171798692
+};

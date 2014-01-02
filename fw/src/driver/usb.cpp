@@ -96,7 +96,7 @@ uint8_t USB::callback_param(uint8_t request, uint16_t value, uint16_t iface,
 		//    rpt_buf[index] = *(*data + index);
 		//}
 		Platform::led.set();
-		APulseController::handle_data(*data, *size);
+		APulseController::handle_dataI(*data, *size);
 // 		for(uint32_t i = 0; i < 64; i++){
 // 			report_buf[i] = (*data)[i];
 // 		}

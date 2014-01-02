@@ -55,7 +55,15 @@ public:
 class WaveGen {
 public:
 	typedef AK4621::sample_t sample_t;
-	
+
+	static void request_resetI(){
+		pending_reset = true;
+	}
+
+	static bool is_resetI(){
+		return is_reset;
+	}
+
 	/*!
 	 * 
 	 * @brief A callback to get samples
@@ -91,32 +99,6 @@ public:
 				break;
 			// Add other signal generation handlers here if anything else req'd
 			}
-		}
-	}
-	
-
-	
-	static void zero4(sample_t * dst, uint32_t n){
-		register uint32_t loops = (n + 15) >> 4;
-		if(!n) return; // But why would anyone do this?
-		switch(n & 0xFF){
-		case 0: do { *dst++ = 0;
-		case 15: *dst++ = 0;
-		case 14: *dst++ = 0;
-		case 13: *dst++ = 0;
-		case 12: *dst++ = 0;
-		case 11: *dst++ = 0;
-		case 10: *dst++ = 0;
-		case 9: *dst++ = 0;
-		case 8: *dst++ = 0;
-		case 7: *dst++ = 0;
-		case 6: *dst++ = 0;
-		case 5: *dst++ = 0;
-		case 4: *dst++ = 0;
-		case 3: *dst++ = 0;
-		case 2: *dst++ = 0;
-		case 1: *dst++ = 0;
-			} while(--loops > 0);
 		}
 	}
 	
@@ -156,6 +138,23 @@ public:
 		silent = false;
 	}
 	//! @}
+
+	static PT_THREAD(pt_wavegen(struct pt * pt)){
+		PT_BEGIN(pt);
+
+		AK4621::set_out_cb(get_samplesI);
+
+		while(true){
+			// Check for reset request
+			if(pending_reset){
+				do_reset();
+				PT_YIELD(pt);
+			}
+			PT_YIELD(pt);
+		}
+
+		PT_END(pt);
+	}
 protected:
 	static constexpr uint32_t buffer_size = AK4621::out_buffer_size;
 	static constexpr uint32_t wavetable_len = 4096;
@@ -216,6 +215,18 @@ protected:
 	}
 	
 	static uint16_t get_time_ms();
+
+	static bool pending_reset;
+	static bool is_reset;
+
+	static void do_reset(){
+		mute();
+		set_off(0);
+		set_off(1);
+		set_off(2);
+		is_reset = true;
+		pending_reset = false;
+	}
 };
 
 #endif // __APULSE_WAVEGEN_H_

@@ -74,7 +74,7 @@ public:
 		FTM->MODE = FTM_MODE_WPDIS_MASK;
 	}
 	
-	void reset_count(uint16_t initial) const {
+	void reset_count(uint16_t initial = 0) const {
 		FTM->CNTIN = FTM_CNTIN_INIT(initial);
 		// Force reload
 		FTM->CNT = 0;
