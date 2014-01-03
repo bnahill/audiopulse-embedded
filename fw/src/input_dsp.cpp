@@ -106,7 +106,7 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 	// Prepare FFT
 	////////////////////////////
 
-	arm_rfft_init_q31(&rfft, &cfft, transform_len, 0, 0);
+	arm_rfft_init_q31(&rfft, &cfft, transform_len, 0, 1);
 
 	while(true){
 		PT_WAIT_UNTIL(pt,
@@ -138,7 +138,7 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 		PT_YIELD(pt);
 		
 		// While there is a full transform available...
-		while(num_decimated >= 512){
+		while(num_decimated >= transform_len){
 			// Multiply old sample average in place
 			vector_mult_scalar(len_minus_one_over_len,
 			                   average_buffer,
@@ -146,7 +146,7 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 			                   transform_len);
 			// The number of samples remaining before the end of the decimated_frame_buffer
 			num_before_end = decimated_frame_buffer_size - theta;
-			if(num_before_end < 512){
+			if(num_before_end < transform_len){
 				// Split in two
 				arm_mult_q31((q31_t*)&decimated_frame_buffer[theta],
 				             (q31_t*)hamming512, (q31_t*)transform_buffer,
@@ -154,7 +154,7 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 				arm_mult_q31((q31_t*)&decimated_frame_buffer,
 				             (q31_t*)&hamming512[num_before_end],
 				             (q31_t*)&transform_buffer[num_before_end],
-				             512 - num_before_end);
+				             transform_len - num_before_end);
 
 				vector_dual_mult_scalar_sum(
 					one_over_len,
@@ -171,13 +171,14 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 					len_minus_one_over_len,
 					&average_buffer[num_before_end],
 					&average_buffer[num_before_end],
-					512 - num_before_end
+					transform_len - num_before_end
 				);
 
 			} else {
 				// All in one shot
 				arm_mult_q31((q31_t*)decimated_frame_buffer,
-				             (q31_t*)hamming512, (q31_t*)transform_buffer, 512);
+				             (q31_t*)hamming512, (q31_t*)transform_buffer,
+				             transform_len);
 
 				vector_dual_mult_scalar_sum(
 					one_over_len,
@@ -185,7 +186,7 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 					len_minus_one_over_len,
 					average_buffer,
 					average_buffer,
-					512
+					transform_len
 				);
 			}
 
