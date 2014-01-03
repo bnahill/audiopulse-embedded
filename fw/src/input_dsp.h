@@ -53,21 +53,26 @@ public:
 	static bool is_resetI(){
 		return is_reset;
 	}
+	
+	typedef sFractional<0,31> sampleFractional;
+	typedef sFractional<1,30> powerFractional;
 
-	static constexpr sFractional<0,31> const * get_transform() {
-		return transform_out;
+	static constexpr sampleFractional const * get_transform() {
+		return transform.complex;
 	}
 
-	static constexpr sFractional<0,31> const * get_average() {
+	static constexpr sampleFractional const * get_average() {
 		return average_buffer;
 	}
 
+	static constexpr uint32_t transform_len = 512;
+	
 protected:
 	typedef AK4621::sample_t sample_t;
 	
-	static constexpr uint32_t transform_len = 512;
+	
 
-	static AK4621::sample_t const * new_samples;
+	static sampleFractional const * new_samples;
 	// MUST HAVE PROTECTED ACCESS
 	static uint32_t num_samples;
 
@@ -85,16 +90,16 @@ protected:
 	static constexpr uint16_t decimate_output_size = 256;
 	static constexpr uint32_t decimated_frame_buffer_size = 3 * transform_len / 2;
 	//! 
-	static sample_t decimated_frame_buffer[decimated_frame_buffer_size];
+	static sampleFractional decimated_frame_buffer[decimated_frame_buffer_size];
 	//! The decimate state
 	static arm_fir_decimate_instance_q31 decimate;
-	static void do_decimate(sample_t * dst);
+	static void do_decimate(sampleFractional * dst);
 
 	static uint32_t theta;
 	static uint8_t buffer_sel;
 
-	static sample_t decimate_buffer[decimate_block_size +
-	                                decimate_fir_order - 1];
+	static sampleFractional decimate_buffer[decimate_block_size +
+	                                        decimate_fir_order - 1];
 	//! @}
 	
 	//! @name Windowing and FFT variables and configuration
@@ -106,11 +111,17 @@ protected:
 	//! The constant 512 sample Q31 Hamming window
 	static sample_t const hamming512[512];
 	static uint32_t num_before_end;
-	static sample_t transform_buffer[transform_len];
-	static sFractional<0,31> transform_out[transform_len];
-	static sFractional<0,31> average_buffer[transform_len];
-	static sFractional<0,31> const one_over_len;
-	static sFractional<0,31> const len_minus_one_over_len;
+	static sampleFractional transform_buffer[transform_len];
+
+	static union TransformOut {
+		sampleFractional complex[transform_len];
+		powerFractional power[transform_len / 2 - 1];
+		TransformOut(){}
+	} transform;
+	
+	static sampleFractional average_buffer[transform_len];
+	static sampleFractional const one_over_len;
+	static sampleFractional const len_minus_one_over_len;
 
 	static arm_rfft_instance_q31 rfft;
 	static arm_cfft_radix4_instance_q31 cfft;
@@ -125,11 +136,11 @@ protected:
 		start_time_ms = -1;
 
 		// Decimated frame buffer really doesn't need to be zero'd...
-		for(auto &a : decimated_frame_buffer) a = 0;
+		for(auto &a : decimated_frame_buffer) a.setInternal(0);
 
 		arm_fir_decimate_init_q31(&decimate, 5, 3,//decimate_fir_order, 3,
 	                             (q31_t*)decimate_coeffs,
-	                             decimate_buffer,
+	                             (q31_t*)decimate_buffer,
 	                             decimate_block_size);
 
 		is_reset = true;

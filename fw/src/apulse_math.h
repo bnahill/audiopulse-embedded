@@ -97,10 +97,13 @@ public:
 	typedef typename IntLength<i_bits + f_bits>::unsigned_t internal_t;
 	typedef typename IntLength<(i_bits + f_bits) * 2>::unsigned_t double_t;
 
+	template<size_t mi_bits, size_t mf_bits>
+	constexpr uFractional(const uFractional<mi_bits, mf_bits> &val) :
+		i(val.normalize<i_bits, f_bits>().i){}
 	constexpr uFractional(const uFractional<i_bits, f_bits> &val) :
-			 i(val.i){}
+		i(val.i){}
 	constexpr uFractional(const internal_t &val) :
-			 i(val){}
+		i(val){}
 	constexpr uFractional(const double &val) :
 		i(val * (1 << f_bits)){}
 	constexpr uFractional(const float &val) :
@@ -166,26 +169,30 @@ public:
 	constexpr sFractional(const sFractional<i_bits, f_bits> &val) :
 			 i(val.i){}
 
-	constexpr sFractional(){}
+	constexpr sFractional() {}
 
 	/*!
 	 * @brief Constructor for arbitrary signed fractionals
 	 */
 	template<size_t mi_bits, size_t mf_bits>
 	constexpr sFractional(const sFractional<mi_bits, mf_bits> &val) :
-		i(val.normalize<mi_bits, mf_bits>().i){}
+		i(val.normalize<i_bits, f_bits>().i){}
 	constexpr sFractional(const internal_t &val) :
 			 i(val){}
 	constexpr sFractional(const double &val) :
 		i(val * (1 << f_bits)){}
 	constexpr sFractional(const float &val) :
 		i(val * (1 << f_bits)){}
-	constexpr sFractional(const int &val) :
-		i(((signed int)val) << f_bits){}
+//	constexpr sFractional(const int &val) :
+//		i(((signed int)val) << f_bits){}
 	constexpr double asDouble() const{
-		return ((double)i) / (1 << f_bits);
+		return ((double)i) / (double)(((unsigned)1) << (f_bits));
 	}
 
+	void setInternal(internal_t internal){
+		i = internal;
+	}
+	
 	/*!
 	 * @brief Convert a fractional number to a different format
 	 */
@@ -207,9 +214,11 @@ public:
 	}
 
 	template<size_t mi_bits, size_t mf_bits>
-	constexpr sFractional<mi_bits + i_bits, mf_bits + f_bits> operator * (sFractional<mi_bits, mf_bits> const &m) {
+	sFractional<mi_bits + i_bits, mf_bits + f_bits> operator * (sFractional<mi_bits, mf_bits> const &m) const {
 		typedef typename IntLength<mi_bits + i_bits + mf_bits + f_bits + 1>::signed_t res_t;
-		return (res_t)m.i * i;
+		sFractional<mi_bits + i_bits, mf_bits + f_bits> out;
+		out.setInternal((res_t)m.i * (res_t)i);
+		return out;
 	}
 
 
@@ -218,7 +227,7 @@ public:
 	}
 
 	template<size_t mi_bits, size_t mf_bits>
-	constexpr sFractional<mi_bits + i_bits, mf_bits + f_bits> operator * (uFractional<mi_bits, mf_bits> const &m) {
+	constexpr sFractional<mi_bits + i_bits, mf_bits + f_bits> operator * (uFractional<mi_bits, mf_bits> const &m) const {
 		typedef typename IntLength<mi_bits + i_bits + mf_bits + f_bits + 1>::signed_t res_t;
 		return (res_t)m.i * i;
 	}
@@ -285,12 +294,12 @@ void vector_mult_scalar(T a, T const * B, T * dst, size_t n){
  This is more-or-less optimized for 32-bit types
  */
 template<typename T>
-void vector_dual_mult_scalar_accumulate(T const a,
-                                        T const b,
-                                        T const * X,
-                                        T const * Y,
-                                        T * dst,
-                                        size_t n){
+void vector_dual_mult_scalar_sum(T const a,
+                                 T const b,
+                                 T const * X,
+                                 T const * Y,
+                                 T * dst,
+                                 size_t n){
 	while(n >= 4){
 		T x1 = *X++;
 		T x2 = *X++;
@@ -320,8 +329,22 @@ void vector_dual_mult_scalar_accumulate(T const a,
 	}
 }
 
-template<typename T>
-void complex_power(T const * X, T * dst, size_t n){
+/*!
+ @brief Compute the real power of a complex transform output from ARM libraries
+ @param X The input array of complex values, as returned from CMSIS-DSP
+ @param dst A buffer for output -- may be the same as input
+  It must be able to hold at least (n/2 + 1) elements
+ @param n The number of input elements
+ */
+template<typename T, typename To>
+void complex_power(T const * X, To * dst, size_t n){
+	// First bin is real X[0]
+	*dst++ = *X * *X;
+	X++;
+	// Second bin is real X[N/2]
+	To tmp = *X * *X;
+	X++;
+	n -= 2;
 	while(n >= 8){
 		T x1 = *X++;
 		T x2 = *X++;
@@ -332,10 +355,10 @@ void complex_power(T const * X, T * dst, size_t n){
 		T x7 = *X++;
 		T x8 = *X++;
 
-		T out1 = (T)(x1*x1) + (T)(x2*x2);
-		T out2 = (T)(x3*x3) + (T)(x4*x4);
-		T out3 = (T)(x5*x5) + (T)(x6*x6);
-		T out4 = (T)(x7*x7) + (T)(x8*x8);
+		To out1 = (To)(x1*x1) + (To)(x2*x2);
+		To out2 = (To)(x3*x3) + (To)(x4*x4);
+		To out3 = (To)(x5*x5) + (To)(x6*x6);
+		To out4 = (To)(x7*x7) + (To)(x8*x8);
 
 
 		*dst++ = out1;
@@ -348,8 +371,9 @@ void complex_power(T const * X, T * dst, size_t n){
 	while(n > 1){
 		T x1 = *X++;
 		T x2 = *X++;
-		*dst++ = (T)(x1*x1) + (T)(x2*x2);
+		*dst++ = (To)(x1*x1) + (To)(x2*x2);
 	}
+	*dst = tmp;
 }
 
 template<typename T>

@@ -24,12 +24,12 @@
 #include <apulse_math.h>
 #include "controller.h"
 
-InputDSP::sample_t const * InputDSP::new_samples  = nullptr;
+InputDSP::sampleFractional const * InputDSP::new_samples  = nullptr;
 uint32_t InputDSP::num_samples                    = 0;
 
 __attribute__((aligned(512)))
 __attribute__((section(".m_data2")))
-InputDSP::sample_t InputDSP::decimated_frame_buffer[decimated_frame_buffer_size];
+InputDSP::sampleFractional InputDSP::decimated_frame_buffer[decimated_frame_buffer_size];
 
 uint16_t InputDSP::num_decimated;
 
@@ -50,17 +50,17 @@ decltype(InputDSP::one_over_len) InputDSP::one_over_len = (1.0/(float)transform_
 decltype(InputDSP::len_minus_one_over_len) InputDSP::len_minus_one_over_len = ((float)transform_len - 1.0)/(float)transform_len;
 
 __attribute__((section(".m_data2")))
-InputDSP::sample_t InputDSP::transform_buffer[transform_len];
+InputDSP::sampleFractional InputDSP::transform_buffer[transform_len];
 
 __attribute__((section(".m_data2")))
-sFractional<0,31> InputDSP::transform_out[transform_len];
+decltype(InputDSP::transform) InputDSP::transform;
 
 __attribute__((section(".m_data2")))
-sFractional<0,31> InputDSP::average_buffer[transform_len];
+InputDSP::sampleFractional InputDSP::average_buffer[transform_len];
 
 __attribute__((section(".m_data2")))
-InputDSP::sample_t InputDSP::decimate_buffer[decimate_block_size +
-                                             decimate_fir_order - 1];
+InputDSP::sampleFractional InputDSP::decimate_buffer[decimate_block_size +
+                                                     decimate_fir_order - 1];
 
 decltype(InputDSP::overlap) InputDSP::overlap;
 
@@ -139,8 +139,8 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 		while(num_decimated >= 256){
 			// Multiply old sample average in place
 			vector_mult_scalar(len_minus_one_over_len,
-			                   (sFractional<0,31> *)average_buffer,
-			                   (sFractional<0,31> *)average_buffer,
+			                   average_buffer,
+			                   average_buffer,
 			                   transform_len);
 			// The number of samples remaining before the end of the decimated_frame_buffer
 			num_before_end = decimated_frame_buffer_size - theta;
@@ -154,7 +154,7 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 				             (q31_t*)&transform_buffer[num_before_end],
 				             512 - num_before_end);
 
-				vector_dual_mult_scalar_accumulate(
+				vector_dual_mult_scalar_sum(
 					one_over_len,
 					len_minus_one_over_len,
 					(sFractional<0,31> const *) &decimated_frame_buffer[theta],
@@ -163,7 +163,7 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 					num_before_end
 				);
 
-				vector_dual_mult_scalar_accumulate(
+				vector_dual_mult_scalar_sum(
 					one_over_len,
 					len_minus_one_over_len,
 					(sFractional<0,31> const *) decimated_frame_buffer,
@@ -177,7 +177,7 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 				arm_mult_q31((q31_t*)decimated_frame_buffer,
 				             (q31_t*)hamming512, (q31_t*)transform_buffer, 512);
 
-				vector_dual_mult_scalar_accumulate(
+				vector_dual_mult_scalar_sum(
 					one_over_len,
 					len_minus_one_over_len,
 					(sFractional<0,31> const *) &decimated_frame_buffer[theta],
@@ -193,11 +193,11 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 
 			PT_YIELD(pt);
 
-			arm_rfft_q31(&rfft, (q31_t*)transform_buffer, (q31_t*)transform_out);
+			arm_rfft_q31(&rfft, (q31_t*)transform_buffer, (q31_t*)transform.complex);
 
 			PT_YIELD(pt);
 
-			complex_power(transform_out, transform_out, transform_len);
+			complex_power(transform.complex, transform.power, transform_len);
 
 			PT_YIELD(pt);
 		}
@@ -209,19 +209,19 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 
 
 
-void InputDSP::do_decimate(sample_t * dst){
-	static sample_t const * iter_in;
+void InputDSP::do_decimate(sampleFractional * dst){
+	static sampleFractional const * iter_in;
 	iter_in = new_samples;
 	for(auto i = 0; i < (768 / decimate_block_size); i++){
 		arm_fir_decimate_fast_q31(&decimate, (q31_t*)iter_in,
-		                          dst, decimate_block_size);
+		                          (q31_t*)dst, decimate_block_size);
 		iter_in += decimate_block_size;
 		dst += decimate_block_size / 3;
 	}
 }
 
 void InputDSP::put_samplesI(sample_t * samples){
-	new_samples = samples;
+	new_samples = reinterpret_cast<sampleFractional *>(samples);
 	num_samples = AK4621::in_buffer_size;
 }
 
