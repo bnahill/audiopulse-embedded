@@ -194,6 +194,7 @@ set(DSP_SOURCES
 	${DSP_SRC}/TransformFunctions/arm_cfft_radix4_q31.c
 	${DSP_SRC}/TransformFunctions/arm_rfft_q31.c
 	${DSP_SRC}/TransformFunctions/arm_bitreversal.c
+	${DSP_SRC}/SupportFunctions/arm_copy_q31.c
 	${DSP_SRC}/CommonTables/arm_common_tables.c
 )
 

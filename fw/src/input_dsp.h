@@ -34,9 +34,12 @@ public:
 	 */
 	static PT_THREAD(pt_dsp(struct pt * pt));
 	
-	static void configute(uint8_t overlap, uint16_t start_time_ms){
+	static void configure(uint8_t overlap,
+	                      uint16_t start_time_ms,
+	                      uint16_t num_windows){
 		InputDSP::overlap = overlap;
 		InputDSP::start_time_ms = start_time_ms;
+		InputDSP::num_windows = num_windows;
 	}
 		
 	/*!
@@ -57,8 +60,8 @@ public:
 	typedef sFractional<0,31> sampleFractional;
 	typedef sFractional<1,30> powerFractional;
 
-	static constexpr sampleFractional const * get_transform() {
-		return transform.complex;
+	static constexpr powerFractional const * get_psd() {
+		return transform.power;
 	}
 
 	static constexpr sampleFractional const * get_average() {
@@ -76,8 +79,12 @@ protected:
 	// MUST HAVE PROTECTED ACCESS
 	static uint32_t num_samples;
 
+	//! @name Configuration
+	//! @{
 	//! Start time
-	static uint16_t start_time_ms;
+	static uint32_t start_time_ms;
+	static uint16_t num_windows;
+	//! @}
 	
 	//! @name Decimation variables and configuration
 	//! @{
@@ -113,20 +120,27 @@ protected:
 	static uint32_t num_before_end;
 	static sampleFractional transform_buffer[transform_len];
 
+	//! Storage of complex transform and the computed PSD
 	static union TransformOut {
 		sampleFractional complex[transform_len];
 		powerFractional power[transform_len / 2 - 1];
 		TransformOut(){}
 	} transform;
 	
+	//! The average windowed waveform
 	static sampleFractional average_buffer[transform_len];
+	//! Constant for averaging
 	static sampleFractional const one_over_len;
+	//! Constant for averaging
 	static sampleFractional const len_minus_one_over_len;
 
+	//! RFFT instance structure
 	static arm_rfft_instance_q31 rfft;
+	//! CFFT instance structure
 	static arm_cfft_radix4_instance_q31 cfft;
 	//! @}
 	
+	//! Standard reset flags
 	static bool pending_reset, is_reset;
 
 	static void do_reset(){

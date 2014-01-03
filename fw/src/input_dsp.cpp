@@ -36,6 +36,7 @@ uint16_t InputDSP::num_decimated;
 arm_fir_decimate_instance_q31 InputDSP::decimate;
 
 decltype(InputDSP::start_time_ms) InputDSP::start_time_ms = -1;
+decltype(InputDSP::num_windows) InputDSP::num_windows;
 
 bool InputDSP::is_reset, InputDSP::pending_reset;
 
@@ -108,9 +109,9 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 	arm_rfft_init_q31(&rfft, &cfft, transform_len, 0, 0);
 
 	while(true){
-		PT_WAIT_UNTIL(pt, (new_samples &&
-		                   (start_time_ms > APulseController::get_time_ms())) ||
-		                   pending_reset);
+		PT_WAIT_UNTIL(pt,
+			(new_samples && (start_time_ms > APulseController::get_time_ms())) ||
+			pending_reset);
 
 		if(pending_reset){
 			// Do reset
@@ -136,7 +137,8 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 		
 		PT_YIELD(pt);
 		
-		while(num_decimated >= 256){
+		// While there is a full transform available...
+		while(num_decimated >= 512){
 			// Multiply old sample average in place
 			vector_mult_scalar(len_minus_one_over_len,
 			                   average_buffer,
@@ -156,19 +158,19 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 
 				vector_dual_mult_scalar_sum(
 					one_over_len,
+					&decimated_frame_buffer[theta],
 					len_minus_one_over_len,
-					(sFractional<0,31> const *) &decimated_frame_buffer[theta],
-					(sFractional<0,31> const *) average_buffer,
-					(sFractional<0,31> *) average_buffer,
+					average_buffer,
+					average_buffer,
 					num_before_end
 				);
 
 				vector_dual_mult_scalar_sum(
 					one_over_len,
+					decimated_frame_buffer,
 					len_minus_one_over_len,
-					(sFractional<0,31> const *) decimated_frame_buffer,
-					(sFractional<0,31> const *) &average_buffer[num_before_end],
-					(sFractional<0,31> *) &average_buffer[num_before_end],
+					&average_buffer[num_before_end],
+					&average_buffer[num_before_end],
 					512 - num_before_end
 				);
 
@@ -179,10 +181,10 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 
 				vector_dual_mult_scalar_sum(
 					one_over_len,
+					&decimated_frame_buffer[theta],
 					len_minus_one_over_len,
-					(sFractional<0,31> const *) &decimated_frame_buffer[theta],
-					(sFractional<0,31> const *) &average_buffer,
-					(sFractional<0,31> *) &average_buffer,
+					average_buffer,
+					average_buffer,
 					512
 				);
 			}

@@ -78,7 +78,7 @@ public:
 	 */
 	static void get_samplesI(sample_t * dst){
 		// Zero the whole damn thing first
-		zero4(dst, buffer_size);
+		zero16(dst, buffer_size);
 		// Check if muting
 		if(silent)
 			return;
@@ -106,16 +106,17 @@ public:
 	//! Use to adjust tones being played. Please mute before using...
 	//! @{
 	static void set_chirp(uint8_t idx, uint8_t ch, uint16_t f1, uint16_t f2,
-	               uint16_t t1, uint16_t t2, uFractional<8,8> gaindb){
+	               uint16_t t1, uint16_t t2, sFractional<7,8> gaindb){
 		
 	}
 	
 	static void set_tone(uint8_t idx, uint8_t ch, uint16_t f1,
-	              uint16_t t1, uint16_t t2, uFractional<8,8> gaindb){
+	              uint16_t t1, uint16_t t2, sFractional<7,8> gaindb){
 		Generator &gen = generators[idx];
 		gen.type = Generator::GEN_OFF;
 		gen.ch = ch;
-		gen.gain = 0x3FFFFFFF; // THIS IS NOT CORRECT
+		//gen.gain = 0x3FFFFFFF; // THIS IS NOT CORRECT
+		gen.gain = db_to_gain(gaindb).i;
 		gen.t1 = t1;
 		gen.t2 = t2;
 		gen.w1 = f1 * wavetable_len * 2 / fs;
@@ -226,6 +227,10 @@ protected:
 		set_off(2);
 		is_reset = true;
 		pending_reset = false;
+	}
+	
+	static sFractional<0,31> db_to_gain(sFractional<7,8> db){
+		return 0.5;
 	}
 };
 

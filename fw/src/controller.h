@@ -52,25 +52,29 @@ class APulseController {
 	 This is intended to be or'd with a channel number
 	 */
 	typedef enum {
-		TONE_OFF = 0   << 4,
-		TONE_FIXED = 1 << 4,
-		TONE_CHIRP = 2 << 4,
+		TONE_OFF   = 0,
+		TONE_FIXED = 1,
+		TONE_CHIRP = 2,
 	} tone_mode_t;
 
 	/*!
 	 @brief The configuration for a single tone
 	 */
 	typedef struct {
-		//! of type tone_mode_t or'd with a channel number
-		uint8_t tone_mode_ch;
-		//! The SPL, in dB 16-bit Q8
-		uint16_t amplitude;
+		//! tone_mode_t mode
+		uint8_t mode : 4;
+		//! Channel number
+		uint8_t ch   : 4;
+		//! The SPL, in dB
+		sFractional<7,8> amplitude;
 		//! Frequency in Hz
 		uint16_t f1;
 		//! Frequency 2 in Hz (not used for fixed tones)
 		uint16_t f2;
-		//! Duration in ms -- set to 0 for no limit
-		uint16_t t;
+		//! Start time in ms
+		uint16_t t1;
+		//! End time in ms
+		uint16_t t2;
 	} __attribute__((packed)) tone_config_t;
 
 	typedef struct {
@@ -122,7 +126,7 @@ class APulseController {
 		ST_RESET = 0,
 		ST_GETPSD,
 		ST_GETAVG,
-		ST_RESETTING
+		ST_RESETTING,
 	} state_t;
 public:
 
@@ -140,9 +144,14 @@ public:
 		if(!size)
 			return;
 
-		static_assert(sizeof(tone_setup_pkt_t) == 29, "tone_setup_pkt_t wrong size");
-		static_assert(sizeof(status_pkt_t) == 2, "status_pkt_t wrong size");
-		static_assert(sizeof(capture_config_pkt_t) == 7, "capture_config_pkt wrong size");
+		static_assert(sizeof(tone_config_t) == 11,
+		              "tone_config_t wrong size");
+		static_assert(sizeof(tone_setup_pkt_t) == 3*sizeof(tone_config_t) + 2,
+		              "tone_setup_pkt_t wrong size");
+		static_assert(sizeof(status_pkt_t) == 2,
+		              "status_pkt_t wrong size");
+		static_assert(sizeof(capture_config_pkt_t) == 7,
+		              "capture_config_pkt wrong size");
 
 		switch(*data){
 		case CMD_RESET:
@@ -154,37 +163,64 @@ public:
 			break;
 		case CMD_GETDATA:
 			state = ST_GETPSD;
+			cmd_idx = 0;
 			break;
 		case CMD_GETSTATUS:
-
+			// Does this really need to happen?
 			break;
 		case CMD_SETUPCAPTURE:
+			InputDSP::configure(a->capture_config_pkt.overlap,
+			                    a->capture_config_pkt.start_time,
+			                    a->capture_config_pkt.num_windows);
 			break;
 		case CMD_SETUPTONES:
+			WaveGen::mute();
+			for(uint32_t i = 0; i < 3; i++){
+				switch(a->tone_config_pkt.tones[i].mode){
+				case TONE_FIXED:
+					WaveGen::set_tone(i,
+						a->tone_config_pkt.tones[i].ch,
+						a->tone_config_pkt.tones[i].f1,
+						a->tone_config_pkt.tones[i].t1,
+						a->tone_config_pkt.tones[i].t2,
+						a->tone_config_pkt.tones[i].amplitude);
+					break;
+				case TONE_CHIRP:
+					WaveGen::set_off(i);
+					break;
+				case TONE_OFF:
+				default:
+					WaveGen::set_off(i);
+					break;
+				}
+			}
 			break;
 		case CMD_STARTUP:
 			break;
 		case CMD_START:
 			timer.stop();
 			timer.reset_count();
+			WaveGen::unmute();
+			TPA6130A2::enable();
 			timer.start();
 			break;
 		default:
 			return;
 		}
-		if(size == 1 and data[0] == 0xA5){
-			WaveGen::mute();
-			WaveGen::set_tone(0, 0, 800, 1000, 10000, 65);
-			WaveGen::set_tone(1, 1, 1600, 1000, 10000, 65);
-			WaveGen::unmute();
-			TPA6130A2::enable();
-		} else if (size == 1 and data[0] == 0xAA){
-			TPA6130A2::disable();
-			WaveGen::mute();
-			WaveGen::set_off(0);
-			WaveGen::set_off(1);
-		}
+// 		if(size == 1 and data[0] == 0xA5){
+// 			WaveGen::mute();
+// 			WaveGen::set_tone(0, 0, 800, 1000, 10000, 65.0);
+// 			WaveGen::set_tone(1, 1, 1600, 1000, 10000, 65.0);
+// 			WaveGen::unmute();
+// 			TPA6130A2::enable();
+// 		} else if (size == 1 and data[0] == 0xAA){
+// 			TPA6130A2::disable();
+// 			WaveGen::mute();
+// 			WaveGen::set_off(0);
+// 			WaveGen::set_off(1);
+// 		}
 	}
+
 
 	/*!
 	 @brief Get a response
@@ -195,19 +231,24 @@ public:
 		static union {
 			uint8_t data[64];
 			status_pkt_t status;
+			uint32_t data32[8];
 		} p;
 
 		switch(state){
 		case ST_GETPSD:
-			memcpy((void*)p.data, (void*)&InputDSP::get_transform()[cmd_idx++ * 8], 64);
 			if(cmd_idx == 16){
+				// Just one more value!
+				((InputDSP::powerFractional *)&p)[0] = InputDSP::get_psd()[InputDSP::transform_len / 2];
 				state = ST_GETAVG;
 				cmd_idx = 0;
+				size = 4;
+				return p.data;
 			}
+			arm_copy_q31((q31_t*)p.data, (q31_t*)&InputDSP::get_psd()[cmd_idx++ * 8], 8);
 			size = 64;
 			return p.data;
 		case ST_GETAVG:
-			memcpy((void*)p.data, (void*)&InputDSP::get_transform()[cmd_idx++ * 8], 64);
+			arm_copy_q31((q31_t*)p.data, (q31_t*)&InputDSP::get_average()[cmd_idx++ * 8], 8);
 			if(cmd_idx == 16){
 				state = ST_RESET;
 				cmd_idx = 0;
@@ -217,7 +258,7 @@ public:
 		case ST_RESET:
 		case ST_RESETTING:
 		default:
-			zero4(p.data, sizeof(status_pkt_t));
+			zero16(p.data, sizeof(status_pkt_t));
 			p.status.version = 0;
 			p.status.is_started = 1;
 			p.status.is_capturing = 1;

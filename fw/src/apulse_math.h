@@ -150,9 +150,8 @@ public:
 		return m.i - i;
 	}
 
-//private:
 	internal_t i : i_bits + f_bits;
-};
+} __attribute__((packed));
 
 
 
@@ -242,9 +241,8 @@ public:
 		return m.i - i;
 	}
 
-//private:
 	internal_t i : i_bits + f_bits + 1;
-};
+} __attribute__((packed));
 
 /*!
  @brief Compute dst = a * B
@@ -295,8 +293,8 @@ void vector_mult_scalar(T a, T const * B, T * dst, size_t n){
  */
 template<typename T>
 void vector_dual_mult_scalar_sum(T const a,
-                                 T const b,
                                  T const * X,
+                                 T const b,
                                  T const * Y,
                                  T * dst,
                                  size_t n){
@@ -341,7 +339,7 @@ void complex_power(T const * X, To * dst, size_t n){
 	// First bin is real X[0]
 	*dst++ = *X * *X;
 	X++;
-	// Second bin is real X[N/2]
+	// Second bin is real X[N/2], don't record until later
 	To tmp = *X * *X;
 	X++;
 	n -= 2;
@@ -376,8 +374,13 @@ void complex_power(T const * X, To * dst, size_t n){
 	*dst = tmp;
 }
 
+/*!
+ @brief An unrolled zeroing
+ @param dst Destination
+ @param n Number of elements
+ */
 template<typename T>
-void zero4(T * dst, uint32_t n){
+void zero16(T * dst, uint32_t n){
 	register uint32_t loops = (n + 15) >> 4;
 	if(!n) return; // But why would anyone do this?
 	switch(n & 0xF){
