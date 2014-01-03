@@ -21,5 +21,5 @@
 
 #include <controller.h>
 
-APulseController::cmd_t APulseController::state;
+APulseController::state_t APulseController::state;
 uint32_t APulseController::cmd_idx;

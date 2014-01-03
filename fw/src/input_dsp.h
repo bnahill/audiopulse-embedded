@@ -53,6 +53,15 @@ public:
 	static bool is_resetI(){
 		return is_reset;
 	}
+
+	static constexpr sFractional<0,31> const * get_transform() {
+		return transform_out;
+	}
+
+	static constexpr sFractional<0,31> const * get_average() {
+		return average_buffer;
+	}
+
 protected:
 	typedef AK4621::sample_t sample_t;
 	
@@ -99,7 +108,7 @@ protected:
 	static uint32_t num_before_end;
 	static sample_t transform_buffer[transform_len];
 	static sFractional<0,31> transform_out[transform_len];
-	static sample_t average_buffer[transform_len];
+	static sFractional<0,31> average_buffer[transform_len];
 	static sFractional<0,31> const one_over_len;
 	static sFractional<0,31> const len_minus_one_over_len;
 

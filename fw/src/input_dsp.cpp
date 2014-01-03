@@ -56,12 +56,11 @@ __attribute__((section(".m_data2")))
 sFractional<0,31> InputDSP::transform_out[transform_len];
 
 __attribute__((section(".m_data2")))
-InputDSP::sample_t InputDSP::average_buffer[transform_len];
+sFractional<0,31> InputDSP::average_buffer[transform_len];
 
 __attribute__((section(".m_data2")))
 InputDSP::sample_t InputDSP::decimate_buffer[decimate_block_size +
                                              decimate_fir_order - 1];
-
 
 decltype(InputDSP::overlap) InputDSP::overlap;
 
@@ -99,6 +98,7 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 	////////////////////////////
 	// Prepare FIR decimation
 	////////////////////////////
+	
 	static_assert(AK4621::in_buffer_size == 768, "Wrong buffer size for DSP");
 
 	////////////////////////////

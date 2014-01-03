@@ -117,6 +117,13 @@ class APulseController {
 	} t_packet_t;
 
 	//! @}
+
+	typedef enum {
+		ST_RESET = 0,
+		ST_GETPSD,
+		ST_GETAVG,
+		ST_RESETTING
+	} state_t;
 public:
 
 	/*!
@@ -146,12 +153,12 @@ public:
 			InputDSP::request_resetI();
 			break;
 		case CMD_GETDATA:
+			state = ST_GETPSD;
 			break;
 		case CMD_GETSTATUS:
 
 			break;
 		case CMD_SETUPCAPTURE:
-
 			break;
 		case CMD_SETUPTONES:
 			break;
@@ -191,8 +198,25 @@ public:
 		} p;
 
 		switch(state){
-		case CMD_GETSTATUS:
-		case CMD_RESET:
+		case ST_GETPSD:
+			memcpy((void*)p.data, (void*)&InputDSP::get_transform()[cmd_idx++ * 8], 64);
+			if(cmd_idx == 16){
+				state = ST_GETAVG;
+				cmd_idx = 0;
+			}
+			size = 64;
+			return p.data;
+		case ST_GETAVG:
+			memcpy((void*)p.data, (void*)&InputDSP::get_transform()[cmd_idx++ * 8], 64);
+			if(cmd_idx == 16){
+				state = ST_RESET;
+				cmd_idx = 0;
+			}
+			size = 64;
+			return p.data;
+		case ST_RESET:
+		case ST_RESETTING:
+		default:
 			zero4(p.data, sizeof(status_pkt_t));
 			p.status.version = 0;
 			p.status.is_started = 1;
@@ -204,13 +228,6 @@ public:
 			p.status.reset_wavegen = WaveGen::is_resetI() ? 1 : 0;
 			size = sizeof(status_pkt_t);
 			return p.data;
-			break;
-		case CMD_NONE:
-			size = 0;
-			break;
-		default:
-			size = 0;
-			break;
 		}
 		return nullptr;
 	}
@@ -238,7 +255,7 @@ public:
 	
 	static constexpr Timer timer = FTM0_BASE_PTR;
 private:
-	static cmd_t state;
+	static state_t state;
 	static uint32_t cmd_idx;
 };
 
