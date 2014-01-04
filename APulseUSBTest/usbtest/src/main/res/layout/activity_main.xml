@@ -1,0 +1,93 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/container"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.apulse.usbtest.Main"
+    tools:ignore="MergeRootFrame" >
+
+    <EditText
+        android:layout_width="300dp"
+        android:layout_height="190dp"
+        android:ems="10"
+        android:id="@+id/editText"
+        android:layout_gravity="center|right"
+        android:maxLength="64"
+        android:width="2dp"
+        android:editable="true"
+        android:inputType="textMultiLine" />
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="87dp"
+        android:layout_height="190dp"
+        android:layout_gravity="bottom|left">
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Recv"
+            android:id="@+id/button3"
+            android:onClick="recvButton" />
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Clear"
+            android:id="@+id/button4"
+            android:onClick="recvClearButton" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="87dp"
+        android:layout_height="190dp"
+        android:layout_gravity="left|center_vertical">
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Send"
+            android:id="@+id/button"
+            android:onClick="sendButton" />
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Clear"
+            android:id="@+id/button2"
+            android:onClick="sendClearButton" />
+    </LinearLayout>
+
+    <EditText
+        android:layout_width="300dp"
+        android:layout_height="190dp"
+        android:inputType="textMultiLine"
+        android:ems="10"
+        android:id="@+id/editText2"
+        android:layout_gravity="right|bottom"
+        android:editable="true" />
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="fill_parent"
+        android:layout_height="190dp"
+        android:layout_gravity="center_horizontal|top">
+
+        <Switch
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Connect"
+            android:id="@+id/switch1"
+            android:layout_gravity="center_horizontal|top"
+            android:checked="false"
+            android:onClick="connectToggleButton" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/textView"
+            android:layout_gravity="center_horizontal" />
+    </LinearLayout>
+
+</FrameLayout>

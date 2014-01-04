@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/APulseUSBTest.iml" filepath="$PROJECT_DIR$/APulseUSBTest.iml" />
+      <module fileurl="file://$PROJECT_DIR$/usbtest/usbtest.iml" filepath="$PROJECT_DIR$/usbtest/usbtest.iml" />
+    </modules>
+  </component>
+</project>
+
