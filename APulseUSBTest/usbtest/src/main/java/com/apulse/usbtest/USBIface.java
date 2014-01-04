@@ -153,14 +153,14 @@ public class USBIface {
         return 0;
     }
 
-    public int send(byte[] data){
+    public int send(byte[] data, int len){
         int count;
         count = connection.controlTransfer(RequestType.DIR_OUT |
                                            RequestType.RECIPIENT_DEVICE |
                                            RequestType.TYPE_CLASS,
                                            HIDVals.SET_REPORT,
                                            (HIDReportType.OUTPUT<<8) | 0x00,
-                                           0, data, data.length, 0);
+                                           0, data, len, 0);
         return count;
     }
 

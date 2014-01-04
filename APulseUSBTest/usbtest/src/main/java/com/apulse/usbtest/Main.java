@@ -127,7 +127,7 @@ public class Main extends Activity {
 
     public void sendButton(View view){
         byte[] bytes = textsend.getText().toString().getBytes();
-        int cnt = usb.send(bytes);
+        int cnt = usb.send(bytes, bytes.length);
         if(cnt >= 0){
             textview.setText("Sent data! -- " + cnt);
         } else {
