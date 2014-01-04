@@ -276,3 +276,14 @@ const tVectorTable __vector_table __attribute__ ((section(".vectortable"))) = {
 		#endif
 	}
 };
+
+void _exit(){}
+void _sbrk(){}
+void _kill(){}
+void _getpid(){}
+void _write(){}
+void _close(){}
+void _fstat(){}
+void _isatty(){}
+void _lseek(){}
+void _read(){}

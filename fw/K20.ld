@@ -48,7 +48,7 @@ MEMORY {
   /* Then some flash protection crap */
   m_cfmprotrom  (RX) : ORIGIN = 0x00000400, LENGTH = 16
   /* Then the flash we actually want */
-  m_text      (RX) : ORIGIN = 1k + 32, LENGTH = 128k - 32
+  m_text      (RX) : ORIGIN = 1k + 32, LENGTH = 256k - 32
   /* There are two RAM regions... They are centered around 0x20000000 */
   m_data      (RW) : ORIGIN = 0x20000000 - 16k, LENGTH = 16k
   /* To avoid variables crossing this boundary, they are separated.

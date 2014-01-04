@@ -22,7 +22,7 @@
 #include <input_dsp.h>
 #include <arm_math.h>
 #include <apulse_math.h>
-#include "controller.h"
+#include <controller.h>
 
 InputDSP::sampleFractional const * InputDSP::new_samples  = nullptr;
 uint32_t InputDSP::num_samples                    = 0;
@@ -47,17 +47,19 @@ uint32_t InputDSP::num_before_end = 0;
 arm_rfft_instance_q31 InputDSP::rfft;
 arm_cfft_radix4_instance_q31 InputDSP::cfft;
 
-decltype(InputDSP::one_over_len) InputDSP::one_over_len = (1.0/(float)transform_len);
-decltype(InputDSP::len_minus_one_over_len) InputDSP::len_minus_one_over_len = ((float)transform_len - 1.0)/(float)transform_len;
-
 __attribute__((section(".m_data2")))
 InputDSP::sampleFractional InputDSP::transform_buffer[transform_len];
 
 __attribute__((section(".m_data2")))
-decltype(InputDSP::transform) InputDSP::transform;
+decltype(InputDSP::complex_transform) InputDSP::complex_transform;
+
+__attribute__((section(".m_data2")))
+decltype(InputDSP::mag_psd) InputDSP::mag_psd;
 
 __attribute__((section(".m_data2")))
 InputDSP::sampleFractional InputDSP::average_buffer[transform_len];
+
+uint32_t InputDSP::window_count;
 
 __attribute__((section(".m_data2")))
 InputDSP::sampleFractional InputDSP::decimate_buffer[decimate_block_size +
@@ -79,7 +81,7 @@ InputDSP::sample_t const InputDSP::decimate_coeffs[decimate_fir_order] = {
 
 PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 	static decltype(new_samples) old_new_samples;
-
+	static AverageConstants constants;
 
 	PT_BEGIN(pt);
 	
@@ -139,11 +141,8 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 		
 		// While there is a full transform available...
 		while(num_decimated >= transform_len){
-			// Multiply old sample average in place
-			vector_mult_scalar(len_minus_one_over_len,
-			                   average_buffer,
-			                   average_buffer,
-			                   transform_len);
+			constants = mk_multipliers();
+
 			// The number of samples remaining before the end of the decimated_frame_buffer
 			num_before_end = decimated_frame_buffer_size - theta;
 			if(num_before_end < transform_len){
@@ -157,18 +156,18 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 				             transform_len - num_before_end);
 
 				vector_dual_mult_scalar_sum(
-					one_over_len,
+					constants.one_over,
 					&decimated_frame_buffer[theta],
-					len_minus_one_over_len,
+					constants.one_minus,
 					average_buffer,
 					average_buffer,
 					num_before_end
 				);
 
 				vector_dual_mult_scalar_sum(
-					one_over_len,
+					constants.one_over,
 					decimated_frame_buffer,
-					len_minus_one_over_len,
+					constants.one_minus,
 					&average_buffer[num_before_end],
 					&average_buffer[num_before_end],
 					transform_len - num_before_end
@@ -181,9 +180,9 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 				             transform_len);
 
 				vector_dual_mult_scalar_sum(
-					one_over_len,
+					constants.one_over,
 					&decimated_frame_buffer[theta],
-					len_minus_one_over_len,
+					constants.one_minus,
 					average_buffer,
 					average_buffer,
 					transform_len
@@ -196,11 +195,16 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 
 			PT_YIELD(pt);
 
-			arm_rfft_q31(&rfft, (q31_t*)transform_buffer, (q31_t*)transform.complex);
+			arm_rfft_q31(&rfft, (q31_t*)transform_buffer, (q31_t*)complex_transform);
 
 			PT_YIELD(pt);
 
-			complex_power(transform.complex, transform.power, transform_len);
+			complex_power_avg_update((powerFractional)constants.one_over,
+			                         complex_transform,
+			                         (powerFractional)constants.one_minus,
+			                         mag_psd,
+			                         mag_psd,
+			                         transform_len);
 
 			PT_YIELD(pt);
 		}

@@ -61,7 +61,7 @@ public:
 	typedef sFractional<1,30> powerFractional;
 
 	static constexpr powerFractional const * get_psd() {
-		return transform.power;
+		return mag_psd;
 	}
 
 	static constexpr sampleFractional const * get_average() {
@@ -121,18 +121,15 @@ protected:
 	static sampleFractional transform_buffer[transform_len];
 
 	//! Storage of complex transform and the computed PSD
-	static union TransformOut {
-		sampleFractional complex[transform_len];
-		powerFractional power[transform_len / 2 - 1];
-		TransformOut(){}
-	} transform;
+	static sampleFractional complex_transform[transform_len];
+
+	static powerFractional mag_psd[transform_len / 2 + 1];
 	
 	//! The average windowed waveform
 	static sampleFractional average_buffer[transform_len];
-	//! Constant for averaging
-	static sampleFractional const one_over_len;
-	//! Constant for averaging
-	static sampleFractional const len_minus_one_over_len;
+
+	//! The number of windows processed so far
+	static uint32_t window_count;
 
 	//! RFFT instance structure
 	static arm_rfft_instance_q31 rfft;
@@ -143,14 +140,30 @@ protected:
 	//! Standard reset flags
 	static bool pending_reset, is_reset;
 
+	struct AverageConstants {
+		sampleFractional one_over;
+		sampleFractional one_minus;
+	};
+
+	static AverageConstants mk_multipliers(){
+		if(!window_count) return {0.0,0.0};
+		sampleFractional one_over = sampleFractional::mk_frac(1, window_count);
+		return {one_over, ((sampleFractional)1.0) - one_over};
+	}
+
 	static void do_reset(){
 		num_samples = 0;
 		buffer_sel = 0;
 		theta = 0;
 		start_time_ms = -1;
+		window_count = 0;
 
 		// Decimated frame buffer really doesn't need to be zero'd...
 		for(auto &a : decimated_frame_buffer) a.setInternal(0);
+
+		// These ones are important though...
+		for(auto &a : mag_psd) a.setInternal(0);
+		for(auto &a : average_buffer) a.setInternal(0);
 
 		arm_fir_decimate_init_q31(&decimate, 5, 3,//decimate_fir_order, 3,
 	                             (q31_t*)decimate_coeffs,

@@ -23,6 +23,7 @@
 #define __APULSE_MATH_H_
 
 #include <stdint.h>
+#include <core_cm4.h>
 
 /*!
  @brief Return the maximum of two values
@@ -225,6 +226,15 @@ public:
 		return *this * *this;
 	}
 
+	static sFractional<i_bits, f_bits> mk_frac(internal_t a, internal_t b){
+		typedef typename IntLength<2*(i_bits + f_bits) + 1>::signed_t double_len_t;
+		double_len_t shifted = a << (i_bits + f_bits);
+		shifted = (shifted / b) >> (i_bits + 1);
+		sFractional<i_bits, f_bits> out;
+		out.setInternal(shifted);
+		return out;
+	}
+
 	template<size_t mi_bits, size_t mf_bits>
 	constexpr sFractional<mi_bits + i_bits, mf_bits + f_bits> operator * (uFractional<mi_bits, mf_bits> const &m) const {
 		typedef typename IntLength<mi_bits + i_bits + mf_bits + f_bits + 1>::signed_t res_t;
@@ -329,18 +339,24 @@ void vector_dual_mult_scalar_sum(T const a,
 
 /*!
  @brief Compute the real power of a complex transform output from ARM libraries
+ @param a A scalar to multiply with power output
  @param X The input array of complex values, as returned from CMSIS-DSP
  @param dst A buffer for output -- may be the same as input
   It must be able to hold at least (n/2 + 1) elements
  @param n The number of input elements
  */
-template<typename T, typename To>
-void complex_power(T const * X, To * dst, size_t n){
+template<typename T, typename Tpwr>
+void complex_power_avg_update(Tpwr a,
+                              T const * X,
+                              Tpwr b,
+                              Tpwr const * Y,
+                              Tpwr * dst,
+                              size_t n){
 	// First bin is real X[0]
-	*dst++ = *X * *X;
+	*dst++ = (Tpwr)(*X * *X) * a + (Tpwr)(*Y++ * b);
 	X++;
-	// Second bin is real X[N/2], don't record until later
-	To tmp = *X * *X;
+	// Second bin is real X[N/2]
+	dst[n/2] = (Tpwr)(*X * *X) * a + (Tpwr)(Y[n/2 + 1] * b);
 	X++;
 	n -= 2;
 	while(n >= 8){
@@ -353,25 +369,34 @@ void complex_power(T const * X, To * dst, size_t n){
 		T x7 = *X++;
 		T x8 = *X++;
 
-		To out1 = (To)(x1*x1) + (To)(x2*x2);
-		To out2 = (To)(x3*x3) + (To)(x4*x4);
-		To out3 = (To)(x5*x5) + (To)(x6*x6);
-		To out4 = (To)(x7*x7) + (To)(x8*x8);
+		Tpwr pwr1 = (Tpwr)(x1*x1) + (Tpwr)(x2*x2);
+		Tpwr pwr2 = (Tpwr)(x3*x3) + (Tpwr)(x4*x4);
+		Tpwr pwr3 = (Tpwr)(x5*x5) + (Tpwr)(x6*x6);
+		Tpwr pwr4 = (Tpwr)(x7*x7) + (Tpwr)(x8*x8);
 
+		Tpwr old1 = *Y++;
+		Tpwr old2 = *Y++;
+		Tpwr old3 = *Y++;
+		Tpwr old4 = *Y++;
 
-		*dst++ = out1;
-		*dst++ = out2;
-		*dst++ = out3;
-		*dst++ = out4;
+		old1 = (pwr1 * a) + (old1 * b);
+		old2 = (pwr2 * a) + (old2 * b);
+		old3 = (pwr3 * a) + (old3 * b);
+		old4 = (pwr4 * a) + (old4 * b);
+
+		*dst++ = old1;
+		*dst++ = old2;
+		*dst++ = old3;
+		*dst++ = old4;
 
 		n -= 8;
 	}
 	while(n > 1){
 		T x1 = *X++;
 		T x2 = *X++;
-		*dst++ = (To)(x1*x1) + (To)(x2*x2);
+		Tpwr pwr1 = (x1*x1) + (x2*x2);
+		*dst++ = pwr1 * a + *Y++ * b;
 	}
-	*dst = tmp;
 }
 
 /*!
