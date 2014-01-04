@@ -219,7 +219,7 @@ public class APulseIface {
 
     private ByteBuffer buffer;
 
-    private USBIface usb;
+    public USBIface usb;
 
     private static final int CMD_RESET        = 0;
     private static final int CMD_STARTUP      = 1;

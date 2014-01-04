@@ -52,10 +52,20 @@ public class Main extends Activity {
         textsend = (EditText) findViewById(R.id.editText);
         textrecv = (EditText) findViewById(R.id.editText2);
 
+        reset_button = (Button)findViewById(R.id.button5);
+        status_button = (Button)findViewById(R.id.button6);
+        start_button = (Button)findViewById(R.id.button7);
+        getdata_button = (Button)findViewById(R.id.button8);
+
         send_button.setEnabled(false);
         recv_button.setEnabled(false);
 
-        usb = new USBIface(this);
+        status_button.setEnabled(false);
+        getdata_button.setEnabled(false);
+        reset_button.setEnabled(false);
+        start_button.setEnabled(false);
+
+        apulse = new APulseIface(this);
 
 
         //IntentFilter filter = new IntentFilter(ACTION_USB_PERMISSION);
@@ -105,7 +115,7 @@ public class Main extends Activity {
 
     public void recvButton(View view){
         byte[] data = new byte[10];//USBIface.max_transfer_size];
-        int size = usb.receive(data, 10);
+        int size = apulse.usb.receive(data, 10);
         String s;
         try{
             s = new String(data, "UTF-8");
@@ -127,7 +137,7 @@ public class Main extends Activity {
 
     public void sendButton(View view){
         byte[] bytes = textsend.getText().toString().getBytes();
-        int cnt = usb.send(bytes, bytes.length);
+        int cnt = apulse.usb.send(bytes, bytes.length);
         if(cnt >= 0){
             textview.setText("Sent data! -- " + cnt);
         } else {
@@ -136,25 +146,37 @@ public class Main extends Activity {
     }
 
     public void connectToggleButton(View view){
-        Switch sw = (Switch)view;
+        final Switch sw = (Switch)view;
         int ret;
         if(sw.isChecked()){
             textview.setText("Attempting to connect...");
-            ret = usb.connect(new USBIface.USBConnHandler() {
+            ret = apulse.usb.connect(new USBIface.USBConnHandler() {
                 public void handleConnected(){
                     textview.setText("Connected successfully!");
                     send_button.setEnabled(true);
                     recv_button.setEnabled(true);
+                    status_button.setEnabled(true);
+                    getdata_button.setEnabled(true);
+                    reset_button.setEnabled(true);
+                    start_button.setEnabled(true);
                 }
                 public void handleError(){
                     textview.setText("Error with permissions");
+                    sw.setChecked(false);
+
                     send_button.setEnabled(false);
                     recv_button.setEnabled(false);
+
+                    status_button.setEnabled(false);
+                    getdata_button.setEnabled(false);
+                    reset_button.setEnabled(false);
+                    start_button.setEnabled(false);
                 }
             });
 
             if(ret != 0){
-                textview.setText(String.format("Error connecting: %d ",ret) + usb.error);
+                textview.setText(String.format("Error connecting: %d ",ret) + apulse.usb.error);
+                sw.setChecked(false);
             }
         } else {
             // Ignore for now
@@ -162,10 +184,32 @@ public class Main extends Activity {
         }
     }
 
+    public void resetButton(View view){
+        apulse.reset();
+    }
+
+    public void statusButton(View view){
+        APulseIface.APulseStatus status = apulse.getStatus();
+    }
+
+    public void startButton(View view){
+
+    }
+
+    public void getdataButton(View view){
+        APulseIface.APulseData data = apulse.getData();
+    }
+
     protected Button send_button;
     protected Button send_clear_button;
     protected Button recv_button;
     protected Button recv_clear_button;
+
+    protected Button reset_button;
+    protected Button status_button;
+    protected Button start_button;
+    protected Button getdata_button;
+
 
     protected TextView textview;
 
@@ -173,5 +217,5 @@ public class Main extends Activity {
 
     protected EditText textsend, textrecv;
 
-    protected USBIface usb;
+    protected APulseIface apulse;
 }
