@@ -71,13 +71,21 @@ public class APulseIface {
         usb.send(buffer.array(), buffer.position());
     }
 
+    public void start(){
+        buffer.position(0);
+        buffer.put((byte)CMD_START);
+
+        usb.send(buffer.array(), 1);
+    }
+
     /*!
      @brief A convenient access class for a returned status code
      */
     static public class APulseStatus {
         public APulseStatus(ByteBuffer buffer){
-            version = ((int)buffer.getChar(0)) & 0xFF;
-            char flags = buffer.getChar(1);
+            version = ((int)buffer.get(0)) & 0xFF;
+            int flags = (int)buffer.get(1);
+            test_ready = (flags & (1 << 5)) != 0;
             is_capturing = (flags & (1 << 5)) != 0;
             is_playing = (flags & (1 << 4)) != 0;
             is_started = (flags & (1 << 3)) != 0;
@@ -94,6 +102,7 @@ public class APulseIface {
         public boolean reset_wavegen;
         public boolean reset_input;
         public boolean reset_controller;
+        public boolean test_ready;
     }
 
     /*!
@@ -165,27 +174,27 @@ public class APulseIface {
                 (int)((APulseIface.transform_len) / 16);
     }
 
-    public class ToneConfig {
+    public static class ToneConfig {
         public void toBuffer(ByteBuffer buffer){
             buffer.put((byte)((tone << 4) & ch));
             buffer.putShort((short)(db * (float)(1 << 8)));
-            buffer.putShort(f1);
-            buffer.putShort(f2);
-            buffer.putShort(t1);
-            buffer.putShort(t2);
+            buffer.putShort((short)f1);
+            buffer.putShort((short)f2);
+            buffer.putShort((short)t1);
+            buffer.putShort((short)t2);
         }
 
         protected int tone;
-        protected short f1;
-        protected short f2;
-        protected short t1;
-        protected short t2;
-        protected float db;
+        protected int f1;
+        protected int f2;
+        protected int t1;
+        protected int t2;
+        protected double db;
         protected int ch;
     }
 
-    public class FixedTone extends ToneConfig {
-        public FixedTone(short f1, short t1, short t2, float db, int ch){
+    public static class FixedTone extends ToneConfig {
+        public FixedTone(int f1, int t1, int t2, double db, int ch){
             this.tone = TONE_FIXED;
             this.f1 = f1;
             this.f2 = f1;
@@ -197,8 +206,8 @@ public class APulseIface {
 
     }
 
-    public class ChirpTone extends ToneConfig {
-        public ChirpTone(short f1, short f2, short t1, short t2, float db, int ch){
+    public static class ChirpTone extends ToneConfig {
+        public ChirpTone(int f1, int f2, int t1, int t2, double db, int ch){
             this.tone = TONE_CHIRP;
             this.f1 = f1;
             this.f2 = f2;

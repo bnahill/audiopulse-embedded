@@ -23,3 +23,147 @@
 
 APulseController::state_t APulseController::state;
 uint32_t APulseController::cmd_idx;
+
+PT_THREAD(APulseController::pt_controller)(struct pt * pt){
+	PT_BEGIN(pt);
+
+	// Run from 32kHz/32 clock
+	timer.configure(Timer::CLKS_FIXED, Timer::PS_32, 0);
+	timer.reset_count(0);
+
+	while(true){
+		PT_YIELD(pt);
+		if(!InputDSP::is_running() &&
+			!WaveGen::is_running() &&
+			timer.is_running()){
+			timer.stop();
+		}
+	}
+
+	PT_END(pt);
+}
+
+uint8_t * APulseController::get_response ( uint16_t& size ) {
+	static union {
+		uint8_t data[64];
+		status_pkt_t status;
+		uint32_t data32[8];
+	} p;
+
+	switch(state){
+	case ST_GETPSD:
+		if(cmd_idx == 16){
+			// Just one more value!
+			((InputDSP::powerFractional *)&p)[0] = InputDSP::get_psd()[InputDSP::transform_len / 2];
+			state = ST_GETAVG;
+			cmd_idx = 0;
+			size = 4;
+			return p.data;
+		}
+		arm_copy_q31((q31_t*)p.data, (q31_t*)&InputDSP::get_psd()[cmd_idx++ * 8], 8);
+		size = 64;
+		return p.data;
+	case ST_GETAVG:
+		arm_copy_q31((q31_t*)p.data, (q31_t*)&InputDSP::get_average()[cmd_idx++ * 8], 8);
+		if(cmd_idx == 16){
+			state = ST_RESET;
+			cmd_idx = 0;
+		}
+		size = 64;
+		return p.data;
+	case ST_RESET:
+	case ST_RESETTING:
+	default:
+		// Send the status packet
+		p.data[0] = 0;
+		p.data[1] = 0;
+		//zero16(p.data, sizeof(status_pkt_t));
+		p.status.version = 22;
+		p.status.is_started = timer.is_running() ? 1 : 0;
+		p.status.is_capturing = InputDSP::is_running() ? 1 : 0;
+		p.status.is_playing = WaveGen::is_running() ? 1 : 0;
+
+		p.status.reset_controller = (state == ST_RESET) ? 1 : 0;
+		p.status.reset_input = InputDSP::is_resetI() ? 1 : 0;
+		p.status.reset_wavegen = WaveGen::is_resetI() ? 1 : 0;
+
+		p.status.test_ready = (WaveGen::is_ready() &&
+		                       InputDSP::is_ready()) ? 1 : 0;
+		size = sizeof(status_pkt_t);
+		return p.data;
+	}
+	return nullptr;
+}
+
+void APulseController::handle_dataI ( uint8_t* data, uint8_t size ) {
+	auto const a = reinterpret_cast<r_packet_t *>(data);
+
+	// First make sure there is data to parse
+	if(!size)
+		return;
+
+	static_assert(sizeof(tone_config_t) == 11,
+					"tone_config_t wrong size");
+	static_assert(sizeof(tone_setup_pkt_t) == 3*sizeof(tone_config_t) + 2,
+					"tone_setup_pkt_t wrong size");
+	static_assert(sizeof(status_pkt_t) == 2,
+					"status_pkt_t wrong size");
+	static_assert(sizeof(capture_config_pkt_t) == 7,
+					"capture_config_pkt wrong size");
+
+	switch(*data){
+	case CMD_RESET:
+		timer.stop();
+		timer.reset_count();
+
+		WaveGen::request_resetI();
+		InputDSP::request_resetI();
+		break;
+	case CMD_GETDATA:
+		state = ST_GETPSD;
+		cmd_idx = 0;
+		break;
+	case CMD_GETSTATUS:
+		// Does this really need to happen?
+		break;
+	case CMD_SETUPCAPTURE:
+		InputDSP::configure(a->capture_config_pkt.overlap,
+							a->capture_config_pkt.start_time,
+							a->capture_config_pkt.num_windows);
+		break;
+	case CMD_SETUPTONES:
+		WaveGen::mute();
+		for(uint32_t i = 0; i < 3; i++){
+			switch(a->tone_config_pkt.tones[i].mode){
+			case TONE_FIXED:
+				WaveGen::set_tone(i,
+					a->tone_config_pkt.tones[i].ch,
+					a->tone_config_pkt.tones[i].f1,
+					a->tone_config_pkt.tones[i].t1,
+					a->tone_config_pkt.tones[i].t2,
+					a->tone_config_pkt.tones[i].amplitude);
+				break;
+			case TONE_CHIRP:
+				WaveGen::set_off(i);
+				break;
+			case TONE_OFF:
+			default:
+				WaveGen::set_off(i);
+				break;
+			}
+		}
+		break;
+	case CMD_STARTUP:
+		break;
+	case CMD_START:
+		timer.stop();
+		timer.reset_count();
+		WaveGen::unmute();
+		TPA6130A2::enable();
+		InputDSP::run();
+		timer.start();
+		break;
+	default:
+		return;
+	}
+}

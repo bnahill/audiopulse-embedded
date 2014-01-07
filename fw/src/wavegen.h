@@ -50,6 +50,9 @@ public:
 	uint16_t w_current; //!< Theta for angular rate in chirp, might not use
 	uint8_t ch;      //!< Which channel is it?
 	AK4621::sample_t gain;   //!< Gain applied to each full-scale sample
+
+	operator bool() const {return type != GEN_OFF;}
+	bool operator !() const {return type == GEN_OFF;}
 };
 
 class WaveGen {
@@ -60,8 +63,16 @@ public:
 		pending_reset = true;
 	}
 
-	static bool is_resetI(){
+	static bool is_resetI() {
 		return is_reset;
+	}
+
+	static bool is_running() {
+		return not silent;
+	}
+
+	static bool is_ready() {
+		return WaveGen::is_ready() && (generators[0].type);
 	}
 
 	/*!
@@ -76,7 +87,7 @@ public:
 	 * 
 	 * @note Inlined because only a single caller
 	 */
-	static void get_samplesI(sample_t * dst){
+	static inline void get_samplesI(sample_t * dst){
 		// Zero the whole damn thing first
 		zero16(dst, buffer_size);
 		// Check if muting
@@ -111,18 +122,7 @@ public:
 	}
 	
 	static void set_tone(uint8_t idx, uint8_t ch, uint16_t f1,
-	              uint16_t t1, uint16_t t2, sFractional<7,8> gaindb){
-		Generator &gen = generators[idx];
-		gen.type = Generator::GEN_OFF;
-		gen.ch = ch;
-		//gen.gain = 0x3FFFFFFF; // THIS IS NOT CORRECT
-		gen.gain = db_to_gain(gaindb).i;
-		gen.t1 = t1;
-		gen.t2 = t2;
-		gen.w1 = f1 * wavetable_len * 2 / fs;
-		gen.theta = 0;
-		gen.type = Generator::GEN_FIXED;
-	}
+	              uint16_t t1, uint16_t t2, sFractional<7,8> gaindb);
 	
 	static void set_off(uint8_t idx){
 		generators[idx].type = Generator::GEN_OFF;
@@ -144,6 +144,8 @@ public:
 		PT_BEGIN(pt);
 
 		AK4621::set_out_cb(get_samplesI);
+
+		do_reset();
 
 		while(true){
 			// Check for reset request

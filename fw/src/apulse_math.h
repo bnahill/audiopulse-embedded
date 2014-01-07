@@ -175,9 +175,9 @@ public:
 	 * @brief Constructor for arbitrary signed fractionals
 	 */
 	template<size_t mi_bits, size_t mf_bits>
-	constexpr sFractional(const sFractional<mi_bits, mf_bits> &val) :
+	constexpr inline sFractional(const sFractional<mi_bits, mf_bits> &val) :
 		i(val.normalize<i_bits, f_bits>().i){}
-	constexpr sFractional(const internal_t &val) :
+	constexpr inline sFractional(const internal_t &val) :
 			 i(val){}
 	constexpr sFractional(const double &val) :
 		i(val * (1 << f_bits)){}
@@ -197,7 +197,7 @@ public:
 	 * @brief Convert a fractional number to a different format
 	 */
 	template<size_t ni_bits, size_t nf_bits>
-	constexpr sFractional<ni_bits, nf_bits> normalize() const {
+	constexpr inline sFractional<ni_bits, nf_bits> normalize() const {
 		typedef sFractional<ni_bits, nf_bits> n_t;
 		return n_t((typename n_t::internal_t) (i >> (f_bits - nf_bits)));
 	}

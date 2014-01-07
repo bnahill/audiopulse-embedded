@@ -41,6 +41,7 @@ public:
 	 */
 	static void enable(){
 		// Always enabled for now...
+		enabled = true;
 	}
 	
 	/*!
@@ -50,9 +51,16 @@ public:
 	 */
 	static void disable(){
 		//nSD.clear();
+		enabled = false;
+	}
+
+	static bool is_ready(){
+		return enabled;
 	}
 	
 protected:
+	static bool enabled;
+
 	/*!
 	 @brief Write a register over I2C
 	 */

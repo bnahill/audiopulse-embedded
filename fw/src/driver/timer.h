@@ -73,6 +73,10 @@ public:
 		// Don't care about other fields
 		FTM->MODE = FTM_MODE_WPDIS_MASK;
 	}
+
+	bool is_running() const {
+		return FTM->MODE & FTM_MODE_FTMEN_MASK;
+	}
 	
 	void reset_count(uint16_t initial = 0) const {
 		FTM->CNTIN = FTM_CNTIN_INIT(initial);

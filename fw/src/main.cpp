@@ -34,10 +34,10 @@ extern "C" {
  * @brief Application entry point
  */
 void main(){
-	struct pt pt_dsp, pt_command_parser, pt_wavegen;
+	struct pt pt_dsp, pt_controller, pt_wavegen;
 
 	PT_INIT(&pt_dsp);
-	PT_INIT(&pt_command_parser);
+	PT_INIT(&pt_controller);
 	PT_INIT(&pt_wavegen);
 
 	// Perform late initializations
@@ -51,9 +51,9 @@ void main(){
 // 	APulseController::handle_dataI(&data, 1);
 	
 	while(true){
-		APulseController::pt_command_parser(&pt_command_parser);
 		InputDSP::pt_dsp(&pt_dsp);
 		WaveGen::pt_wavegen(&pt_wavegen);
+		APulseController::pt_controller(&pt_controller);
     }
 } 
 

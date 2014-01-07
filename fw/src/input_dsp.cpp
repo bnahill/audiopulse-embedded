@@ -38,11 +38,12 @@ arm_fir_decimate_instance_q31 InputDSP::decimate;
 decltype(InputDSP::start_time_ms) InputDSP::start_time_ms = -1;
 decltype(InputDSP::num_windows) InputDSP::num_windows;
 
-bool InputDSP::is_reset, InputDSP::pending_reset;
+bool InputDSP::is_reset, InputDSP::pending_reset, InputDSP::running;
 
 uint32_t InputDSP::theta = 0;
 uint8_t InputDSP::buffer_sel = 0;
 uint32_t InputDSP::num_before_end = 0;
+
 
 arm_rfft_instance_q31 InputDSP::rfft;
 arm_cfft_radix4_instance_q31 InputDSP::cfft;
@@ -112,7 +113,7 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 
 	while(true){
 		PT_WAIT_UNTIL(pt,
-			(new_samples && (start_time_ms > APulseController::get_time_ms())) ||
+			(is_running() && new_samples && (start_time_ms > APulseController::get_time_ms())) ||
 			pending_reset);
 
 		if(pending_reset){
@@ -206,7 +207,13 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 			                         mag_psd,
 			                         transform_len);
 
+			// Check if we've processed enough windows to shut down
+			if(++window_count >= num_windows){
+				stop();
+			}
+
 			PT_YIELD(pt);
+
 		}
 		
 	}
@@ -228,8 +235,10 @@ void InputDSP::do_decimate(sampleFractional * dst){
 }
 
 void InputDSP::put_samplesI(sample_t * samples){
-	new_samples = reinterpret_cast<sampleFractional *>(samples);
-	num_samples = AK4621::in_buffer_size;
+	if(running){
+		new_samples = reinterpret_cast<sampleFractional *>(samples);
+		num_samples = AK4621::in_buffer_size;
+	}
 }
 
 // np.round(signal.windows.hamming(512) * 2**31).astype(np.int32)

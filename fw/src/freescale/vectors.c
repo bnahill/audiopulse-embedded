@@ -86,7 +86,19 @@ void Cpu_Interrupt(void)
 
 void Cpu_INT_HardFaultInterrupt()
 {
-
+    asm(
+         " movs r0,#4       \n"
+         " movs r1, lr      \n"
+         " tst r0, r1       \n"
+         " beq _MSP         \n"
+         " mrs r0, psp      \n"
+         " b _HALT          \n"
+       "_MSP:               \n"
+         " mrs r0, msp      \n"
+       "_HALT:              \n"
+         " ldr r1,[r0,#20]  \n"
+         " bkpt #0          \n"
+    );
 }
 
 void Cpu_INT_BusFaultInterrupt()

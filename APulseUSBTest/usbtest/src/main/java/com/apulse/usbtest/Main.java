@@ -49,8 +49,9 @@ public class Main extends Activity {
         textview = (TextView) findViewById(R.id.textView);
         toggle_button = (Switch) findViewById(R.id.switch1);
 
-        textsend = (EditText) findViewById(R.id.editText);
-        textrecv = (EditText) findViewById(R.id.editText2);
+        textsend = (EditText) findViewById(R.id.editText2);
+        textrecv = (EditText) findViewById(R.id.editText);
+        app_out = (EditText) findViewById(R.id.editText3);
 
         reset_button = (Button)findViewById(R.id.button5);
         status_button = (Button)findViewById(R.id.button6);
@@ -67,6 +68,9 @@ public class Main extends Activity {
 
         apulse = new APulseIface(this);
 
+
+        app_out.setKeyListener(null);
+        textrecv.setKeyListener(null);
 
         //IntentFilter filter = new IntentFilter(ACTION_USB_PERMISSION);
         //registerReceiver(mUsbReceiver, filter);
@@ -148,6 +152,7 @@ public class Main extends Activity {
     public void connectToggleButton(View view){
         final Switch sw = (Switch)view;
         int ret;
+        app_out.setText("");
         if(sw.isChecked()){
             textview.setText("Attempting to connect...");
             ret = apulse.usb.connect(new USBIface.USBConnHandler() {
@@ -190,10 +195,27 @@ public class Main extends Activity {
 
     public void statusButton(View view){
         APulseIface.APulseStatus status = apulse.getStatus();
+
+        app_out.setText(
+                "Version: " + status.version + " Status: "+
+                " ic=" + (status.is_capturing? "1":"0") +
+                " ip=" + (status.is_playing? "1":"0") +
+                " is=" + (status.is_started? "1":"0") +
+                " rw=" + (status.reset_wavegen? "1":"0") +
+                " ri=" + (status.reset_input? "1":"0") +
+                " rc=" + (status.reset_controller? "1":"0") +
+                " ready=" + (status.test_ready? "1":"0")
+        );
     }
 
     public void startButton(View view){
+        APulseIface.ToneConfig[] tones = new APulseIface.ToneConfig[2];
+        tones[0] = new APulseIface.FixedTone(2000, 1000, 20000, 65.0, 0);
+        tones[1] = new APulseIface.FixedTone(5000, 1000, 20000, 65.0, 0);
 
+        apulse.configTones(tones);
+
+        apulse.start();
     }
 
     public void getdataButton(View view){
@@ -212,6 +234,8 @@ public class Main extends Activity {
 
 
     protected TextView textview;
+
+    protected EditText app_out;
 
     protected Switch toggle_button;
 

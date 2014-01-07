@@ -21,6 +21,8 @@
 
 #include <driver/tpa6130a2.h>
 
+bool TPA6130A2::enabled = false;
+
 void TPA6130A2::init(){
 	if(I2C == I2C0_BASE_PTR){
 		SIM_SCGC4 |= SIM_SCGC4_I2C0_MASK;

@@ -49,12 +49,21 @@ public:
 	 */
 	static void put_samplesI(AK4621::sample_t * samples);
 
-	static void request_resetI(){
-		pending_reset = true;
-	}
+	static void run(){running = true;}
 
-	static bool is_resetI(){
-		return is_reset;
+	static void stop(){running = false;}
+
+	static void request_resetI(){pending_reset = true;}
+
+	static bool is_resetI(){return is_reset;}
+
+	static bool is_running(){return running;}
+
+	static bool is_ready(){
+		return (num_windows > 0) &&
+		       (window_count == 0) &&
+		       (num_samples == 0) &&
+		       (start_time_ms != -1);
 	}
 	
 	typedef sFractional<0,31> sampleFractional;
@@ -138,7 +147,7 @@ protected:
 	//! @}
 	
 	//! Standard reset flags
-	static bool pending_reset, is_reset;
+	static bool pending_reset, is_reset, running;
 
 	struct AverageConstants {
 		sampleFractional one_over;
@@ -152,6 +161,8 @@ protected:
 	}
 
 	static void do_reset(){
+		running = 0;
+		new_samples = nullptr;
 		num_samples = 0;
 		buffer_sel = 0;
 		theta = 0;
