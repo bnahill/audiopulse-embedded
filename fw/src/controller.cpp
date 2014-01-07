@@ -23,6 +23,7 @@
 
 APulseController::state_t APulseController::state;
 uint32_t APulseController::cmd_idx;
+uint8_t APulseController::err_code;
 
 PT_THREAD(APulseController::pt_controller)(struct pt * pt){
 	PT_BEGIN(pt);
@@ -75,10 +76,7 @@ uint8_t * APulseController::get_response ( uint16_t& size ) {
 	case ST_RESETTING:
 	default:
 		// Send the status packet
-		p.data[0] = 0;
-		p.data[1] = 0;
-		//zero16(p.data, sizeof(status_pkt_t));
-		p.status.version = 22;
+		p.status.version = 02;
 		p.status.is_started = timer.is_running() ? 1 : 0;
 		p.status.is_capturing = InputDSP::is_running() ? 1 : 0;
 		p.status.is_playing = WaveGen::is_running() ? 1 : 0;
@@ -89,6 +87,8 @@ uint8_t * APulseController::get_response ( uint16_t& size ) {
 
 		p.status.test_ready = (WaveGen::is_ready() &&
 		                       InputDSP::is_ready()) ? 1 : 0;
+		p.status.err_code = err_code;
+		
 		size = sizeof(status_pkt_t);
 		return p.data;
 	}
@@ -106,7 +106,7 @@ void APulseController::handle_dataI ( uint8_t* data, uint8_t size ) {
 					"tone_config_t wrong size");
 	static_assert(sizeof(tone_setup_pkt_t) == 3*sizeof(tone_config_t) + 2,
 					"tone_setup_pkt_t wrong size");
-	static_assert(sizeof(status_pkt_t) == 2,
+	static_assert(sizeof(status_pkt_t) == 3,
 					"status_pkt_t wrong size");
 	static_assert(sizeof(capture_config_pkt_t) == 7,
 					"capture_config_pkt wrong size");
@@ -156,6 +156,15 @@ void APulseController::handle_dataI ( uint8_t* data, uint8_t size ) {
 	case CMD_STARTUP:
 		break;
 	case CMD_START:
+		err_code = 0;
+		if(!WaveGen::is_ready()){
+			err_code = 1;
+		}
+		if(!InputDSP::is_ready()){
+			err_code |= 2;
+		}
+		if(err_code)
+			break;
 		timer.stop();
 		timer.reset_count();
 		WaveGen::unmute();

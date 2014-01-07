@@ -85,6 +85,8 @@ public class APulseIface {
         public APulseStatus(ByteBuffer buffer){
             version = ((int)buffer.get(0)) & 0xFF;
             int flags = (int)buffer.get(1);
+            err_code = (int)buffer.get(1);
+
             test_ready = (flags & (1 << 5)) != 0;
             is_capturing = (flags & (1 << 5)) != 0;
             is_playing = (flags & (1 << 4)) != 0;
@@ -103,6 +105,7 @@ public class APulseIface {
         public boolean reset_input;
         public boolean reset_controller;
         public boolean test_ready;
+        public int err_code;
     }
 
     /*!

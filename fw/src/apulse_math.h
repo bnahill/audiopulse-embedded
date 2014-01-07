@@ -23,7 +23,6 @@
 #define __APULSE_MATH_H_
 
 #include <stdint.h>
-#include <core_cm4.h>
 
 /*!
  @brief Return the maximum of two values
@@ -109,10 +108,8 @@ public:
 		i(val * (1 << f_bits)){}
 	constexpr uFractional(const float &val) :
 		i(val * (1 << f_bits)){}
-	constexpr uFractional(const int &val) :
-		i(((unsigned int)val) << f_bits){}
 	constexpr double asDouble() const{
-		return ((double)i) / (1 << f_bits);
+		return ((double)i) / (double)((1 << f_bits) - 1);
 	}
 
 	/*!
@@ -150,6 +147,14 @@ public:
 	constexpr uFractional<max(mi_bits, i_bits), max(mf_bits, f_bits)> operator - (uFractional<mi_bits, mf_bits> &m) const {
 		return m.i - i;
 	}
+	
+	constexpr uFractional<i_bits, f_bits> operator - (uFractional<i_bits, f_bits> &m) const {
+		return m.i - i;
+	}
+	
+	
+	static constexpr uFractional<i_bits,f_bits> minval(){return (internal_t)0;}
+	static constexpr uFractional<i_bits,f_bits> maxval(){return (internal_t)(-1);}
 
 	internal_t i : i_bits + f_bits;
 } __attribute__((packed));
@@ -180,12 +185,12 @@ public:
 	constexpr inline sFractional(const internal_t &val) :
 			 i(val){}
 	constexpr sFractional(const double &val) :
-		i(val * (1 << f_bits)){}
+		i(val * ((1 << f_bits) - 1)){}
 	constexpr sFractional(const float &val) :
 		i(val * (1 << f_bits)){}
 //	constexpr sFractional(const int &val) :
 //		i(((signed int)val) << f_bits){}
-	constexpr double asDouble() const{
+	constexpr double asDouble() const {
 		return ((double)i) / (double)(((unsigned)1) << (f_bits));
 	}
 
@@ -230,9 +235,7 @@ public:
 		typedef typename IntLength<2*(i_bits + f_bits) + 1>::signed_t double_len_t;
 		double_len_t shifted = a << (i_bits + f_bits);
 		shifted = (shifted / b) >> (i_bits + 1);
-		sFractional<i_bits, f_bits> out;
-		out.setInternal(shifted);
-		return out;
+		return (sFractional<i_bits, f_bits>::internal_t) shifted;
 	}
 
 	template<size_t mi_bits, size_t mf_bits>
@@ -250,7 +253,11 @@ public:
 	constexpr sFractional<max(mi_bits, i_bits), max(mf_bits, f_bits)> operator - (sFractional<mi_bits, mf_bits> const &m) const {
 		return m.i - i;
 	}
-
+	
+	
+	static constexpr sFractional<i_bits,f_bits> minval(){return (internal_t)(1 << (f_bits + i_bits));}
+	static constexpr sFractional<i_bits,f_bits> maxval(){return (internal_t)minval().i - 1;}
+	
 	internal_t i : i_bits + f_bits + 1;
 } __attribute__((packed));
 
@@ -407,26 +414,27 @@ void complex_power_avg_update(Tpwr a,
  */
 template<typename T>
 void zero16(T * dst, uint32_t n){
-	register uint32_t loops = (n + 15) >> 4;
-	if(!n) return; // But why would anyone do this?
-	switch(n & 0xF){
-	case 0: do { *dst++ = 0;
-	case 15: *dst++ = 0;
-	case 14: *dst++ = 0;
-	case 13: *dst++ = 0;
-	case 12: *dst++ = 0;
-	case 11: *dst++ = 0;
-	case 10: *dst++ = 0;
-	case 9: *dst++ = 0;
-	case 8: *dst++ = 0;
-	case 7: *dst++ = 0;
-	case 6: *dst++ = 0;
-	case 5: *dst++ = 0;
-	case 4: *dst++ = 0;
-	case 3: *dst++ = 0;
-	case 2: *dst++ = 0;
-	case 1: *dst++ = 0;
-		} while(--loops > 0);
+	while(n >= 16){
+		*dst++ = 0;
+		*dst++ = 0;
+		*dst++ = 0;
+		*dst++ = 0;
+		*dst++ = 0;
+		*dst++ = 0;
+		*dst++ = 0;
+		*dst++ = 0;
+		*dst++ = 0;
+		*dst++ = 0;
+		*dst++ = 0;
+		*dst++ = 0;
+		*dst++ = 0;
+		*dst++ = 0;
+		*dst++ = 0;
+		*dst++ = 0;
+		n -= 16;
+	}
+	while(n--){
+		*dst++ = 0;
 	}
 }
 

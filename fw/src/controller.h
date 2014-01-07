@@ -116,6 +116,7 @@ class APulseController {
 		uint8_t is_capturing     : 1;
 		uint8_t test_ready       : 1;
 		uint8_t reserved         : 1;
+		uint8_t err_code;
 	} status_pkt_t;
 
 	typedef union {
@@ -163,6 +164,7 @@ public:
 private:
 	static state_t state;
 	static uint32_t cmd_idx;
+	static uint8_t err_code;
 };
 
 #endif // __APULSE_CONTROLLER_H_

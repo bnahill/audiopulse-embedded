@@ -91,7 +91,7 @@ set(BOARD_REVISION "1" CACHE STRING "Which revision is it? BB=1, SF=2")
 # Build Options
 ########################################################
 
-set(OPTIMIZATION "-Os")
+set(OPTIMIZATION "-O3")
 set(LTO )#"-flto")
 
 set(MCU cortex-m4)
