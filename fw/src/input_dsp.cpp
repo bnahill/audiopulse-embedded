@@ -175,7 +175,7 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 					             (q31_t*)&transform_buffer[num_before_end],
 					             transform_len - num_before_end);
 
-					vector_dual_mult_scalar_sum(
+					weighted_vector_sum(
 						constants.one_over,
 						&decimated_frame_buffer[theta],
 						constants.one_minus,
@@ -184,7 +184,7 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 						num_before_end
 					);
 
-					vector_dual_mult_scalar_sum(
+					weighted_vector_sum(
 						constants.one_over,
 						decimated_frame_buffer,
 						constants.one_minus,
@@ -202,7 +202,7 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 						transform_len
 					);
 
-					vector_dual_mult_scalar_sum(
+					weighted_vector_sum(
 						constants.one_over,
 						&decimated_frame_buffer[theta],
 						constants.one_minus,

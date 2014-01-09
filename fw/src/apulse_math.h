@@ -309,12 +309,12 @@ void vector_mult_scalar(T a, T const * B, T * dst, size_t n){
  This is more-or-less optimized for 32-bit types
  */
 template<typename T>
-void vector_dual_mult_scalar_sum(T const a,
-                                 T const * X,
-                                 T const b,
-                                 T const * Y,
-                                 T * dst,
-                                 size_t n){
+void weighted_vector_sum(T const a,
+                         T const * X,
+                         T const b,
+                         T const * Y,
+                         T * dst,
+                         size_t n){
 	while(n >= 4){
 		T x1 = *X++;
 		T x2 = *X++;
@@ -346,11 +346,17 @@ void vector_dual_mult_scalar_sum(T const a,
 
 /*!
  @brief Compute the real power of a complex transform output from ARM libraries
+   and add it to the previous average
  @param a A scalar to multiply with power output
  @param X The input array of complex values, as returned from CMSIS-DSP
  @param dst A buffer for output -- may be the same as input
   It must be able to hold at least (n/2 + 1) elements
  @param n The number of input elements
+ 
+ Computes (roughly) dst = a * mag(X)^2 + b * Y
+ X is formatted a bit funny, hence the "roughly"
+ 
+ @note Y may refer to the same buffer as dst
  */
 template<typename T, typename Tpwr>
 void complex_power_avg_update(Tpwr a,

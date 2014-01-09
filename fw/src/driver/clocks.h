@@ -25,6 +25,44 @@
 #include <derivative.h>
 #include <driver/gpio.h>
 
+/*!
+ @brief A constant configuration for clocks to make it easy to switch between
+ configurations
+ 
+ @TODO Add USB division
+ */
+class ClockConfig {
+public:
+	constexpr ClockConfig(
+		uint32_t const mcgoutclk,
+		uint32_t const busclk,
+		
+		uint32_t const clk_xtal,
+		uint32_t const clk_pll_div,
+		uint32_t const clk_pll_mul,
+		uint32_t const clk_core_div,
+		uint32_t const clk_bus_div,
+		uint32_t const clk_flexbus_div,
+		uint32_t const clk_flash_div) :
+		mcgoutclk(mcgoutclk), busclk(busclk),
+		clk_xtal(clk_xtal), clk_pll_div(clk_pll_div),
+		clk_pll_mul(clk_pll_mul), clk_core_div(clk_core_div),
+		clk_bus_div(clk_bus_div), clk_flexbus_div(clk_flexbus_div),
+		clk_flash_div(clk_flash_div)
+		{}
+private:
+	uint32_t const mcgoutclk;
+	uint32_t const busclk;
+	
+	uint32_t const clk_xtal;
+	uint32_t const clk_pll_div;
+	uint32_t const clk_pll_mul;
+	uint32_t const clk_core_div;
+	uint32_t const clk_bus_div;
+	uint32_t const clk_flexbus_div;
+	uint32_t const clk_flash_div;
+};
+
 class Clock {
 public:
 	/*!
@@ -59,6 +97,8 @@ public:
 		}
 	}
 
+
+	
 private:
 	static constexpr GPIOPin clkout = {PTC_BASE_PTR, 3};
 
@@ -69,6 +109,33 @@ private:
 	static constexpr uint32_t clk_bus_div = 1;
 	static constexpr uint32_t clk_flexbus_div = 1;
 	static constexpr uint32_t clk_flash_div = 2; // Max 25MHz
+	
+	static constexpr ClockConfig clk48 = {
+		48000000, // Run OUTCLK at 48MHz
+		48000000, // Bus clock is same
+		8000000,  // xtal is 8MHz
+		4,        // PLL input is 8MHz / 4
+		24,       // Multiply that by 24 = 48MHz
+		1,        // Core is MCGOUTCLK / 1
+		1,        // Bus is MCGOUTCLK / 1
+		1,        // Flexbus is MCGOUTCLK / 1
+		2         // Flash is MCGOUTCLK / 2
+	};
+	
+	static constexpr ClockConfig clk72 = {
+		72000000, // Run OUTCLK at 72MHz
+		36000000, // Bus clock is half that
+		8000000,  // xtal is 8MHz
+		4,        // PLL input is 8MHz / 4
+		36,       // Multiply that by 36 = 72MHz
+		1,        // Core is MCGOUTCLK / 1
+		1,        // Bus is MCGOUTCLK / 2
+		1,        // Flexbus is MCGOUTCLK / 2 = 36MHz
+		3         // Flash is MCGOUTCLK / 3 = 24MHz
+	};
+	
+	//! Select the configuration to use
+	static constexpr ClockConfig config = clk48;
 };
 
 #endif // __APULSE_CLOCKS_H_

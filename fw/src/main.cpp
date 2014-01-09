@@ -47,6 +47,8 @@ void main(){
 	
 	AK4621::start();
 	
+	//Clock::set_clkout(Clock::CLKOUT_MCGIRCLK);
+	
 // 	uint8_t data = 0xA5;
 // 	APulseController::handle_dataI(&data, 1);
 	

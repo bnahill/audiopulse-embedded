@@ -108,4 +108,5 @@ protected:
 	FTM_MemMapPtr const FTM;
 };
 
+
 #endif // __APULSE_TIMER_H_
