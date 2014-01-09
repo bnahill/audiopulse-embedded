@@ -1,4 +1,4 @@
-	define r
+define r
     mon reset
 end
 
@@ -13,3 +13,5 @@ file @OUTFILE@
 
 target remote :2331
 
+source ${CMAKE_SOURCE_DIR}/cmdebug/gdb.py
+dwt configclk 48000000
