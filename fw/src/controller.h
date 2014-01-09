@@ -152,7 +152,8 @@ public:
 	static uint8_t * get_response(uint16_t &size);
 	
 	static uint16_t get_time_ms(){
-		return timer.get_count();
+		//return timer.get_count();
+		return timer.get_ms();
 	}
 
 	void request_resetI();
@@ -161,7 +162,8 @@ public:
 	static PT_THREAD(pt_controller(struct pt * pt));
 	
 	//! An instance of the timer for synchronization
-	static constexpr Timer timer = FTM0_BASE_PTR;
+	//static constexpr Timer timer = FTM0_BASE_PTR;
+	static constexpr TimerPIT timer = 0;
 private:
 	static teststate_t teststate;
 	static state_t state;

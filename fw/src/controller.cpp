@@ -29,16 +29,18 @@ decltype(APulseController::teststate) APulseController::teststate = TEST_RESET;
 PT_THREAD(APulseController::pt_controller)(struct pt * pt){
 	PT_BEGIN(pt);
 
+	timer.reset();
+	
 	// Run from 32kHz/32 clock
-	timer.configure(Timer::CLKS_FIXED, Timer::PS_32, 0);
-	timer.reset_count(0);
+	//timer.configure(Timer::CLKS_FIXED, Timer::PS_32, 0);
+	//timer.reset_count(0);
 
 	while(true){
 		PT_YIELD(pt);
 		if(!InputDSP::is_running() &&
 			!WaveGen::is_running() &&
 			timer.is_running()){
-			timer.stop();
+			timer.reset();
 		}
 	}
 
@@ -121,8 +123,9 @@ void APulseController::handle_dataI ( uint8_t* data, uint8_t size ) {
 	switch(*data){
 	case CMD_RESET:
 		err_code = 0;
-		timer.stop();
-		timer.reset_count();
+		//timer.stop();
+		//timer.reset_count();
+		timer.reset();
 
 		teststate = TEST_RESET;
 		WaveGen::request_resetI();
@@ -191,8 +194,9 @@ void APulseController::handle_dataI ( uint8_t* data, uint8_t size ) {
 		}
 		if(err_code)
 			break;
-		timer.stop();
-		timer.reset_count();
+// 		timer.stop();
+// 		timer.reset_count();
+		timer.reset();
 		WaveGen::runI();
 		InputDSP::runI();
 		timer.start();

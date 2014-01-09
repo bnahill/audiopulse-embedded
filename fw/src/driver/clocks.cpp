@@ -22,10 +22,10 @@
 #include <driver/platform.h>
 
 void Clock::setupClocks(){
-	SIM_CLKDIV1 = SIM_CLKDIV1_OUTDIV1(clk_core_div - 1) |
-				  SIM_CLKDIV1_OUTDIV2(clk_bus_div - 1) |
-				  SIM_CLKDIV1_OUTDIV3(clk_flexbus_div - 1) |
-				  SIM_CLKDIV1_OUTDIV4(clk_flash_div - 1);
+	SIM_CLKDIV1 = SIM_CLKDIV1_OUTDIV1(config.clk_core_div - 1) |
+				  SIM_CLKDIV1_OUTDIV2(config.clk_bus_div - 1) |
+				  SIM_CLKDIV1_OUTDIV3(config.clk_flexbus_div - 1) |
+				  SIM_CLKDIV1_OUTDIV4(config.clk_flash_div - 1);
 	switchFEItoFBE();
 	switchFBEtoPBE();
 	switchPBEtoPEE();
@@ -56,12 +56,12 @@ void Clock::switchFEItoFBE(){
 
 void Clock::switchFBEtoPBE(){
 	// Configure PLL divider
-	MCG_C5 = MCG_C5_PRDIV0(clk_pll_div - 1);
+	MCG_C5 = MCG_C5_PRDIV0(config.clk_pll_div - 1);
 	// Configure PLL multiplier
-	MCG_C6 = MCG_C6_VDIV0(clk_pll_mul - 24);
+	MCG_C6 = MCG_C6_VDIV0(config.clk_pll_mul - 24);
 
 	// Enable that PLL
-	MCG_C5 = MCG_C5_PRDIV0(clk_pll_div - 1) | MCG_C5_PLLCLKEN0_MASK;
+	MCG_C5 = MCG_C5_PRDIV0(config.clk_pll_div - 1) | MCG_C5_PLLCLKEN0_MASK;
 
 	// Wait for lock
 	while(!(MCG_S & MCG_S_LOCK0_MASK));
@@ -69,7 +69,7 @@ void Clock::switchFBEtoPBE(){
 
 void Clock::switchPBEtoPEE(){
 	// Switch PLLS to PLL
-	MCG_C6 = MCG_C6_VDIV0(clk_pll_mul - 24) | MCG_C6_PLLS_MASK;
+	MCG_C6 = MCG_C6_VDIV0(config.clk_pll_mul - 24) | MCG_C6_PLLS_MASK;
 
 	// Switch main clock to PLL
 	MCG_C1 = MCG_C1_CLKS(0) | MCG_C1_IREFS_MASK | MCG_C1_IRCLKEN_MASK;

@@ -50,7 +50,7 @@ public:
 		clk_bus_div(clk_bus_div), clk_flexbus_div(clk_flexbus_div),
 		clk_flash_div(clk_flash_div)
 		{}
-private:
+
 	uint32_t const mcgoutclk;
 	uint32_t const busclk;
 	
@@ -98,18 +98,6 @@ public:
 	}
 
 
-	
-private:
-	static constexpr GPIOPin clkout = {PTC_BASE_PTR, 3};
-
-	static constexpr uint32_t clk_xtal = 8000000;
-	static constexpr uint32_t clk_pll_div = 4; // Make 2MHz
-	static constexpr uint32_t clk_pll_mul = 24; // Make 48MHz
-	static constexpr uint32_t clk_core_div = 1;    // Use 48MHz for everything
-	static constexpr uint32_t clk_bus_div = 1;
-	static constexpr uint32_t clk_flexbus_div = 1;
-	static constexpr uint32_t clk_flash_div = 2; // Max 25MHz
-	
 	static constexpr ClockConfig clk48 = {
 		48000000, // Run OUTCLK at 48MHz
 		48000000, // Bus clock is same
@@ -136,6 +124,9 @@ private:
 	
 	//! Select the configuration to use
 	static constexpr ClockConfig config = clk48;
+	
+private:
+	static constexpr GPIOPin clkout = {PTC_BASE_PTR, 3};
 };
 
 #endif // __APULSE_CLOCKS_H_

@@ -108,5 +108,37 @@ protected:
 	FTM_MemMapPtr const FTM;
 };
 
+class TimerPIT {
+public:
+	constexpr TimerPIT(uint32_t index) : i(index) {}
+	
+	void reset() const {
+		PIT_MCR = PIT_MCR_FRZ_MASK; // Enable timer clocks but stop in debug
+		PIT_TCTRL(i) = 0; // Disable timer
+		PIT_LDVAL(i) = 0;
+	}
+	
+	void start() const {
+		PIT_TCTRL(i) = PIT_TCTRL_TEN_MASK;
+	}
+	
+	bool is_running() const {
+		return PIT_TCTRL(i) & PIT_TCTRL_TEN_MASK;
+	}
+	
+	uint32_t get_ms() const {
+		return to_ms(PIT_CVAL(i));
+	}
+protected:
+	static constexpr uint32_t to_ms(uint32_t cval){
+		return ((uint64_t)(0xFFFFFFFF-cval) * mul) >> 32;
+	}
+	
+	static constexpr uint32_t div = (Clock::config.busclk / 1000);
+	static constexpr uint32_t mul = (uint32_t)((((uint64_t)(1)) << 32) / div);
+	
+	uint32_t const i;
+};
+
 
 #endif // __APULSE_TIMER_H_
