@@ -196,7 +196,12 @@ public class Main extends Activity {
     public void statusButton(View view){
         APulseIface.APulseStatus status = apulse.getStatus();
 
-        String out = String.format("Version: %d, Test state: %s, WaveGen state: %s, Input state: %s, Error: %d",
+        String out = String.format(
+                "Version:       %d\n" +
+                "Test state:    %s\n" +
+                "WaveGen state: %s\n" +
+                "Input state:   %s\n" +
+                "Error:         %d",
                 status.version,
                 status.testStateString(),
                 status.wgStateString(),
