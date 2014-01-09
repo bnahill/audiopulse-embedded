@@ -40,7 +40,13 @@ PT_THREAD(APulseController::pt_controller)(struct pt * pt){
 		if(!InputDSP::is_running() &&
 			!WaveGen::is_running() &&
 			timer.is_running()){
+
 			timer.reset();
+		}
+		if(InputDSP::get_state() == InputDSP::ST_DONE &&
+		   WaveGen::get_state() == WaveGen::ST_DONE){
+			teststate = TEST_DONE;
+			Platform::led.clear();
 		}
 	}
 
@@ -201,6 +207,7 @@ void APulseController::handle_dataI ( uint8_t* data, uint8_t size ) {
 		InputDSP::runI();
 		timer.start();
 		teststate = TEST_RUNNING;
+		Platform::led.set();
 		break;
 	default:
 		return;

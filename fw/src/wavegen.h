@@ -120,8 +120,10 @@ public:
 			alldone |= generator.t2 < t;
 		}
 
-		if(alldone)
+		if(alldone){
 			mute();
+			state = ST_DONE;
+		}
 	}
 	
 	//! @name Tone selection functions

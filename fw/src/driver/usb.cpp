@@ -84,18 +84,9 @@ uint8_t USB::callback_param(uint8_t request, uint16_t value, uint16_t iface,
 	
 	switch(request){
 	case USB_HID_GET_REPORT_REQUEST :
-		Platform::led.clear();
-// 		*data = report_buf;
-// 		report_buf[0] = 'z';
-// 		*size = 64;
 		*data = APulseController::get_response(*size);
 		break;
 	case USB_HID_SET_REPORT_REQUEST :
-		//for(index = 0; index < KEYBOARD_BUFF_SIZE ; index++)
-		//{   /* copy the report sent by the host */
-		//    rpt_buf[index] = *(*data + index);
-		//}
-		Platform::led.set();
 		APulseController::handle_dataI(*data, *size);
 // 		for(uint32_t i = 0; i < 64; i++){
 // 			report_buf[i] = (*data)[i];
