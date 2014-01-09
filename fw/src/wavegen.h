@@ -51,32 +51,36 @@ public:
 	uint8_t ch;      //!< Which channel is it?
 	AK4621::sample_t gain;   //!< Gain applied to each full-scale sample
 
-	operator bool() const {return type != GEN_OFF;}
-	bool operator !() const {return type == GEN_OFF;}
+	inline operator bool() const {return type != GEN_OFF;}
+	inline bool operator !() const {return type == GEN_OFF;}
 };
 
 class WaveGen {
 public:
 	typedef AK4621::sample_t sample_t;
 
-	static void request_resetI(){
+	static inline void request_resetI(){
 		pending_reset = true;
 	}
 
-	static bool is_resetI() {
-		return is_reset;
+	static inline bool is_running(){
+		return state == ST_RUNNING;
 	}
 
-	static bool is_running() {
-		return not silent;
-	}
+	typedef enum {
+		ST_RESET   = 0,
+		ST_READY   = 1,
+		ST_RUNNING = 2,
+		ST_DONE    = 3
+	} state_t;
 
-	static bool is_ready() {
-		return WaveGen::is_ready() && (generators[0].type);
+	static inline state_t& get_state(){return state;}
+
+	static inline bool is_ready() {
+		return generators[0].type;
 	}
 
 	/*!
-	 * 
 	 * @brief A callback to get samples
 	 * @param dst The destination buffer (size known from \ref AK4621)
 	 * 
@@ -95,6 +99,8 @@ public:
 			return;
 		
 		auto t = get_time_ms();
+
+		bool alldone = false;
 		
 		for(Generator &generator : generators){
 			switch(generator.type){
@@ -110,7 +116,12 @@ public:
 				break;
 			// Add other signal generation handlers here if anything else req'd
 			}
+
+			alldone |= generator.t2 < t;
 		}
+
+		if(alldone)
+			mute();
 	}
 	
 	//! @name Tone selection functions
@@ -118,27 +129,25 @@ public:
 	//! @{
 	static void set_chirp(uint8_t idx, uint8_t ch, uint16_t f1, uint16_t f2,
 	               uint16_t t1, uint16_t t2, sFractional<7,8> gaindb){
-		
+		// state = ST_READY;
 	}
 	
 	static void set_tone(uint8_t idx, uint8_t ch, uint16_t f1,
 	              uint16_t t1, uint16_t t2, sFractional<7,8> gaindb);
 	
-	static void set_off(uint8_t idx){
-		generators[idx].type = Generator::GEN_OFF;
+	static inline void set_off(uint8_t idx){
+		if(state == ST_RESET || state == ST_READY){
+			generators[idx].type = Generator::GEN_OFF;
+		}
 	}
 	//! @}
-	
-	//! @name Muting functions
-	//! Mute all channels when altering parameters
-	//! @{
-	static void mute(){
-		silent = true;
+
+	static inline void runI(){
+		if(state == ST_READY){
+			state = ST_RUNNING;
+			unmute();
+		}
 	}
-	static void unmute(){
-		silent = false;
-	}
-	//! @}
 
 	static PT_THREAD(pt_wavegen(struct pt * pt)){
 		PT_BEGIN(pt);
@@ -151,7 +160,10 @@ public:
 			// Check for reset request
 			if(pending_reset){
 				do_reset();
-				PT_YIELD(pt);
+			}
+			// Enable output if relevant
+			if((state != ST_RESET) && !TPA6130A2::is_ready()){
+				TPA6130A2::enable();
 			}
 			PT_YIELD(pt);
 		}
@@ -169,6 +181,19 @@ protected:
 	static constexpr uint32_t num_generators = 3;
 	static Generator generators[num_generators];
 	
+	static state_t state;
+
+	//! @name Muting functions
+	//! Mute all channels when altering parameters
+	//! @{
+	static inline void mute(){
+		silent = true;
+	}
+	static inline void unmute(){
+		silent = false;
+	}
+	//! @}
+
 	/*!
 	 @brief Generate a waveform
 	 @param generator The generator to use
@@ -220,14 +245,13 @@ protected:
 	static uint16_t get_time_ms();
 
 	static bool pending_reset;
-	static bool is_reset;
 
 	static void do_reset(){
 		mute();
 		set_off(0);
 		set_off(1);
 		set_off(2);
-		is_reset = true;
+		state = ST_RESET;
 		pending_reset = false;
 	}
 	

@@ -37,34 +37,36 @@ public:
 	/*!
 	 @brief Enable the device, taking it out of a low-power state
 
-	 @note This is done automatically now stupid, eh?
+	 @note This actually can take some time, so please don't run from ISR
 	 */
-	static void enable(){
-		// Always enabled for now...
-		enabled = true;
-	}
+	static void enable();
 	
 	/*!
 	 @brief Disable the device, putting it in a low-power state
 
 	 @note This does nothing right now
 	 */
-	static void disable(){
-		//nSD.clear();
-		enabled = false;
-	}
+	static void disable();
 
-	static bool is_ready(){
+	static inline bool is_ready(){
 		return enabled;
 	}
 	
 protected:
 	static bool enabled;
 
+	static uint8_t volume;
+
 	/*!
 	 @brief Write a register over I2C
 	 */
 	static void write_reg(uint8_t addr, uint8_t val);
+
+	/*!
+	 @brief Write multiple registers over I2C
+	 */
+	static void write_multiple(uint8_t start_addr,
+	                           uint8_t const * data, uint8_t n);
 
 	/*!
 	 @brief Read a single register over I2C

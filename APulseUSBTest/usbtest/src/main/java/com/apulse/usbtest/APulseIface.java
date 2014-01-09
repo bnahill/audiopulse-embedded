@@ -21,7 +21,7 @@ public class APulseIface {
     }
 
     public APulseStatus getStatus(){
-        usb.receive(buffer.array(), 2);
+        usb.receive(buffer.array(), 5);
         return new APulseStatus(buffer);
     }
 
@@ -34,9 +34,9 @@ public class APulseIface {
         usb.send(buffer.array(), 1);
         do{
             status = getStatus();
-        } while(!(status.reset_controller &&
-                  status.reset_input &&
-                  status.reset_wavegen));
+        } while(!((status.test_state == APulseStatus.TEST_RESET) &&
+                  (status.wg_state == APulseStatus.WG_RESET) &&
+                  (status.in_state == APulseStatus.IN_RESET)));
     }
 
     /*!
@@ -68,14 +68,27 @@ public class APulseIface {
                 t.toBuffer(buffer);
             }
         }
-        usb.send(buffer.array(), buffer.position());
+        buffer.position(0);
+        usb.send(buffer.array(), 35);
+    }
+
+    public void configCapture(int t1, int overlap, int nframes){
+        buffer.position(0);
+        buffer.put((byte) CMD_SETUPCAPTURE);
+        buffer.putShort((short) overlap);
+        buffer.put((byte) 0); //window function, ignore it
+        buffer.putShort((short) nframes);
+        buffer.putShort((short) t1);
+        buffer.position(0);
+        usb.send(buffer.array(), 63);
     }
 
     public void start(){
         buffer.position(0);
         buffer.put((byte)CMD_START);
 
-        usb.send(buffer.array(), 1);
+        buffer.position(0);
+        usb.send(buffer.array(), 63);
     }
 
     /*!
@@ -83,29 +96,85 @@ public class APulseIface {
      */
     static public class APulseStatus {
         public APulseStatus(ByteBuffer buffer){
-            version = ((int)buffer.get(0)) & 0xFF;
-            int flags = (int)buffer.get(1);
-            err_code = (int)buffer.get(1);
-
-            test_ready = (flags & (1 << 5)) != 0;
-            is_capturing = (flags & (1 << 5)) != 0;
-            is_playing = (flags & (1 << 4)) != 0;
-            is_started = (flags & (1 << 3)) != 0;
-            reset_wavegen = (flags & (1 << 2)) != 0;
-            reset_input = (flags & (1 << 1)) != 0;
-            reset_controller = (flags & (1 << 0)) != 0;
+            version = (int)buffer.get(0) & 0xFF;
+            in_state = (int)buffer.get(1) & 0xFF;
+            wg_state = (int)buffer.get(2) & 0xFF;
+            test_state = (int)buffer.get(3) & 0xFF;
+            err_code = (int)buffer.get(4) & 0xFF;
         }
 
         public int version;
-
-        public boolean is_capturing;
-        public boolean is_playing;
-        public boolean is_started;
-        public boolean reset_wavegen;
-        public boolean reset_input;
-        public boolean reset_controller;
-        public boolean test_ready;
+        public int wg_state;
+        public int in_state;
+        public int test_state;
         public int err_code;
+
+        public static final int WG_RESET   = 0;
+        public static final int WG_READY   = 1;
+        public static final int WG_RUNNING = 2;
+        public static final int WG_DONE    = 3;
+
+        public static final int IN_RESET     = 0;
+        public static final int IN_READY     = 1;
+        public static final int IN_RUNWAIT   = 2;
+        public static final int IN_CAPTURING = 3;
+        public static final int IN_DONE      = 4;
+
+        public static final int TEST_RESET       = 0;
+        public static final int TEST_CONFIGURING = 1;
+        public static final int TEST_READY       = 2;
+        public static final int TEST_RUNNING     = 3;
+        public static final int TEST_DONE        = 4;
+
+
+        public String wgStateString(){
+            switch(wg_state){
+                case WG_RESET:
+                    return "reset";
+                case WG_READY:
+                    return "ready";
+                case WG_RUNNING:
+                    return "running";
+                case WG_DONE:
+                    return "done";
+                default:
+                    return "unknown";
+            }
+        }
+
+        public String testStateString(){
+            switch(test_state){
+                case TEST_RESET:
+                    return "reset";
+                case TEST_CONFIGURING:
+                    return "configuring";
+                case TEST_READY:
+                    return "ready";
+                case TEST_RUNNING:
+                    return "running";
+                case TEST_DONE:
+                    return "done";
+                default:
+                    return "unknown";
+            }
+        }
+
+        public String inStateString(){
+            switch(in_state){
+                case IN_RESET:
+                    return "reset";
+                case IN_READY:
+                    return "ready";
+                case IN_RUNWAIT:
+                    return "runwait";
+                case IN_CAPTURING:
+                    return "capturing";
+                case IN_DONE:
+                    return "done";
+                default:
+                    return "unknown";
+            }
+        }
     }
 
     /*!
@@ -179,7 +248,7 @@ public class APulseIface {
 
     public static class ToneConfig {
         public void toBuffer(ByteBuffer buffer){
-            buffer.put((byte)((tone << 4) & ch));
+            buffer.put((byte)((ch << 4) | tone));
             buffer.putShort((short)(db * (float)(1 << 8)));
             buffer.putShort((short)f1);
             buffer.putShort((short)f2);
@@ -242,6 +311,6 @@ public class APulseIface {
     private static final int CMD_START        = 6;
 
     private static final int TONE_OFF         = 0;
-    private static final int TONE_FIXED       = 0;
-    private static final int TONE_CHIRP       = 0;
+    private static final int TONE_FIXED       = 1;
+    private static final int TONE_CHIRP       = 2;
 }

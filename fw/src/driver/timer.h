@@ -59,19 +59,26 @@ public:
 			SIM_SCGC6 |= SIM_SCGC6_FTM1_MASK;
 		else if(FTM == FTM2_BASE_PTR)
 			SIM_SCGC3 |= SIM_SCGC3_FTM2_MASK;
-		// Disable device, allow for configuration
+
+		FTM->MODE = FTM_MODE_WPDIS_MASK;
+
+		// Unlock and disable device, allow for configuration
 		stop();
 		FTM->SC = FTM_SC_PS(ps) | FTM_SC_CLKS(cs);
 	}
 	
 	void start() const {
-		// Don't care about other fields
-		FTM->MODE = FTM_MODE_FTMEN_MASK;
+// 		if((FTM->MODE & FTM_MODE_WPDIS_MASK) == 0){
+// 			FTM->MODE |= FTM_MODE_WPDIS_MASK;
+// 		}
+		FTM->MODE |= FTM_MODE_FTMEN_MASK | FTM_MODE_INIT_MASK;
 	}
 	
 	void stop() const {
-		// Don't care about other fields
-		FTM->MODE = FTM_MODE_WPDIS_MASK;
+// 		if((FTM->MODE & FTM_MODE_WPDIS_MASK) == 0){
+// 			FTM->MODE |= FTM_MODE_WPDIS_MASK;
+// 		}
+		FTM->MODE &= ~FTM_MODE_FTMEN_MASK;
 	}
 
 	bool is_running() const {

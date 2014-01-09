@@ -24,6 +24,7 @@
 APulseController::state_t APulseController::state;
 uint32_t APulseController::cmd_idx;
 uint8_t APulseController::err_code;
+decltype(APulseController::teststate) APulseController::teststate = TEST_RESET;
 
 PT_THREAD(APulseController::pt_controller)(struct pt * pt){
 	PT_BEGIN(pt);
@@ -77,17 +78,22 @@ uint8_t * APulseController::get_response ( uint16_t& size ) {
 	default:
 		// Send the status packet
 		p.status.version = 02;
-		p.status.is_started = timer.is_running() ? 1 : 0;
-		p.status.is_capturing = InputDSP::is_running() ? 1 : 0;
-		p.status.is_playing = WaveGen::is_running() ? 1 : 0;
+		p.status.input_state = InputDSP::get_state();
+		p.status.wavegen_state = WaveGen::get_state();
+		p.status.controller_state = teststate;
 
-		p.status.reset_controller = (state == ST_RESET) ? 1 : 0;
-		p.status.reset_input = InputDSP::is_resetI() ? 1 : 0;
-		p.status.reset_wavegen = WaveGen::is_resetI() ? 1 : 0;
-
-		p.status.test_ready = (WaveGen::is_ready() &&
-		                       InputDSP::is_ready()) ? 1 : 0;
+// 		p.status.is_started = timer.is_running() ? 1 : 0;
+// 		p.status.is_capturing = InputDSP::is_running() ? 1 : 0;
+// 		p.status.is_playing = WaveGen::is_running() ? 1 : 0;
+//
+// 		p.status.reset_controller = (state == ST_RESET) ? 1 : 0;
+// 		p.status.reset_input = InputDSP::is_resetI() ? 1 : 0;
+// 		p.status.reset_wavegen = WaveGen::is_resetI() ? 1 : 0;
+//
+// 		p.status.test_ready = (WaveGen::is_ready() &&
+// 		                       InputDSP::is_ready()) ? 1 : 0;
 		p.status.err_code = err_code;
+
 		
 		size = sizeof(status_pkt_t);
 		return p.data;
@@ -99,23 +105,26 @@ void APulseController::handle_dataI ( uint8_t* data, uint8_t size ) {
 	auto const a = reinterpret_cast<r_packet_t *>(data);
 
 	// First make sure there is data to parse
-	if(!size)
-		return;
+	//// APPARENTLY SIZE ISN'T BEING SET RIGHT... WHATEVER...
+	//if(!size)
+	//	return;
 
 	static_assert(sizeof(tone_config_t) == 11,
 					"tone_config_t wrong size");
-	static_assert(sizeof(tone_setup_pkt_t) == 3*sizeof(tone_config_t) + 2,
+	static_assert(sizeof(tone_setup_pkt_t) == 3*sizeof(tone_config_t) + 1,
 					"tone_setup_pkt_t wrong size");
-	static_assert(sizeof(status_pkt_t) == 3,
+	static_assert(sizeof(status_pkt_t) == 5,
 					"status_pkt_t wrong size");
-	static_assert(sizeof(capture_config_pkt_t) == 7,
+	static_assert(sizeof(capture_config_pkt_t) == 8,
 					"capture_config_pkt wrong size");
 
 	switch(*data){
 	case CMD_RESET:
+		err_code = 0;
 		timer.stop();
 		timer.reset_count();
 
+		teststate = TEST_RESET;
 		WaveGen::request_resetI();
 		InputDSP::request_resetI();
 		break;
@@ -127,29 +136,43 @@ void APulseController::handle_dataI ( uint8_t* data, uint8_t size ) {
 		// Does this really need to happen?
 		break;
 	case CMD_SETUPCAPTURE:
-		InputDSP::configure(a->capture_config_pkt.overlap,
-							a->capture_config_pkt.start_time,
-							a->capture_config_pkt.num_windows);
+		if(teststate == TEST_RESET ||
+		   teststate == TEST_CONFIGURING ||
+		   teststate == TEST_READY){
+			InputDSP::configure(
+				a->capture_config_pkt.overlap,
+				a->capture_config_pkt.start_time,
+				a->capture_config_pkt.num_windows
+			);
+			teststate = WaveGen::is_ready() ? TEST_READY : TEST_CONFIGURING;
+		}
 		break;
 	case CMD_SETUPTONES:
-		WaveGen::mute();
-		for(uint32_t i = 0; i < 3; i++){
-			switch(a->tone_config_pkt.tones[i].mode){
-			case TONE_FIXED:
-				WaveGen::set_tone(i,
-					a->tone_config_pkt.tones[i].ch,
-					a->tone_config_pkt.tones[i].f1,
-					a->tone_config_pkt.tones[i].t1,
-					a->tone_config_pkt.tones[i].t2,
-					a->tone_config_pkt.tones[i].amplitude);
-				break;
-			case TONE_CHIRP:
-				WaveGen::set_off(i);
-				break;
-			case TONE_OFF:
-			default:
-				WaveGen::set_off(i);
-				break;
+		if((teststate == TEST_RESET) ||
+		   (teststate == TEST_CONFIGURING) ||
+		   (teststate == TEST_READY)){
+			for(uint32_t i = 0; i < 3; i++){
+				switch(a->tone_config_pkt.tones[i].mode){
+				case TONE_FIXED:
+					WaveGen::set_tone(i,
+						a->tone_config_pkt.tones[i].ch,
+						a->tone_config_pkt.tones[i].f1,
+						a->tone_config_pkt.tones[i].t1,
+						a->tone_config_pkt.tones[i].t2,
+						a->tone_config_pkt.tones[i].amplitude);
+					break;
+				case TONE_CHIRP:
+					WaveGen::set_off(i);
+					break;
+				case TONE_OFF:
+				default:
+					WaveGen::set_off(i);
+					break;
+				}
+			}
+			// Advance to next state if got a real tone
+			if(WaveGen::is_ready()){
+				teststate = InputDSP::is_ready() ? TEST_READY : TEST_CONFIGURING;
 			}
 		}
 		break;
@@ -163,14 +186,17 @@ void APulseController::handle_dataI ( uint8_t* data, uint8_t size ) {
 		if(!InputDSP::is_ready()){
 			err_code |= 2;
 		}
+		if(!(teststate == TEST_READY)){
+			err_code |= 4;
+		}
 		if(err_code)
 			break;
 		timer.stop();
 		timer.reset_count();
-		WaveGen::unmute();
-		TPA6130A2::enable();
-		InputDSP::run();
+		WaveGen::runI();
+		InputDSP::runI();
 		timer.start();
+		teststate = TEST_RUNNING;
 		break;
 	default:
 		return;

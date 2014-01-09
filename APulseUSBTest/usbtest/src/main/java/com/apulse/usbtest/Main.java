@@ -196,22 +196,21 @@ public class Main extends Activity {
     public void statusButton(View view){
         APulseIface.APulseStatus status = apulse.getStatus();
 
-        app_out.setText(
-                "Version: " + status.version + " Status: "+
-                " ic=" + (status.is_capturing? "1":"0") +
-                " ip=" + (status.is_playing? "1":"0") +
-                " is=" + (status.is_started? "1":"0") +
-                " rw=" + (status.reset_wavegen? "1":"0") +
-                " ri=" + (status.reset_input? "1":"0") +
-                " rc=" + (status.reset_controller? "1":"0") +
-                " ready=" + (status.test_ready? "1":"0")
-        );
+        String out = String.format("Version: %d, Test state: %s, WaveGen state: %s, Input state: %s, Error: %d",
+                status.version,
+                status.testStateString(),
+                status.wgStateString(),
+                status.inStateString(),
+                status.err_code);
+        app_out.setText(out);
     }
 
     public void startButton(View view){
         APulseIface.ToneConfig[] tones = new APulseIface.ToneConfig[2];
         tones[0] = new APulseIface.FixedTone(2000, 1000, 20000, 65.0, 0);
         tones[1] = new APulseIface.FixedTone(5000, 1000, 20000, 65.0, 0);
+
+        apulse.configCapture(2000, 256, 100);
 
         apulse.configTones(tones);
 

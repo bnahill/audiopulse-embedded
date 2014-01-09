@@ -27,8 +27,7 @@
 #include <driver/timer.h>
 #include <driver/tpa6130a2.h>
 #include <wavegen.h>
-#include "input_dsp.h"
-
+#include <input_dsp.h>
 
 class APulseController {
 	//! @name Commands
@@ -79,14 +78,13 @@ class APulseController {
 
 	typedef struct {
 		uint8_t cmd;
-		uint8_t enabled_mask;
 		tone_config_t tones[3];
 	} __attribute__((packed)) tone_setup_pkt_t;
 
 	typedef struct {
 		uint8_t cmd;
 		//! Window overlap in samples
-		uint8_t overlap;
+		uint16_t overlap;
 		//! Window function (ignored)
 		uint8_t window_function;
 		//! Number of windows to capture
@@ -108,14 +106,9 @@ class APulseController {
 
 	typedef struct {
 		uint8_t version;
-		uint8_t reset_controller : 1;
-		uint8_t reset_input      : 1;
-		uint8_t reset_wavegen    : 1;
-		uint8_t is_started       : 1;
-		uint8_t is_playing       : 1;
-		uint8_t is_capturing     : 1;
-		uint8_t test_ready       : 1;
-		uint8_t reserved         : 1;
+		uint8_t input_state;
+		uint8_t wavegen_state;
+		uint8_t controller_state;
 		uint8_t err_code;
 	} status_pkt_t;
 
@@ -124,6 +117,14 @@ class APulseController {
 	} t_packet_t;
 
 	//! @}
+
+	typedef enum {
+		TEST_RESET       = 0,
+		TEST_CONFIGURING = 1,
+		TEST_READY       = 2,
+		TEST_RUNNING     = 3,
+		TEST_DONE        = 4
+	} teststate_t;
 
 	typedef enum {
 		ST_RESET = 0,
@@ -162,6 +163,7 @@ public:
 	//! An instance of the timer for synchronization
 	static constexpr Timer timer = FTM0_BASE_PTR;
 private:
+	static teststate_t teststate;
 	static state_t state;
 	static uint32_t cmd_idx;
 	static uint8_t err_code;

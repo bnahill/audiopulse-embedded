@@ -22,6 +22,7 @@
 #include <driver/tpa6130a2.h>
 
 bool TPA6130A2::enabled = false;
+uint8_t TPA6130A2::volume = 20;
 
 void TPA6130A2::init(){
 	if(I2C == I2C0_BASE_PTR){
@@ -48,6 +49,25 @@ void TPA6130A2::init(){
 	write_reg(1, 0xC0);
 	// Half volume
 	write_reg(2, 20);
+
+	enable();
+}
+
+void TPA6130A2::enable(){
+	if(!enabled){
+		// ENABLE IT
+		write_reg(1, 0xC0);
+		// Half volume
+		write_reg(2, volume);
+
+		// Always enabled for now...
+		enabled = true;
+	}
+}
+
+void TPA6130A2::disable(){
+	nSD.clear();
+	enabled = false;
 }
 
 void TPA6130A2::write_reg (uint8_t addr, uint8_t val ) {
@@ -67,6 +87,32 @@ void TPA6130A2::write_reg (uint8_t addr, uint8_t val ) {
 
 	while((I2C->S & I2C_S_IICIF_MASK) == 0); // Wait for 
 	I2C->S |= I2C_S_IICIF_MASK; // Clear
+
+	I2C->C1 &= ~I2C_C1_MST_MASK;
+	I2C->C1 &= ~I2C_C1_TX_MASK;
+
+	while(I2C->S & I2C_S_BUSY_MASK); // Wait for STOP
+}
+
+void TPA6130A2::write_multiple(uint8_t start_addr, uint8_t const * data, uint8_t n){
+	I2C->C1 |= I2C_C1_TX_MASK;
+	I2C->C1 |= I2C_C1_MST_MASK; // Assert start
+	I2C->D = i2c_addr; // Write bus address
+
+	while((I2C->S & I2C_S_IICIF_MASK) == 0); // Wait for
+	I2C->S |= I2C_S_IICIF_MASK; // Clear
+
+	I2C->D = start_addr; // Write register address
+
+	while((I2C->S & I2C_S_IICIF_MASK) == 0); // Wait for
+	I2C->S |= I2C_S_IICIF_MASK; // Clear
+
+	while(n--){
+		I2C->D = *data++; // Write value
+
+		while((I2C->S & I2C_S_IICIF_MASK) == 0); // Wait for
+		I2C->S |= I2C_S_IICIF_MASK; // Clear
+	}
 
 	I2C->C1 &= ~I2C_C1_MST_MASK;
 	I2C->C1 &= ~I2C_C1_TX_MASK;

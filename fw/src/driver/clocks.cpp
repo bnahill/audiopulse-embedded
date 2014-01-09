@@ -29,6 +29,10 @@ void Clock::setupClocks(){
 	switchFEItoFBE();
 	switchFBEtoPBE();
 	switchPBEtoPEE();
+
+	// Autotrim!
+	MCG_SC = MCG_SC_ATME_MASK;
+	while(MCG_SC & MCG_SC_ATME_MASK);
 }
 
 void Clock::switchFEItoFBE(){
@@ -46,7 +50,7 @@ void Clock::switchFEItoFBE(){
 	         MCG_C1_IREFS_MASK | MCG_C1_IRCLKEN_MASK;
 
 	// Wait for switch
-	while(((MCG_S & MCG_S_CLKST_MASK) >> 2) != 2);
+	while(((MCG_S & MCG_S_CLKST_MASK) >> MCG_S_CLKST_SHIFT) != 2);
 
 }
 
@@ -72,5 +76,5 @@ void Clock::switchPBEtoPEE(){
 	
 	// Switch internal reference back to 32k
 	MCG_C2 = MCG_C2_RANGE0(1) | MCG_C2_EREFS0_MASK;
-	while(((MCG_S & MCG_S_CLKST_MASK) >> 2) != 3);
+	while(((MCG_S & MCG_S_CLKST_MASK) >> MCG_S_CLKST_SHIFT) != 3);
 }

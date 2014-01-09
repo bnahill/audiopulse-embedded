@@ -23,6 +23,7 @@
 #include <controller.h>
 
 bool WaveGen::silent = true;
+decltype(WaveGen::state) WaveGen::state;
 
 Generator WaveGen::generators[num_generators];
 
@@ -30,21 +31,22 @@ uint16_t WaveGen::get_time_ms() {
 	return APulseController::get_time_ms();
 }
 
-bool WaveGen::is_reset;
 bool WaveGen::pending_reset;
 
 void WaveGen::set_tone (uint8_t idx, uint8_t ch, uint16_t f1, uint16_t t1,
                         uint16_t t2, sFractional< 7, 8 > gaindb ){
-	Generator &gen = generators[idx];
-	gen.type = Generator::GEN_OFF;
-	gen.ch = ch;
-	//gen.gain = 0x3FFFFFFF; // THIS IS NOT CORRECT
-	gen.gain = db_to_gain(gaindb).i;
-	gen.t1 = t1;
-	gen.t2 = t2;
-	gen.w1 = f1 * wavetable_len * 2 / fs;
-	gen.theta = 0;
-	gen.type = Generator::GEN_FIXED;
+	if(state == ST_READY || state == ST_RESET){
+		state = ST_READY;
+		Generator &gen = generators[idx];
+		gen.type = Generator::GEN_OFF;
+		gen.ch = ch;
+		gen.gain = db_to_gain(gaindb).i;
+		gen.t1 = t1;
+		gen.t2 = t2;
+		gen.w1 = f1 * wavetable_len * 2 / fs;
+		gen.theta = 0;
+		gen.type = Generator::GEN_FIXED;
+	}
 }
 
 

@@ -68,6 +68,8 @@ InputDSP::sampleFractional InputDSP::decimate_buffer[decimate_block_size +
 
 decltype(InputDSP::overlap) InputDSP::overlap;
 
+decltype(InputDSP::state) InputDSP::state = ST_UNKNOWN;
+
 /**
  * Generated coefficients from http://t-filter.appspot.com/fir/index.html
  * Passband 0-6kHz -0.5dB with 1dB ripple (max 0dB)
@@ -79,6 +81,18 @@ InputDSP::sample_t const InputDSP::decimate_coeffs[decimate_fir_order] = {
 	612254038, 139749183, -172723375, -240290533, -121174027, 48163641,
 	166081815, 232918033, -206371169
 };
+
+void InputDSP::configure(uint16_t overlap,
+                         uint16_t start_time_ms,
+	                     uint16_t num_windows){
+	if(state == ST_RESET || state == ST_READY){
+		is_reset = false;
+		InputDSP::overlap = overlap;
+		InputDSP::start_time_ms = start_time_ms;
+		InputDSP::num_windows = num_windows;
+		state = ST_READY;
+	}
+}
 
 PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 	static decltype(new_samples) old_new_samples;
@@ -112,110 +126,121 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 	arm_rfft_init_q31(&rfft, &cfft, transform_len, 0, 1);
 
 	while(true){
-		PT_WAIT_UNTIL(pt,
-			(is_running() && new_samples && (start_time_ms > APulseController::get_time_ms())) ||
-			pending_reset);
+		// Just wait until we are supposed ot be waiting for the right time
+		PT_WAIT_UNTIL(pt, pending_reset || (state == ST_RUNWAIT));
+		if(pending_reset){ do_reset(); continue; }
 
-		if(pending_reset){
-			// Do reset
-			do_reset();
-			continue;
-		}
+		// Now wait for the right time
+		PT_WAIT_UNTIL(pt, pending_reset ||
+		                  APulseController::get_time_ms() > start_time_ms);
+		if(pending_reset){ do_reset(); continue; }
 
-		old_new_samples = new_samples;
+		state = ST_CAPTURING;
+
+		while(state == ST_CAPTURING){
+			PT_WAIT_UNTIL(pt, new_samples || pending_reset);
+			if(pending_reset){ do_reset(); break;}
+
+			old_new_samples = new_samples;
 		
-		do_decimate(&decimated_frame_buffer[buffer_sel * decimate_output_size]);
-		buffer_sel = (buffer_sel + 1) % 3;
-		num_samples += 256;
-		
-		if(debug){
-			// Quick check for overrun
-			if(new_samples != old_new_samples)
-				while(true);
-		}
+			do_decimate(&decimated_frame_buffer[buffer_sel * decimate_output_size]);
+			buffer_sel = (buffer_sel + 1) % 3;
+			num_samples += 256;
+
+			if(debug){
+				// Quick check for overrun
+				if(new_samples != old_new_samples)
+					while(true);
+			}
 			
-		new_samples = nullptr;
-		
-		num_decimated += 256;
-		
-		PT_YIELD(pt);
-		
-		// While there is a full transform available...
-		while(num_decimated >= transform_len){
-			constants = mk_multipliers();
+			new_samples = nullptr;
 
-			// The number of samples remaining before the end of the decimated_frame_buffer
-			num_before_end = decimated_frame_buffer_size - theta;
-			if(num_before_end < transform_len){
-				// Split in two
-				arm_mult_q31((q31_t*)&decimated_frame_buffer[theta],
-				             (q31_t*)hamming512, (q31_t*)transform_buffer,
-				             num_before_end);
-				arm_mult_q31((q31_t*)&decimated_frame_buffer,
-				             (q31_t*)&hamming512[num_before_end],
-				             (q31_t*)&transform_buffer[num_before_end],
-				             transform_len - num_before_end);
+			num_decimated += 256;
 
-				vector_dual_mult_scalar_sum(
-					constants.one_over,
-					&decimated_frame_buffer[theta],
-					constants.one_minus,
-					average_buffer,
-					average_buffer,
-					num_before_end
-				);
+			PT_YIELD(pt);
 
-				vector_dual_mult_scalar_sum(
-					constants.one_over,
-					decimated_frame_buffer,
-					constants.one_minus,
-					&average_buffer[num_before_end],
-					&average_buffer[num_before_end],
-					transform_len - num_before_end
-				);
+			// While there is a full transform available...
+			while(num_decimated >= transform_len){
+				constants = mk_multipliers();
 
-			} else {
-				// All in one shot
-				arm_mult_q31((q31_t*)decimated_frame_buffer,
-				             (q31_t*)hamming512, (q31_t*)transform_buffer,
-				             transform_len);
+				// The number of samples remaining before the end of the decimated_frame_buffer
+				num_before_end = decimated_frame_buffer_size - theta;
+				if(num_before_end < transform_len){
+					// Split in two
+					arm_mult_q31((q31_t*)&decimated_frame_buffer[theta],
+					             (q31_t*)hamming512, (q31_t*)transform_buffer,
+					             num_before_end);
+					arm_mult_q31((q31_t*)&decimated_frame_buffer,
+					             (q31_t*)&hamming512[num_before_end],
+					             (q31_t*)&transform_buffer[num_before_end],
+					             transform_len - num_before_end);
 
-				vector_dual_mult_scalar_sum(
-					constants.one_over,
-					&decimated_frame_buffer[theta],
-					constants.one_minus,
-					average_buffer,
-					average_buffer,
+					vector_dual_mult_scalar_sum(
+						constants.one_over,
+						&decimated_frame_buffer[theta],
+						constants.one_minus,
+						average_buffer,
+						average_buffer,
+						num_before_end
+					);
+
+					vector_dual_mult_scalar_sum(
+						constants.one_over,
+						decimated_frame_buffer,
+						constants.one_minus,
+						&average_buffer[num_before_end],
+						&average_buffer[num_before_end],
+						transform_len - num_before_end
+					);
+
+				} else {
+					// All in one shot
+					arm_mult_q31(
+						(q31_t*)decimated_frame_buffer,
+						(q31_t*)hamming512,
+						(q31_t*)transform_buffer,
+						transform_len
+					);
+
+					vector_dual_mult_scalar_sum(
+						constants.one_over,
+						&decimated_frame_buffer[theta],
+						constants.one_minus,
+						average_buffer,
+						average_buffer,
+						transform_len
+					);
+				}
+
+				num_decimated -= (transform_len - overlap);
+				theta = (theta + (transform_len - overlap)) &
+						(decimated_frame_buffer_size - 1);
+
+				PT_YIELD(pt);
+
+				arm_rfft_q31(&rfft, (q31_t*)transform_buffer,
+				             (q31_t*)complex_transform);
+
+				PT_YIELD(pt);
+
+				complex_power_avg_update(
+					(powerFractional)constants.one_over,
+					complex_transform,
+					(powerFractional)constants.one_minus,
+					mag_psd,
+					mag_psd,
 					transform_len
 				);
+
+				// Check if we've processed enough windows to shut down
+				if(++window_count >= num_windows){
+					state = ST_DONE;
+				}
+
+				PT_YIELD(pt);
+
 			}
-
-			num_decimated -= (transform_len - overlap);
-			theta = (theta + (transform_len - overlap)) &
-			        (decimated_frame_buffer_size - 1);
-
-			PT_YIELD(pt);
-
-			arm_rfft_q31(&rfft, (q31_t*)transform_buffer, (q31_t*)complex_transform);
-
-			PT_YIELD(pt);
-
-			complex_power_avg_update((powerFractional)constants.one_over,
-			                         complex_transform,
-			                         (powerFractional)constants.one_minus,
-			                         mag_psd,
-			                         mag_psd,
-			                         transform_len);
-
-			// Check if we've processed enough windows to shut down
-			if(++window_count >= num_windows){
-				stop();
-			}
-
-			PT_YIELD(pt);
-
 		}
-		
 	}
 
 	PT_END(pt);

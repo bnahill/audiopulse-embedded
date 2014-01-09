@@ -23,7 +23,7 @@
 #define __APULSE_CLOCKS_H_
 
 #include <derivative.h>
-
+#include <driver/gpio.h>
 
 class Clock {
 public:
@@ -40,7 +40,28 @@ public:
 
 	static void switchPBEtoPEE();
 
+	typedef enum {
+		CLKOUT_OFF       = 0,
+		CLKOUT_FLASHCLK  = 2,
+		CLKOUT_LPO       = 3,
+		CLKOUT_MCGIRCLK  = 4,
+		CLKOUT_RTC       = 5,
+		CLKOUT_OSCERCLK0 = 6
+	} clkout_src_t;
+
+	static void set_clkout(clkout_src_t src){
+		if(src == CLKOUT_OFF){
+			clkout.configure(GPIOPin::MUX_ANALOG);
+		} else {
+			SIM_SOPT2 = (SIM_SOPT2 & ~SIM_SOPT2_CLKOUTSEL_MASK) |
+			            (SIM_SOPT2_CLKOUTSEL(src));
+			clkout.configure(GPIOPin::MUX_ALT5);
+		}
+	}
+
 private:
+	static constexpr GPIOPin clkout = {PTC_BASE_PTR, 3};
+
 	static constexpr uint32_t clk_xtal = 8000000;
 	static constexpr uint32_t clk_pll_div = 4; // Make 2MHz
 	static constexpr uint32_t clk_pll_mul = 24; // Make 48MHz

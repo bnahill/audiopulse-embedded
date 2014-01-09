@@ -34,13 +34,9 @@ public:
 	 */
 	static PT_THREAD(pt_dsp(struct pt * pt));
 	
-	static void configure(uint8_t overlap,
+	static void configure(uint16_t overlap,
 	                      uint16_t start_time_ms,
-	                      uint16_t num_windows){
-		InputDSP::overlap = overlap;
-		InputDSP::start_time_ms = start_time_ms;
-		InputDSP::num_windows = num_windows;
-	}
+	                      uint16_t num_windows);
 		
 	/*!
 	 @brief Callback to receive new samples
@@ -49,21 +45,29 @@ public:
 	 */
 	static void put_samplesI(AK4621::sample_t * samples);
 
-	static void run(){running = true;}
+	/*!
+	 @brief Transition from READY to RUN state
 
-	static void stop(){running = false;}
+	 @note MUST BE CALLED FROM INTERRUPT OR LOCKED CONTEXT
+	 */
+	static inline void runI(){
+		if(state == ST_READY){
+			state = ST_RUNWAIT;
+		}
+	}
 
-	static void request_resetI(){pending_reset = true;}
+	static inline void request_resetI(){pending_reset = true;}
 
-	static bool is_resetI(){return is_reset;}
+	static inline bool is_resetI(){return is_reset;}
 
-	static bool is_running(){return running;}
+	static inline bool is_running(){return running;}
 
-	static bool is_ready(){
-		return (num_windows > 0) &&
-		       (window_count == 0) &&
-		       (num_samples == 0) &&
-		       (start_time_ms != -1);
+	static inline bool is_ready(){
+		return state == ST_READY;
+// 		return (num_windows > 0) &&
+// 		       (window_count == 0) &&
+// 		       (num_samples == 0) &&
+// 		       (start_time_ms != -1);
 	}
 	
 	typedef sFractional<0,31> sampleFractional;
@@ -79,10 +83,21 @@ public:
 
 	static constexpr uint32_t transform_len = 512;
 	
+	typedef enum {
+		ST_RESET     = 0,
+		ST_READY     = 1,
+		ST_RUNWAIT   = 2,
+		ST_CAPTURING = 3,
+		ST_DONE      = 4,
+		ST_UNKNOWN   = 5
+	} state_t;
+
+	static inline const state_t& get_state(){return state;}
+
 protected:
 	typedef AK4621::sample_t sample_t;
 	
-	
+	static state_t state;
 
 	static sampleFractional const * new_samples;
 	// MUST HAVE PROTECTED ACCESS
@@ -123,7 +138,7 @@ protected:
 	//! The number of decimated samples available
 	static uint16_t num_decimated;
 	//! The current window overlap setting (M)
-	static uint8_t overlap;
+	static uint16_t overlap;
 	//! The constant 512 sample Q31 Hamming window
 	static sample_t const hamming512[512];
 	static uint32_t num_before_end;
@@ -183,6 +198,8 @@ protected:
 
 		is_reset = true;
 		pending_reset = false;
+
+		state = ST_RESET;
 	}
 	
 	static constexpr bool debug = true;
