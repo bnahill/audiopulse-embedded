@@ -38,7 +38,7 @@ arm_fir_decimate_instance_q31 InputDSP::decimate;
 decltype(InputDSP::start_time_ms) InputDSP::start_time_ms = -1;
 decltype(InputDSP::num_windows) InputDSP::num_windows;
 
-bool InputDSP::is_reset, InputDSP::pending_reset, InputDSP::running;
+bool InputDSP::is_reset, InputDSP::pending_reset;
 
 uint32_t InputDSP::theta = 0;
 uint8_t InputDSP::buffer_sel = 0;
@@ -260,7 +260,7 @@ void InputDSP::do_decimate(sampleFractional * dst){
 }
 
 void InputDSP::put_samplesI(sample_t * samples){
-	if(running){
+	if(state == ST_CAPTURING){
 		new_samples = reinterpret_cast<sampleFractional *>(samples);
 		num_samples = AK4621::in_buffer_size;
 	}

@@ -153,7 +153,9 @@ public:
 	
 	static uint16_t get_time_ms(){
 		//return timer.get_count();
-		return timer.get_ms();
+		uint32_t t = timer.get_ms();
+		most_recent_t_ms = t;
+		return t;
 	}
 
 	void request_resetI();
@@ -163,8 +165,9 @@ public:
 	
 	//! An instance of the timer for synchronization
 	//static constexpr Timer timer = FTM0_BASE_PTR;
-	static constexpr TimerPIT timer = 0;
+	static constexpr TimerPIT timer = {0};
 private:
+	static uint32_t most_recent_t_ms;
 	static teststate_t teststate;
 	static state_t state;
 	static uint32_t cmd_idx;

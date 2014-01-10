@@ -212,10 +212,10 @@ public class Main extends Activity {
 
     public void startButton(View view){
         APulseIface.ToneConfig[] tones = new APulseIface.ToneConfig[2];
-        tones[0] = new APulseIface.FixedTone(2000, 1000, 20000, 65.0, 0);
-        tones[1] = new APulseIface.FixedTone(5000, 1000, 20000, 65.0, 0);
+        tones[0] = new APulseIface.FixedTone(500, 1000, 10000, 65.0, 0);
+        tones[1] = new APulseIface.FixedTone(800, 1000, 10000, 65.0, 1);
 
-        apulse.configCapture(2000, 256, 100);
+        apulse.configCapture(2000, 256, 200);
 
         apulse.configTones(tones);
 
@@ -223,7 +223,12 @@ public class Main extends Activity {
     }
 
     public void getdataButton(View view){
-        APulseIface.APulseData data = apulse.getData();
+        if(apulse.getStatus().test_state == APulseIface.APulseStatus.TEST_DONE){
+            APulseIface.APulseData data = apulse.getData();
+            app_out.setText("Received buffers");
+        } else {
+            app_out.setText("Data not ready...");
+        }
     }
 
     protected Button send_button;

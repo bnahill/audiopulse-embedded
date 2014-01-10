@@ -35,7 +35,7 @@ extern "C" {
  */
 void main(){
 	struct pt pt_dsp, pt_controller, pt_wavegen;
-
+	
 	PT_INIT(&pt_dsp);
 	PT_INIT(&pt_controller);
 	PT_INIT(&pt_wavegen);

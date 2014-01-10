@@ -100,7 +100,7 @@ public:
 		
 		auto t = get_time_ms();
 
-		bool alldone = false;
+		bool alldone = true;
 		
 		for(Generator &generator : generators){
 			switch(generator.type){
@@ -117,7 +117,7 @@ public:
 			// Add other signal generation handlers here if anything else req'd
 			}
 
-			alldone |= generator.t2 < t;
+			alldone &= generator.t2 < t;
 		}
 
 		if(alldone){

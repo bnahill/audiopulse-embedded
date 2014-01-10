@@ -25,6 +25,9 @@ APulseController::state_t APulseController::state;
 uint32_t APulseController::cmd_idx;
 uint8_t APulseController::err_code;
 decltype(APulseController::teststate) APulseController::teststate = TEST_RESET;
+constexpr TimerPIT APulseController::timer;
+
+uint32_t APulseController::most_recent_t_ms;
 
 PT_THREAD(APulseController::pt_controller)(struct pt * pt){
 	PT_BEGIN(pt);
@@ -37,16 +40,12 @@ PT_THREAD(APulseController::pt_controller)(struct pt * pt){
 
 	while(true){
 		PT_YIELD(pt);
-		if(!InputDSP::is_running() &&
-			!WaveGen::is_running() &&
-			timer.is_running()){
-
-			timer.reset();
-		}
 		if(InputDSP::get_state() == InputDSP::ST_DONE &&
 		   WaveGen::get_state() == WaveGen::ST_DONE){
 			teststate = TEST_DONE;
 			Platform::led.clear();
+			if(timer.is_running())
+				timer.reset();
 		}
 	}
 

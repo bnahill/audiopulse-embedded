@@ -60,8 +60,6 @@ public:
 
 	static inline bool is_resetI(){return is_reset;}
 
-	static inline bool is_running(){return running;}
-
 	static inline bool is_ready(){
 		return state == ST_READY;
 // 		return (num_windows > 0) &&
@@ -162,7 +160,7 @@ protected:
 	//! @}
 	
 	//! Standard reset flags
-	static bool pending_reset, is_reset, running;
+	static bool pending_reset, is_reset;
 
 	struct AverageConstants {
 		sampleFractional one_over;
@@ -176,7 +174,6 @@ protected:
 	}
 
 	static void do_reset(){
-		running = 0;
 		new_samples = nullptr;
 		num_samples = 0;
 		buffer_sel = 0;

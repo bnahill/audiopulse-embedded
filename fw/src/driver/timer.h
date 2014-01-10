@@ -113,9 +113,11 @@ public:
 	constexpr TimerPIT(uint32_t index) : i(index) {}
 	
 	void reset() const {
+		SIM_SCGC6 |= SIM_SCGC6_PIT_MASK;
+
 		PIT_MCR = PIT_MCR_FRZ_MASK; // Enable timer clocks but stop in debug
 		PIT_TCTRL(i) = 0; // Disable timer
-		PIT_LDVAL(i) = 0;
+		PIT_LDVAL(i) = 0xFFFFFFFF;
 	}
 	
 	void start() const {

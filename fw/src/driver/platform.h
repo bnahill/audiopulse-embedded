@@ -52,7 +52,7 @@ public:
 		
 		TPA6130A2::init();
 		
-		led.set();
+		led.clear();
 	}
 	
 	//! The one debug LED
