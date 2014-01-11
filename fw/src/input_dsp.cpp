@@ -49,7 +49,7 @@ arm_rfft_instance_q31 InputDSP::rfft;
 arm_cfft_radix4_instance_q31 InputDSP::cfft;
 
 __attribute__((section(".m_data2")))
-InputDSP::sampleFractional InputDSP::transform_buffer[transform_len+2];
+InputDSP::sampleFractional InputDSP::transform_buffer[transform_len];
 
 __attribute__((section(".m_data2")))
 decltype(InputDSP::complex_transform) InputDSP::complex_transform;

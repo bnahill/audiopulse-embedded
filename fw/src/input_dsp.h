@@ -141,10 +141,10 @@ protected:
 	//! The constant 512 sample Q31 Hamming window
 	static sample_t const hamming512[512];
 	static uint32_t num_before_end;
-	static sampleFractional transform_buffer[transform_len+2];
+	static sampleFractional transform_buffer[transform_len];
 
 	//! Storage of complex transform and the computed PSD
-	static transformFractional complex_transform[transform_len];
+	static transformFractional complex_transform[transform_len + 2];
 
 	static powerFractional mag_psd[transform_len / 2 + 1];
 	
