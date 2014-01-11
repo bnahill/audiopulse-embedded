@@ -140,16 +140,16 @@ public:
 
 	template<size_t mi_bits, size_t mf_bits>
 	constexpr uFractional<max(mi_bits, i_bits), max(mf_bits, f_bits)> operator + (uFractional<mi_bits, mf_bits> &m) const {
-		return m.i + i;
+		return i + m.i;
 	}
 
 	template<size_t mi_bits, size_t mf_bits>
 	constexpr uFractional<max(mi_bits, i_bits), max(mf_bits, f_bits)> operator - (uFractional<mi_bits, mf_bits> &m) const {
-		return m.i - i;
+		return i - m.i;
 	}
 	
 	constexpr uFractional<i_bits, f_bits> operator - (uFractional<i_bits, f_bits> &m) const {
-		return m.i - i;
+		return i - m.i;
 	}
 	
 	
@@ -233,8 +233,8 @@ public:
 
 	static sFractional<i_bits, f_bits> mk_frac(internal_t a, internal_t b){
 		typedef typename IntLength<2*(i_bits + f_bits) + 1>::signed_t double_len_t;
-		double_len_t shifted = a << (i_bits + f_bits);
-		shifted = (shifted / b) >> (i_bits + 1);
+		double_len_t shifted = ((double_len_t)a) << (i_bits + f_bits);
+		shifted = (shifted / ((double_len_t)b)) >> (i_bits + 1);
 		return (sFractional<i_bits, f_bits>::internal_t) shifted;
 	}
 
@@ -246,12 +246,12 @@ public:
 
 	template<size_t mi_bits, size_t mf_bits>
 	constexpr sFractional<max(mi_bits, i_bits), max(mf_bits, f_bits)> operator + (sFractional<mi_bits, mf_bits> const &m) const {
-		return m.i + i;
+		return i + m.i;
 	}
 
 	template<size_t mi_bits, size_t mf_bits>
 	constexpr sFractional<max(mi_bits, i_bits), max(mf_bits, f_bits)> operator - (sFractional<mi_bits, mf_bits> const &m) const {
-		return m.i - i;
+		return i - m.i;
 	}
 	
 	
@@ -421,22 +421,23 @@ void complex_power_avg_update(Tpwr a,
 template<typename T>
 void zero16(T * dst, uint32_t n){
 	while(n >= 16){
-		*dst++ = 0;
-		*dst++ = 0;
-		*dst++ = 0;
-		*dst++ = 0;
-		*dst++ = 0;
-		*dst++ = 0;
-		*dst++ = 0;
-		*dst++ = 0;
-		*dst++ = 0;
-		*dst++ = 0;
-		*dst++ = 0;
-		*dst++ = 0;
-		*dst++ = 0;
-		*dst++ = 0;
-		*dst++ = 0;
-		*dst++ = 0;
+		dst[0] = 0;
+		dst[1] = 0;
+		dst[2] = 0;
+		dst[3] = 0;
+		dst[4] = 0;
+		dst[5] = 0;
+		dst[6] = 0;
+		dst[7] = 0;
+		dst[8] = 0;
+		dst[9] = 0;
+		dst[10] = 0;
+		dst[11] = 0;
+		dst[12] = 0;
+		dst[13] = 0;
+		dst[14] = 0;
+		dst[15] = 0;
+		dst += 16;
 		n -= 16;
 	}
 	while(n--){

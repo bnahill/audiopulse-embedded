@@ -24,90 +24,10 @@
 #include <driver/platform.h>
 
 /*!
- @brief A simplified interface to the PIT peripherals
- 
- @note This totally ignores most of the features of PIT, at least for now
+ @brief A quick interface to the PIT timers
+
+ This doesn't deal with interrupts or any more advanced features...
  */
-class Timer {
-public:
-	constexpr Timer(FTM_MemMapPtr FTM):
-		FTM(FTM)
-	{}
-	
-	typedef enum {
-		PS_1   = 0,
-		PS_2   = 1,
-		PS_4   = 2,
-		PS_8   = 3,
-		PS_16  = 4,
-		PS_32  = 5,
-		PS_64  = 6,
-		PS_128 = 7
-	} prescaler_t;
-	
-	typedef enum {
-		CLKS_NONE  = 0,
-		CLKS_SYS   = 1,
-		CLKS_FIXED = 2,
-		CLKS_EXT   = 3
-	} clock_src_t;
-	
-	void configure(clock_src_t cs, prescaler_t ps, uint16_t modulo) const {
-		if(FTM == FTM0_BASE_PTR)
-			SIM_SCGC6 |= SIM_SCGC6_FTM0_MASK;
-		else if(FTM == FTM1_BASE_PTR)
-			SIM_SCGC6 |= SIM_SCGC6_FTM1_MASK;
-		else if(FTM == FTM2_BASE_PTR)
-			SIM_SCGC3 |= SIM_SCGC3_FTM2_MASK;
-
-		FTM->MODE = FTM_MODE_WPDIS_MASK;
-
-		// Unlock and disable device, allow for configuration
-		stop();
-		FTM->SC = FTM_SC_PS(ps) | FTM_SC_CLKS(cs);
-	}
-	
-	void start() const {
-// 		if((FTM->MODE & FTM_MODE_WPDIS_MASK) == 0){
-// 			FTM->MODE |= FTM_MODE_WPDIS_MASK;
-// 		}
-		FTM->MODE |= FTM_MODE_FTMEN_MASK | FTM_MODE_INIT_MASK;
-	}
-	
-	void stop() const {
-// 		if((FTM->MODE & FTM_MODE_WPDIS_MASK) == 0){
-// 			FTM->MODE |= FTM_MODE_WPDIS_MASK;
-// 		}
-		FTM->MODE &= ~FTM_MODE_FTMEN_MASK;
-	}
-
-	bool is_running() const {
-		return FTM->MODE & FTM_MODE_FTMEN_MASK;
-	}
-	
-	void reset_count(uint16_t initial = 0) const {
-		FTM->CNTIN = FTM_CNTIN_INIT(initial);
-		// Force reload
-		FTM->CNT = 0;
-	}
-	
-	uint16_t get_count() const {
-		return FTM->CNT;
-	}
-	
-	bool did_overflow() const {
-		uint32_t v = FTM->SC;
-		if(v & FTM_SC_TOF_MASK){
-			FTM->SC = v & ~FTM_SC_TOF_MASK;
-			return true;
-		}
-		return false;
-	}
-	
-protected:
-	FTM_MemMapPtr const FTM;
-};
-
 class TimerPIT {
 public:
 	constexpr TimerPIT(uint32_t index) : i(index) {}

@@ -74,6 +74,8 @@ public:
 		ST_DONE    = 3
 	} state_t;
 
+	static constexpr uint32_t num_generators = 3;
+
 	static inline state_t& get_state(){return state;}
 
 	static inline bool is_ready() {
@@ -180,7 +182,6 @@ protected:
 	
 	static bool silent;
 	
-	static constexpr uint32_t num_generators = 3;
 	static Generator generators[num_generators];
 	
 	static state_t state;

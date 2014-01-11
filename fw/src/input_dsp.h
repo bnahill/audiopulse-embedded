@@ -168,7 +168,7 @@ protected:
 	};
 
 	static AverageConstants mk_multipliers(){
-		if(!window_count) return {0.0,0.0};
+		if(!window_count) return {1.0,0.0};
 		sampleFractional one_over = sampleFractional::mk_frac(1, window_count);
 		return {one_over, ((sampleFractional)1.0) - one_over};
 	}

@@ -47,11 +47,6 @@ void main(){
 	
 	AK4621::start();
 	
-	//Clock::set_clkout(Clock::CLKOUT_MCGIRCLK);
-	
-// 	uint8_t data = 0xA5;
-// 	APulseController::handle_dataI(&data, 1);
-	
 	while(true){
 		InputDSP::pt_dsp(&pt_dsp);
 		WaveGen::pt_wavegen(&pt_wavegen);
