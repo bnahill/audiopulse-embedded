@@ -197,11 +197,11 @@ public class APulseIface {
          */
         public int pushBuffer(ByteBuffer buffer){
             int ret;
-            IntBuffer iBuffer = buffer.asIntBuffer();
+            buffer.position(0);
 
             if(frame_count < psd_frames - 1){
-                for(int i = 0; i < 64; i++){
-                    psd[frame_count * 16 + i] = iBuffer.get(i);
+                for(int i = 0; i < 16; i++){
+                    psd[frame_count * 16 + i] = buffer.getInt();//iBuffer.get(i);
                 }
                 // Check if the next one is the wuss-frame (one sample)
                 if(frame_count == psd_frames - 2){
@@ -211,12 +211,12 @@ public class APulseIface {
                 }
             } else if (frame_count == psd_frames - 1){
                 // This is the last PSD frame, containing only one sample
-                psd[frame_count * 16] = iBuffer.get(0);
+                psd[frame_count * 16] = buffer.getInt();//iBuffer.get(0);
                 ret = 64;
             } else if (frame_count - psd_frames < average_frames){
                 // Now receiving average frames
-                for(int i = 0; i < 64; i++){
-                    average[(frame_count - psd_frames)* 16 + i] = iBuffer.get(i);
+                for(int i = 0; i < 16; i++){
+                    average[(frame_count - psd_frames)* 16 + i] = buffer.getInt();//iBuffer.get(i);
                 }
                 // Check if last frame
                 if(frame_count - psd_frames == average_frames - 1)
