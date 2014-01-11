@@ -56,7 +56,7 @@ uint8_t * APulseController::get_response ( uint16_t& size ) {
 	static union {
 		uint8_t data[64];
 		status_pkt_t status;
-		uint32_t data32[8];
+		uint32_t data32[16];
 	} p;
 
 	switch(state){
@@ -69,12 +69,12 @@ uint8_t * APulseController::get_response ( uint16_t& size ) {
 			size = 4;
 			return p.data;
 		}
-		arm_copy_q31((q31_t*)p.data, (q31_t*)&InputDSP::get_psd()[cmd_idx++ * 8], 8);
+		arm_copy_q31((q31_t*)&InputDSP::get_psd()[cmd_idx++ * 16], (q31_t*)p.data, 16);
 		size = 64;
 		return p.data;
 	case ST_GETAVG:
-		arm_copy_q31((q31_t*)p.data, (q31_t*)&InputDSP::get_average()[cmd_idx++ * 8], 8);
-		if(cmd_idx == 16){
+		arm_copy_q31((q31_t*)&InputDSP::get_average()[cmd_idx++ * 16], (q31_t*)p.data, 16);
+		if(cmd_idx == 32){
 			state = ST_RESET;
 			cmd_idx = 0;
 		}

@@ -70,6 +70,7 @@ public:
 	
 	typedef sFractional<0,31> sampleFractional;
 	typedef sFractional<1,30> powerFractional;
+	typedef sFractional<8,23> transformFractional;
 
 	static constexpr powerFractional const * get_psd() {
 		return mag_psd;
@@ -140,10 +141,10 @@ protected:
 	//! The constant 512 sample Q31 Hamming window
 	static sample_t const hamming512[512];
 	static uint32_t num_before_end;
-	static sampleFractional transform_buffer[transform_len];
+	static sampleFractional transform_buffer[transform_len+2];
 
 	//! Storage of complex transform and the computed PSD
-	static sampleFractional complex_transform[transform_len];
+	static transformFractional complex_transform[transform_len];
 
 	static powerFractional mag_psd[transform_len / 2 + 1];
 	

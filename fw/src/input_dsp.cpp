@@ -49,7 +49,7 @@ arm_rfft_instance_q31 InputDSP::rfft;
 arm_cfft_radix4_instance_q31 InputDSP::cfft;
 
 __attribute__((section(".m_data2")))
-InputDSP::sampleFractional InputDSP::transform_buffer[transform_len];
+InputDSP::sampleFractional InputDSP::transform_buffer[transform_len+2];
 
 __attribute__((section(".m_data2")))
 decltype(InputDSP::complex_transform) InputDSP::complex_transform;
@@ -229,7 +229,7 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 					(powerFractional)constants.one_minus,
 					mag_psd,
 					mag_psd,
-					transform_len
+					transform_len + 2
 				);
 
 				// Check if we've processed enough windows to shut down

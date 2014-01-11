@@ -365,13 +365,14 @@ void complex_power_avg_update(Tpwr a,
                               Tpwr const * Y,
                               Tpwr * dst,
                               size_t n){
-	// First bin is real X[0]
-	*dst++ = (Tpwr)(*X * *X) * a + (Tpwr)(*Y++ * b);
-	X++;
-	// Second bin is real X[N/2]
-	dst[n/2] = (Tpwr)(*X * *X) * a + (Tpwr)(Y[n/2 - 1] * b);
-	X++;
-	n -= 2;
+// 	// First bin is real X[0]
+// 	*dst++ = (Tpwr)(*X * *X) * a + (Tpwr)(*Y * b);
+// 	X++;
+// 	// Second bin is real X[N/2]
+// 	dst[n/2] = (Tpwr)(*X * *X) * a + (Tpwr)(Y[n/2] * b);
+// 	Y++;
+// 	X++;
+// 	n -= 2;
 	while(n >= 8){
 		T x1 = *X++;
 		T x2 = *X++;
