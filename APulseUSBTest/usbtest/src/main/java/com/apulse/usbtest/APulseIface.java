@@ -233,8 +233,23 @@ public class APulseIface {
             return ret;
         }
 
-        public final int[] getPSD(){return psd;}
-        public final int[] getAverage(){return average;}
+        //public final int[] getPSD(){return psd;}
+        //public final int[] getAverage(){return average;}
+        public double[] getPSD(){
+            double[] ret = new double[APulseIface.transform_len / 2 + 1];
+            for(int i = 0; i < APulseIface.transform_len / 2 + 1; i++){
+                ret[i] = ((double)psd[i]) / (double)0x7FFFFFFF;
+            }
+            return ret;
+        }
+
+        public double[] getAverage(){
+            double[] ret = new double[APulseIface.transform_len];
+            for(int i = 0; i < APulseIface.transform_len; i++){
+                ret[i] = ((double)average[i]) / (double)0x7FFFFFFF;
+            }
+            return ret;
+        }
 
         private int frame_count;
         private int average[];

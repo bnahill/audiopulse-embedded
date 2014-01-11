@@ -225,7 +225,14 @@ public class Main extends Activity {
     public void getdataButton(View view){
         if(apulse.getStatus().test_state == APulseIface.APulseStatus.TEST_DONE){
             APulseIface.APulseData data = apulse.getData();
-            app_out.setText("Received buffers");
+            double[] psd = data.getPSD();
+            String out = "";
+            for(int i = 0; i < psd.length; i++){
+                double logd = (psd[i] == 0) ? -Double.NEGATIVE_INFINITY : Math.log10(psd[i]);
+
+                out += String.format("%d:\t%.10f\n",(int)(((double)i)*31.25), logd);
+            }
+            app_out.setText(out);
         } else {
             app_out.setText("Data not ready...");
         }
