@@ -213,7 +213,7 @@ public class Main extends Activity {
     public void startButton(View view){
         APulseIface.ToneConfig[] tones = new APulseIface.ToneConfig[2];
         tones[0] = new APulseIface.FixedTone(500, 1000, 10000, 65.0, 0);
-        tones[1] = new APulseIface.FixedTone(800, 1000, 10000, 65.0, 1);
+        tones[1] = new APulseIface.FixedTone(1000, 1000, 10000, 65.0, 1);
 
         apulse.configCapture(2000, 256, 200);
 

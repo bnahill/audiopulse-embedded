@@ -96,16 +96,19 @@ public:
 protected:
 	typedef AK4621::sample_t sample_t;
 	
+	//! The current state in the test state machine
 	static state_t state;
 
+	//! A pointer to new samples
 	static sampleFractional const * new_samples;
 	// MUST HAVE PROTECTED ACCESS
 	static uint32_t num_samples;
 
-	//! @name Configuration
+	//! @name Test Configuration
 	//! @{
 	//! Start time
 	static uint32_t start_time_ms;
+	//! The number of windows to use
 	static uint16_t num_windows;
 	//! @}
 	
@@ -114,20 +117,27 @@ protected:
 	//! The filter order for FIR decimation
 	static constexpr uint16_t decimate_fir_order = 21;
 	static sample_t const decimate_coeffs[decimate_fir_order];
-	// The number of samples processed in each iteration of ARM FIR decimate
+	//! The number of samples processed in each iteration of ARM FIR decimate
 	static constexpr uint16_t decimate_block_size = 48;
-	// The number of output samples generated at a time
+	//! The number of output samples generated at a time
 	static constexpr uint16_t decimate_output_size = 256;
+	//! The size of the buffer containing decimated samples
 	static constexpr uint32_t decimated_frame_buffer_size = 3 * transform_len / 2;
-	//! 
+	//! The buffer containing decimated samples
 	static sampleFractional decimated_frame_buffer[decimated_frame_buffer_size];
 	//! The decimate state
 	static arm_fir_decimate_instance_q31 decimate;
+	//! Perform the decimation (separate function because it is in small chunks
 	static void do_decimate(sampleFractional * dst);
 
-	static uint32_t theta;
+	//! An iterator through the decimated buffer
+	//! Incremented every transform/averaging frame
+	static uint32_t decimated_iter;
+	//! Since inputs are of fixed sizes, they are placed sequentially in three
+	//! buffers. This selects between them.
 	static uint8_t buffer_sel;
 
+	//! A buffer used internally by the decimation process
 	static sampleFractional decimate_buffer[decimate_block_size +
 	                                        decimate_fir_order - 1];
 	//! @}
@@ -168,17 +178,23 @@ protected:
 		sampleFractional one_minus;
 	};
 
+	/*!
+	 @brief Generate 1/N and 1-(1/N) multipliers to be used for this frame
+	 */
 	static AverageConstants mk_multipliers(){
 		if(!window_count) return {1.0,0.0};
 		sampleFractional one_over = sampleFractional::mk_frac(1, window_count);
 		return {one_over, ((sampleFractional)1.0) - one_over};
 	}
 
+	/*!
+	 @brief Reset the whole state of the input DSP block
+	 */
 	static void do_reset(){
 		new_samples = nullptr;
 		num_samples = 0;
 		buffer_sel = 0;
-		theta = 0;
+		decimated_iter = 0;
 		start_time_ms = -1;
 		window_count = 0;
 

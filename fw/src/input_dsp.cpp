@@ -40,7 +40,7 @@ decltype(InputDSP::num_windows) InputDSP::num_windows;
 
 bool InputDSP::is_reset, InputDSP::pending_reset;
 
-uint32_t InputDSP::theta = 0;
+uint32_t InputDSP::decimated_iter = 0;
 uint8_t InputDSP::buffer_sel = 0;
 uint32_t InputDSP::num_before_end = 0;
 
@@ -56,6 +56,9 @@ decltype(InputDSP::complex_transform) InputDSP::complex_transform;
 
 __attribute__((section(".m_data2")))
 decltype(InputDSP::mag_psd) InputDSP::mag_psd;
+
+// __attribute__((section(".m_data2")))
+// decltype(InputDSP::mag_psd) InputDSP::mag_psd;
 
 __attribute__((section(".m_data2")))
 InputDSP::sampleFractional InputDSP::average_buffer[transform_len];
@@ -164,10 +167,10 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 				constants = mk_multipliers();
 
 				// The number of samples remaining before the end of the decimated_frame_buffer
-				num_before_end = decimated_frame_buffer_size - theta;
+				num_before_end = decimated_frame_buffer_size - decimated_iter;
 				if(num_before_end < transform_len){
 					// Split in two
-					arm_mult_q31((q31_t*)&decimated_frame_buffer[theta],
+					arm_mult_q31((q31_t*)&decimated_frame_buffer[decimated_iter],
 					             (q31_t*)hamming512, (q31_t*)transform_buffer,
 					             num_before_end);
 					arm_mult_q31((q31_t*)&decimated_frame_buffer,
@@ -177,7 +180,7 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 
 					weighted_vector_sum(
 						constants.one_over,
-						&decimated_frame_buffer[theta],
+						&decimated_frame_buffer[decimated_iter],
 						constants.one_minus,
 						average_buffer,
 						average_buffer,
@@ -204,7 +207,7 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 
 					weighted_vector_sum(
 						constants.one_over,
-						&decimated_frame_buffer[theta],
+						&decimated_frame_buffer[decimated_iter],
 						constants.one_minus,
 						average_buffer,
 						average_buffer,
@@ -213,7 +216,7 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 				}
 
 				num_decimated -= (transform_len - overlap);
-				theta = (theta + (transform_len - overlap)) &
+				decimated_iter = ( decimated_iter + (transform_len - overlap)) &
 						(decimated_frame_buffer_size - 1);
 
 				PT_YIELD(pt);
@@ -222,6 +225,7 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 				             (q31_t*)complex_transform);
 
 				PT_YIELD(pt);
+
 
 				complex_power_avg_update(
 					(powerFractional)constants.one_over,

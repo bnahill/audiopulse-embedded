@@ -42,6 +42,8 @@ public:
 	} gen_type_t;
 
 	gen_type_t type;
+	uint16_t f1;
+	uint16_t f2;
 	uint16_t w1;     //!< Start normalized angular rate
 	uint16_t w2;     //!< End angular rate (chirp)
 	uint16_t t1;     //!< The start time
@@ -224,7 +226,7 @@ protected:
 			s = __SSAT((((q63_t) s * gain) >> 32),31);
 			
 			// Add this sample to the output
-			*dst += s;
+			*dst += (get_speaker_gain(generator.f1)*(sFractional<0,31>)s).normalize<0,31>().i;
 			dst += 2;
 			
 			theta = (theta + generator.w1) & (wavetable_len * 2 - 1);
@@ -258,9 +260,28 @@ protected:
 		pending_reset = false;
 	}
 	
-	static sFractional<0,31> db_to_gain(sFractional<7,8> db){
-		return 0.5;
+	static constexpr uint32_t speaker_coeffs_size = 256;
+	// Starts at 100Hz
+	static constexpr uint32_t speaker_coeffs_start = 100;
+	// Divide frequency by 32 first
+	static constexpr uint32_t speaker_coeffs_scaling = 32;
+
+	static sFractional<0,31>::internal_t speaker_coeffs[speaker_coeffs_size];
+
+	/*!
+	 @brief Compute the frequency-independent gain to be applied to a full-range
+	 sine wave to achieve the desired gain.
+	 */
+	static sFractional<0,31> db_to_pp(sFractional<7,8> db){
+		return pow10f(db.asFloat()/20.0) / 31623.0;
 	}
+
+	static sFractional<0,31> get_speaker_gain(uint16_t freq){
+		return speaker_coeffs[(freq - speaker_coeffs_start +
+		                      (speaker_coeffs_scaling / 2)) / speaker_coeffs_scaling];
+	}
+
+
 };
 
 #endif // __APULSE_WAVEGEN_H_

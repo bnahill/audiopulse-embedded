@@ -193,6 +193,9 @@ public:
 	constexpr double asDouble() const {
 		return ((double)i) / (double)(((unsigned)1) << (f_bits));
 	}
+	constexpr float asFloat() const {
+		return ((float)i) / (float)(((unsigned)1) << (f_bits));
+	}
 
 	void setInternal(internal_t internal){
 		i = internal;
@@ -267,14 +270,16 @@ public:
 template<typename T>
 void vector_mult_scalar(T a, T const * B, T * dst, size_t n){
 	while(n >= 8){
-		T b1 = *B++;
-		T b2 = *B++;
-		T b3 = *B++;
-		T b4 = *B++;
-		T b5 = *B++;
-		T b6 = *B++;
-		T b7 = *B++;
-		T b8 = *B++;
+		T b1 = B[0];
+		T b2 = B[1];
+		T b3 = B[2];
+		T b4 = B[3];
+		T b5 = B[4];
+		T b6 = B[5];
+		T b7 = B[6];
+		T b8 = B[7];
+
+		B += 8;
 
 		T out1 = (b1 * a);
 		T out2 = (b2 * a);
@@ -285,14 +290,16 @@ void vector_mult_scalar(T a, T const * B, T * dst, size_t n){
 		T out7 = (b7 * a);
 		T out8 = (b8 * a);
 
-		*dst++ = out1;
-		*dst++ = out2;
-		*dst++ = out3;
-		*dst++ = out4;
-		*dst++ = out5;
-		*dst++ = out6;
-		*dst++ = out7;
-		*dst++ = out8;
+		dst[0] = out1;
+		dst[1] = out2;
+		dst[2] = out3;
+		dst[3] = out4;
+		dst[4] = out5;
+		dst[5] = out6;
+		dst[6] = out7;
+		dst[7] = out8;
+
+		dst += 8;
 
 		n -= 8;
 	}
@@ -316,15 +323,18 @@ void weighted_vector_sum(T const a,
                          T * dst,
                          size_t n){
 	while(n >= 4){
-		T x1 = *X++;
-		T x2 = *X++;
-		T x3 = *X++;
-		T x4 = *X++;
+		T x1 = X[0];
+		T x2 = X[1];
+		T x3 = X[2];
+		T x4 = X[3];
 
-		T y1 = *Y++;
-		T y2 = *Y++;
-		T y3 = *Y++;
-		T y4 = *Y++;
+		T y1 = Y[0];
+		T y2 = Y[1];
+		T y3 = Y[2];
+		T y4 = Y[3];
+
+		X += 4;
+		Y += 4;
 
 		T out1 = (x1 * a) + (y1 * b);
 		T out2 = (x2 * a) + (y2 * b);
@@ -413,6 +423,41 @@ void complex_power_avg_update(Tpwr a,
 		n -= 2;
 	}
 }
+
+template<typename T, typename Tpwr>
+void complex_to_psd(T const * X, Tpwr * dst, uint32_t n){
+	while(n >= 4){
+		T x1 = X[0];
+		T x2 = X[1];
+		T x3 = X[2];
+		T x4 = X[3];
+		T x5 = X[4];
+		T x6 = X[5];
+		T x7 = X[6];
+		T x8 = X[7];
+
+		X += 8;
+
+		Tpwr pwr1 = (Tpwr)(x1*x1) + (Tpwr)(x2*x2);
+		Tpwr pwr2 = (Tpwr)(x3*x3) + (Tpwr)(x4*x4);
+		Tpwr pwr3 = (Tpwr)(x5*x5) + (Tpwr)(x6*x6);
+		Tpwr pwr4 = (Tpwr)(x7*x7) + (Tpwr)(x8*x8);
+
+		*dst++ = pwr1;
+		*dst++ = pwr2;
+		*dst++ = pwr3;
+		*dst++ = pwr4;
+
+		n -= 4;
+	}
+	while(n){
+		T x1 = *X++;
+		T x2 = *X++;
+		*dst++ = (x1*x1) + (x2*x2);
+		n -= 1;
+	}
+}
+
 
 /*!
  @brief An unrolled zeroing
