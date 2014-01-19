@@ -221,12 +221,13 @@ protected:
 			s = wavetable[theta & (wavetable_len - 1)];
 			// Negate for second half-wave
 			if(theta & wavetable_len)
-				s *= -1;
+				s = -s;
 			
 			s = __SSAT((((q63_t) s * gain) >> 32),31);
 			
 			// Add this sample to the output
 			*dst += (get_speaker_gain(generator.f1)*(sFractional<0,31>)s).normalize<0,31>().i;
+			//*dst += s;
 			dst += 2;
 			
 			theta = (theta + generator.w1) & (wavetable_len * 2 - 1);

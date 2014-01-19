@@ -46,6 +46,8 @@ void main(){
 	USB::hidClassInit();
 	
 	AK4621::start();
+
+	Platform::led.set();
 	
 	while(true){
 		InputDSP::pt_dsp(&pt_dsp);

@@ -69,7 +69,7 @@ public:
 	}
 	
 	typedef sFractional<0,31> sampleFractional;
-	typedef sFractional<1,30> powerFractional;
+	typedef sFractional<3,28> powerFractional;
 	typedef sFractional<8,23> transformFractional;
 
 	static constexpr powerFractional const * get_psd() {

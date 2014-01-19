@@ -131,6 +131,7 @@ void APulseController::handle_dataI ( uint8_t* data, uint8_t size ) {
 		//timer.stop();
 		//timer.reset_count();
 		timer.reset();
+		Platform::led.clear();
 
 		teststate = TEST_RESET;
 		WaveGen::request_resetI();
