@@ -212,8 +212,25 @@ public class Main extends Activity {
 
     public void startButton(View view){
         APulseIface.ToneConfig[] tones = new APulseIface.ToneConfig[2];
-        tones[0] = new APulseIface.FixedTone(500, 1000, 10000, 65.0, 0);
-        tones[1] = new APulseIface.FixedTone(1000, 1000, 10000, 65.0, 1);
+
+        try {
+            short f = Short.decode(((TextView) findViewById(R.id.f_1)).getText().toString());
+            short t1 = Short.decode(((TextView) findViewById(R.id.t1_1)).getText().toString());
+            short t2 = Short.decode(((TextView) findViewById(R.id.t2_1)).getText().toString());
+            short db = Short.decode(((TextView) findViewById(R.id.db_1)).getText().toString());
+
+            tones[0] = new APulseIface.FixedTone(f, t1, t2, (double)db, 0);
+
+            f = Short.decode(((TextView) findViewById(R.id.f_2)).getText().toString());
+            t1 = Short.decode(((TextView) findViewById(R.id.t1_2)).getText().toString());
+            t2 = Short.decode(((TextView) findViewById(R.id.t2_2)).getText().toString());
+            db = Short.decode(((TextView) findViewById(R.id.db_2)).getText().toString());
+
+            tones[1] = new APulseIface.FixedTone(f, t1, t2, (double)db, 1);
+        } catch (NullPointerException e) {
+            app_out.setText("Error with arguments");
+            return;
+        }
 
         apulse.configCapture(2000, 256, 200);
 
