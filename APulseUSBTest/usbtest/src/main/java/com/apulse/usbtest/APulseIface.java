@@ -186,6 +186,10 @@ public class APulseIface {
             frame_count = 0;
             average = new int[APulseIface.transform_len];
             psd = new int[APulseIface.transform_len / 2 + 1];
+            for(int i = 0; i < average.length; i++)
+                average[i] = 0;
+            for(int i = 0; i < psd.length; i++)
+                psd[i] = 0;
         }
 
         /*!

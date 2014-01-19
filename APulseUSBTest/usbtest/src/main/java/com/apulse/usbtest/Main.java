@@ -41,16 +41,10 @@ public class Main extends Activity {
                     .commit();
         }
 
-        send_button = (Button)findViewById(R.id.button);
-        send_clear_button = (Button)findViewById(R.id.button2);
-        recv_button = (Button)findViewById(R.id.button3);
-        recv_clear_button = (Button)findViewById(R.id.button4);
 
         textview = (TextView) findViewById(R.id.textView);
         toggle_button = (Switch) findViewById(R.id.switch1);
 
-        textsend = (EditText) findViewById(R.id.editText2);
-        textrecv = (EditText) findViewById(R.id.editText);
         app_out = (EditText) findViewById(R.id.editText3);
 
         reset_button = (Button)findViewById(R.id.button5);
@@ -58,8 +52,6 @@ public class Main extends Activity {
         start_button = (Button)findViewById(R.id.button7);
         getdata_button = (Button)findViewById(R.id.button8);
 
-        send_button.setEnabled(false);
-        recv_button.setEnabled(false);
 
         status_button.setEnabled(false);
         getdata_button.setEnabled(false);
@@ -70,7 +62,6 @@ public class Main extends Activity {
 
 
         app_out.setKeyListener(null);
-        textrecv.setKeyListener(null);
 
         //IntentFilter filter = new IntentFilter(ACTION_USB_PERMISSION);
         //registerReceiver(mUsbReceiver, filter);
@@ -113,42 +104,6 @@ public class Main extends Activity {
         }
     }
 
-    public void recvClearButton(View view){
-        textrecv.setText("");
-    }
-
-    public void recvButton(View view){
-        byte[] data = new byte[10];//USBIface.max_transfer_size];
-        int size = apulse.usb.receive(data, 10);
-        String s;
-        try{
-            s = new String(data, "UTF-8");
-        } catch(Exception e){
-            s = "Wrong encoding?";
-        }
-        if(size >= 0){
-            textrecv.setText("test:"+s+":");
-            textview.setText(String.format("Read %d bytes!",size));
-        } else {
-            textrecv.setText("");
-            textview.setText(String.format("Error reading! -- %d",size));
-        }
-    }
-
-    public void sendClearButton(View view){
-        textsend.setText("");
-    }
-
-    public void sendButton(View view){
-        byte[] bytes = textsend.getText().toString().getBytes();
-        int cnt = apulse.usb.send(bytes, bytes.length);
-        if(cnt >= 0){
-            textview.setText("Sent data! -- " + cnt);
-        } else {
-            textview.setText("Error sending data! -- " + cnt);
-        }
-    }
-
     public void connectToggleButton(View view){
         final Switch sw = (Switch)view;
         int ret;
@@ -158,8 +113,6 @@ public class Main extends Activity {
             ret = apulse.usb.connect(new USBIface.USBConnHandler() {
                 public void handleConnected(){
                     textview.setText("Connected successfully!");
-                    send_button.setEnabled(true);
-                    recv_button.setEnabled(true);
                     status_button.setEnabled(true);
                     getdata_button.setEnabled(true);
                     reset_button.setEnabled(true);
@@ -168,9 +121,6 @@ public class Main extends Activity {
                 public void handleError(){
                     textview.setText("Error with permissions");
                     sw.setChecked(false);
-
-                    send_button.setEnabled(false);
-                    recv_button.setEnabled(false);
 
                     status_button.setEnabled(false);
                     getdata_button.setEnabled(false);
@@ -243,22 +193,22 @@ public class Main extends Activity {
         if(apulse.getStatus().test_state == APulseIface.APulseStatus.TEST_DONE){
             APulseIface.APulseData data = apulse.getData();
             double[] psd = data.getPSD();
+            double[] average = data.getAverage();
             String out = "";
             for(int i = 0; i < psd.length; i++){
                 double logd = (psd[i] == 0) ? -Double.NEGATIVE_INFINITY : Math.log10(psd[i]);
 
                 out += String.format("%d:\t%.10f\n",(int)(((double)i)*31.25), logd);
             }
+            out = "";
+            for(int i = 0; i < average.length; i++){
+                out += String.format("%.10f\n", average[i]);
+            }
             app_out.setText(out);
         } else {
             app_out.setText("Data not ready...");
         }
     }
-
-    protected Button send_button;
-    protected Button send_clear_button;
-    protected Button recv_button;
-    protected Button recv_clear_button;
 
     protected Button reset_button;
     protected Button status_button;
@@ -271,8 +221,6 @@ public class Main extends Activity {
     protected EditText app_out;
 
     protected Switch toggle_button;
-
-    protected EditText textsend, textrecv;
 
     protected APulseIface apulse;
 }
