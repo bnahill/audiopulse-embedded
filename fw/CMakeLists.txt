@@ -96,7 +96,7 @@ set(LTO )#"-flto")
 
 set(MCU cortex-m4)
 
-set(MCFLAGS "-mcpu=${MCU} -g3 -mthumb -fomit-frame-pointer -D__NEWLIB__")
+set(MCFLAGS "-mcpu=${MCU} -g3 -mthumb -fomit-frame-pointer -D__NEWLIB__ -fno-math-errno -fdelete-null-pointer-checks")
 
 
 
@@ -123,7 +123,7 @@ set(C_WARNINGS "-Wall")
 # Flags for both C and C++ compilers
 set(COMMON_FLAGS "${LTO} -ffunction-sections -ffreestanding -fdata-sections ${MCFLAGS}")
 # Eliminate the need for a bunch of extra support code that may not work on the chip anyways
-set(CMAKE_CXX_FLAGS "--std=gnu++11 -fno-rtti -fno-exceptions ${CXX_WARNINGS} ${COMMON_FLAGS}")
+set(CMAKE_CXX_FLAGS "--std=gnu++11 -fno-rtti -fno-exceptions -fno-threadsafe-statics ${CXX_WARNINGS} ${COMMON_FLAGS}")
 # Use the new C11 standard
 set(CMAKE_C_FLAGS "--std=gnu1x ${C_WARNINGS} ${COMMON_FLAGS}")
 set(CMAKE_EXE_LINKER_FLAGS "-T${LINKER_SCRIPT} ${LTO} ${OPTIMIZATION} -Wl,-Map=${TARGET}.map,--cref,-static,--gc-sections -nostartfiles --entry=__reset_vector ${MCFLAGS} ${CMAKE_EXE_LINKER_FLAGS}")
