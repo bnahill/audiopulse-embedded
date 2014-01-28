@@ -164,6 +164,7 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 
 			// While there is a full transform available...
 			while(num_decimated >= transform_len){
+				// THIS IS RUN ONCE PER EPOCH
 				constants = mk_multipliers();
 
 				// The number of samples remaining before the end of the decimated_frame_buffer
@@ -238,7 +239,12 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 
 				// Check if we've processed enough windows to shut down
 				if(++window_count >= num_windows){
+					for(uint32_t i = 0; i < transform_len / 2; i++){
+						mag_psd[i] = mag_psd[i] * APulseController::coeffs[i / 16];
+					}
+					mag_psd[transform_len / 2] = mag_psd[transform_len / 2] * APulseController::coeffs[15];
 					state = ST_DONE;
+					break;
 				}
 
 				PT_YIELD(pt);

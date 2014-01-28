@@ -26,11 +26,16 @@ uint32_t APulseController::cmd_idx;
 uint8_t APulseController::err_code;
 decltype(APulseController::teststate) APulseController::teststate = TEST_RESET;
 constexpr TimerPIT APulseController::timer;
+InputDSP::powerFractional APulseController::coeffs[16];
 
 uint32_t APulseController::most_recent_t_ms;
 
 PT_THREAD(APulseController::pt_controller)(struct pt * pt){
+	static uint32_t i;
+
 	PT_BEGIN(pt);
+
+	clear_calibration();
 
 	timer.reset();
 	
@@ -46,6 +51,35 @@ PT_THREAD(APulseController::pt_controller)(struct pt * pt){
 			Platform::led.clear();
 			if(timer.is_running())
 				timer.reset();
+		}
+		if(teststate == TEST_CALIB_MIC){
+
+			for(i = 0; i < 16; i++){
+				// Calibrating 16 evenly spaced bins across 8kHz, aligned to lower bin
+				static uint32_t f = 500 * i + 500 - 16;
+				// Will land in this bin
+				static uint32_t bin = 16 * i + 7;
+
+				InputDSP::request_resetI();
+				WaveGen::request_resetI();
+
+				PT_WAIT_UNTIL(pt, InputDSP::is_resetI());
+				PT_WAIT_UNTIL(pt, WaveGen::get_state() == WaveGen::ST_RESET);
+
+				WaveGen::set_tone(0, 0, f, 0, 500, calib_tone_level);
+				InputDSP::configure(256, 25, 15);
+
+				PT_WAIT_UNTIL(pt, InputDSP::is_ready() && WaveGen::is_ready());
+
+				timer.reset();
+				WaveGen::runI();
+				InputDSP::runI();
+				timer.start();
+
+				PT_WAIT_UNTIL(pt, InputDSP::get_state() == InputDSP::ST_DONE);
+
+				coeffs[i] = (1.0 / 16.0)  / InputDSP::get_psd()[bin].asFloat();
+			}
 		}
 	}
 
@@ -186,6 +220,14 @@ void APulseController::handle_dataI ( uint8_t* data, uint8_t size ) {
 		}
 		break;
 	case CMD_STARTUP:
+		break;
+	case CMD_CALIBRATE_MIC:
+		if(teststate == TEST_RESET)
+			teststate = TEST_CALIB_MIC;
+		break;
+	case CMD_RESET_CALIB:
+		if(teststate == TEST_RESET)
+			clear_calibration();
 		break;
 	case CMD_START:
 		err_code = 0;

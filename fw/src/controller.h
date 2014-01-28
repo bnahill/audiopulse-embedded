@@ -41,6 +41,8 @@ class APulseController {
 		CMD_GETSTATUS = 4,
 		CMD_GETDATA = 5,
 		CMD_START = 6,
+		CMD_CALIBRATE_MIC = 7,
+		CMD_RESET_CALIB = 8,
 
 		CMD_NONE = 255,
 	} cmd_t;
@@ -123,7 +125,8 @@ class APulseController {
 		TEST_CONFIGURING = 1,
 		TEST_READY       = 2,
 		TEST_RUNNING     = 3,
-		TEST_DONE        = 4
+		TEST_DONE        = 4,
+		TEST_CALIB_MIC   = 5
 	} teststate_t;
 
 	typedef enum {
@@ -132,7 +135,12 @@ class APulseController {
 		ST_GETAVG,
 		ST_RESETTING,
 	} state_t;
+
+	static void clear_calibration(){
+		for(auto &i : coeffs) i = 1.0;
+	}
 public:
+	static InputDSP::powerFractional coeffs[16];
 
 	/*!
 	 @brief Handle a USB command (or data sent)
@@ -160,12 +168,15 @@ public:
 
 	void request_resetI();
 
-
 	static PT_THREAD(pt_controller(struct pt * pt));
 	
 	//! An instance of the timer for synchronization
 	//static constexpr Timer timer = FTM0_BASE_PTR;
 	static constexpr TimerPIT timer = {0};
+
+	static constexpr sFractional<8,23> dbspl_reference = 90.0;
+	//! dbspl_reference - 24 dB (/ 16)
+	static constexpr sFractional<8,23> calib_tone_level = 66.0;
 private:
 	static uint32_t most_recent_t_ms;
 	static teststate_t teststate;

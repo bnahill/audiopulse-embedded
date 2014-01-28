@@ -95,7 +95,8 @@ template <size_t i_bits, size_t f_bits>
 class uFractional {
 public:
 	typedef typename IntLength<i_bits + f_bits>::unsigned_t internal_t;
-	typedef typename IntLength<(i_bits + f_bits) * 2>::unsigned_t double_t;
+	static constexpr size_t bits_i = i_bits;
+	static constexpr size_t bits_f = f_bits;
 
 	template<size_t mi_bits, size_t mf_bits>
 	constexpr uFractional(const uFractional<mi_bits, mf_bits> &val) :
@@ -170,6 +171,8 @@ template <size_t i_bits, size_t f_bits>
 class sFractional {
 public:
 	typedef typename IntLength<i_bits + f_bits + 1>::signed_t internal_t;
+	static constexpr size_t bits_i = i_bits;
+	static constexpr size_t bits_f = f_bits;
 
 	constexpr sFractional(const sFractional<i_bits, f_bits> &val) :
 			 i(val.i){}
@@ -384,34 +387,40 @@ void complex_power_avg_update(Tpwr a,
 // 	X++;
 // 	n -= 2;
 	while(n >= 8){
-		T x1 = *X++;
-		T x2 = *X++;
-		T x3 = *X++;
-		T x4 = *X++;
-		T x5 = *X++;
-		T x6 = *X++;
-		T x7 = *X++;
-		T x8 = *X++;
+		T x1 = X[0];
+		T x2 = X[1];
+		T x3 = X[2];
+		T x4 = X[3];
+		T x5 = X[4];
+		T x6 = X[5];
+		T x7 = X[6];
+		T x8 = X[7];
 
-		Tpwr pwr1 = (Tpwr)(x1*x1) + (Tpwr)(x2*x2);
-		Tpwr pwr2 = (Tpwr)(x3*x3) + (Tpwr)(x4*x4);
-		Tpwr pwr3 = (Tpwr)(x5*x5) + (Tpwr)(x6*x6);
-		Tpwr pwr4 = (Tpwr)(x7*x7) + (Tpwr)(x8*x8);
+		X += 8;
 
-		Tpwr old1 = *Y++;
-		Tpwr old2 = *Y++;
-		Tpwr old3 = *Y++;
-		Tpwr old4 = *Y++;
+		Tpwr pwr1 = (x1*x1) + (x2*x2);
+		Tpwr pwr2 = (x3*x3) + (x4*x4);
+		Tpwr pwr3 = (x5*x5) + (x6*x6);
+		Tpwr pwr4 = (x7*x7) + (x8*x8);
+
+		Tpwr old1 = Y[0];
+		Tpwr old2 = Y[1];
+		Tpwr old3 = Y[2];
+		Tpwr old4 = Y[3];
+
+		Y += 4;
 
 		old1 = (pwr1 * a) + (old1 * b);
 		old2 = (pwr2 * a) + (old2 * b);
 		old3 = (pwr3 * a) + (old3 * b);
 		old4 = (pwr4 * a) + (old4 * b);
 
-		*dst++ = old1;
-		*dst++ = old2;
-		*dst++ = old3;
-		*dst++ = old4;
+		dst[0] = old1;
+		dst[1] = old2;
+		dst[2] = old3;
+		dst[3] = old4;
+
+		dst += 4;
 
 		n -= 8;
 	}

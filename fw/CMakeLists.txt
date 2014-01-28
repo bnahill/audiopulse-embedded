@@ -123,7 +123,7 @@ set(C_WARNINGS "-Wall")
 # Flags for both C and C++ compilers
 set(COMMON_FLAGS "${LTO} -ffunction-sections -ffreestanding -fdata-sections ${MCFLAGS}")
 # Eliminate the need for a bunch of extra support code that may not work on the chip anyways
-set(CMAKE_CXX_FLAGS "--std=gnu++11 -fno-rtti -fno-exceptions -fno-threadsafe-statics ${CXX_WARNINGS} ${COMMON_FLAGS}")
+set(CMAKE_CXX_FLAGS "--std=gnu++11 -fno-rtti -fno-exceptions -fno-threadsafe-statics  ${CXX_WARNINGS} ${COMMON_FLAGS}")
 # Use the new C11 standard
 set(CMAKE_C_FLAGS "--std=gnu1x ${C_WARNINGS} ${COMMON_FLAGS}")
 set(CMAKE_EXE_LINKER_FLAGS "-T${LINKER_SCRIPT} ${LTO} ${OPTIMIZATION} -Wl,-Map=${TARGET}.map,--cref,-static,--gc-sections -nostartfiles --entry=__reset_vector ${MCFLAGS} ${CMAKE_EXE_LINKER_FLAGS}")
@@ -210,7 +210,7 @@ SET_TARGET_PROPERTIES(dsp PROPERTIES COMPILE_FLAGS "-O3")
 
 add_executable(${OUTFILE} ${APP_SOURCES}  ${FREESCALE_SOURCES})
 set_target_properties(${OUTFILE} PROPERTIES COMPILE_FLAGS "${OPTIMIZATION}")
-target_link_libraries(${OUTFILE} gcc c dsp)# libarm_cortexM4l_math.a)
+target_link_libraries(${OUTFILE} dsp)# libarm_cortexM4l_math.a)
 
 
 # Warnings only for application code -- Optimizations only on ST/ARM code
@@ -289,13 +289,13 @@ add_custom_target(gdbtui COMMAND ${GDBTUI} ${GDB_ARGS})
 #add_dependencies(ddd gdb_script)
 
 
-#add_custom_command(
-	#OUTPUT ${TARGET}_size DEPENDS ${OUTFILE}
-	#COMMAND arm-none-eabi-size --format=berkeley ${OUTFILE}
-#)
-#add_custom_target(
-	#${TARGET}_outputs ALL DEPENDS ${TARGET}_size #${name}.map ${name}.bin ${name}.ihx ${name}.dump ${name}.rom
-#)
+add_custom_command(
+	OUTPUT ${TARGET}_size DEPENDS ${OUTFILE}
+	COMMAND arm-none-eabi-size --format=berkeley ${OUTFILE}
+)
+add_custom_target(
+	${TARGET}_outputs ALL DEPENDS ${TARGET}_size #${name}.map ${name}.bin ${name}.ihx ${name}.dump ${name}.rom
+)
 
 ##############################################################
 # Doxygen Output

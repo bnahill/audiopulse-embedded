@@ -179,11 +179,11 @@ protected:
 	};
 
 	/*!
-	 @brief Generate 1/N and 1-(1/N) multipliers to be used for this frame
+	 @brief Generate 1/N and 1-(1/N) multipliers to be used for this epoch
 	 */
 	static AverageConstants mk_multipliers(){
-		if(!window_count) return {1.0,0.0};
-		sampleFractional one_over = sampleFractional::mk_frac(1, window_count);
+		//if(!window_count) return {1.0,0.0};
+		sampleFractional one_over = sampleFractional::mk_frac(1, window_count + 1);
 		return {one_over, ((sampleFractional)1.0) - one_over};
 	}
 
