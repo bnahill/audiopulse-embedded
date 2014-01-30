@@ -5,9 +5,11 @@ import usb.core
 import usb.util
 import sys
 
+
 class UsbConstants():
     USB_VID = 0x15A2
     USB_PID = 0xBEEF
+
 
 class ReqConstants():
     DIR_IN = 0x80
@@ -29,32 +31,104 @@ class ReqConstants():
     # Other
     RECIPIENT_OTHER = 0x03
 
+
 class HidConstants:
-    GET_REPORT           =     0x01
-    GET_IDLE             =     0x02
-    GET_PROTOCOL         =     0x03
-    SET_REPORT           =     0x09
-    SET_IDLE             =     0x0A
-    SET_PROTOCOL         =     0x0B
+    GET_REPORT = 0x01
+    GET_IDLE = 0x02
+    GET_PROTOCOL = 0x03
+    SET_REPORT = 0x09
+    SET_IDLE = 0x0A
+    SET_PROTOCOL = 0x0B
+
 
 class HidReportConstants:
-    INPUT    =     0x01
-    OUTPUT   =     0x02
-    FEATURE  =     0x03
+    INPUT = 0x01
+    OUTPUT = 0x02
+    FEATURE = 0x03
 
 
 class Constants():
-    CMD_RESET        = 0
-    CMD_STARTUP      = 1
-    CMD_SETUPTONES   = 2
+    CMD_RESET = 0
+    CMD_STARTUP = 1
+    CMD_SETUPTONES = 2
     CMD_SETUPCAPTURE = 3
-    CMD_GETSTATUS    = 4
-    CMD_GETDATA      = 5
-    CMD_START        = 6
+    CMD_GETSTATUS = 4
+    CMD_GETDATA = 5
+    CMD_START = 6
 
-    TONE_OFF         = 0
-    TONE_FIXED       = 1
-    TONE_CHIRP       = 2
+    TONE_OFF = 0
+    TONE_FIXED = 1
+    TONE_CHIRP = 2
+
+
+class APulseStatus():
+    WG_RESET = 0
+    WG_READY = 1
+    WG_RUNNING = 2
+    WG_DONE = 3
+
+    str_wgstate = ["Reset", "Ready", "Running", "Done"]
+
+    IN_RESET = 0
+    IN_READY = 1
+    IN_RUNWAIT = 2
+    IN_CAPTURING = 3
+    IN_DONE = 4
+
+    str_instate = ["Reset", "Ready", "RunWait", "Capturing", "Done"]
+
+    TEST_RESET = 0
+    TEST_CONFIGURING = 1
+    TEST_READY = 2
+    TEST_RUNNING = 3
+    TEST_DONE = 4
+
+    str_test = ["Reset", "Configuring", "Ready", "Running", "Done"]
+
+    def __init__(self, data):
+        assert len(data) == 5, "Not a status packet... Len:%d" % len(data)
+        (self.version, self.input_state, self.wavegen_state,
+         self.controller_state, self.err_code) = struct.unpack("B" * 5, data)
+
+    def __str__(self):
+        input_state = self.str_instate[self.input_state]
+        wavegen_state = self.str_wgstate[self.wavegen_state]
+        control_state = self.str_test[self.controller_state]
+        s = "Version:{}, Input:{}, WaveGen:{}, Control:{}, Err:{}".format(
+            self.version, input_state, wavegen_state,
+            control_state, self.err_code
+        )
+        return s
+
+
+class ToneConfig(object):
+    TONE_OFF = 0
+    TONE_FIXED = 1
+    TONE_CHIRP = 2
+
+    def __init__(self, typ, f1, f2, t1, t2, db, ch):
+        self.typ = typ
+        self.f1 = f1
+        self.f2 = f2
+        self.t1 = t1
+        self.t2 = t2
+        self.db = db
+        self.ch = ch
+
+    def to_buff(self):
+        return struct.pack("<BHHHHH",
+            (self.ch << 4) | self.typ,
+            int(self.db) << 8, self.f1, self.f2, self.t1, self.t2)
+
+class FixedTone(ToneConfig):
+    def __init__(self, f1, t1, t2, db, ch):
+        super(FixedTone, self).__init__(ToneConfig.TONE_FIXED, f1, 0, t1, t2, db, ch)
+
+
+class DummyTone(ToneConfig):
+    def __init__(self):
+        super(DummyTone, self).__init__(ToneConfig.TONE_OFF, 0, 0, 0, 0, 0, 0)
+
 
 class APulseIface():
     dev = None
@@ -70,7 +144,6 @@ class APulseIface():
         if dev is None:
             raise ValueError("No device found")
 
-
         if dev.is_kernel_driver_active(0) is True:
             sys.stderr.write("Releasing kernel driver\n")
             dev.detach_kernel_driver(0)
@@ -78,14 +151,14 @@ class APulseIface():
         dev.set_configuration()
 
         cfg = dev.get_active_configuration()
-        intf = cfg[(0,0)]
+        intf = cfg[(0, 0)]
 
         ep = usb.util.find_descriptor(
             intf,
             # match the first IN endpoint (no OUT currently...)
-            custom_match = \
-            lambda e: \
-                usb.util.endpoint_direction(e.bEndpointAddress) == \
+            custom_match =
+            lambda e:
+                usb.util.endpoint_direction(e.bEndpointAddress) ==
                 usb.util.ENDPOINT_IN
         )
 
@@ -95,22 +168,52 @@ class APulseIface():
         self.out_ep = ep
         self.dev = dev
 
+    def reset(self):
+        data = struct.pack("B", Constants.CMD_RESET)
+        self._write(data)
+
+    def get_status(self):
+        data = self._read(5)
+        return APulseStatus(data)
+
+    def config_tones(self, tones):
+        buff = struct.pack("B", Constants.CMD_SETUPTONES)
+        for t in tones:
+            buff = buff + t.to_buff()
+        for i in range(3-len(tones)):
+            buff = buff + DummyTone().to_buff()
+        assert len(buff) == 34, "Wrong sized buffer..."
+        self._write(buff)
+
+    def config_capture(self, t1, epochs, overlap):
+        buff = struct.pack("<BHBHH", Constants.CMD_SETUPCAPTURE,
+            overlap, 0, epochs, t1)
+        self._write(buff)
+
+    def start(self):
+        buff = struct.pack("B", Constants.CMD_START)
+        self._write(buff)
+        status = self.get_status()
+        if(status.err_code):
+            sys.stderr.write("Error starting! {}".format(status.err_code))
+
     def _write(self, data):
         self.dev.ctrl_transfer(ReqConstants.DIR_OUT |
                                ReqConstants.RECIPIENT_DEVICE |
                                ReqConstants.TYPE_CLASS,
                                HidConstants.SET_REPORT,
-                               (HidReportConstants.OUTPUT<<8) | 0x00, 0, data)
+                               (HidReportConstants.OUTPUT << 8) | 0x00,
+                               0,
+                               data)
 
     def _read(self, n):
         return self.dev.ctrl_transfer(ReqConstants.DIR_IN |
                                       ReqConstants.RECIPIENT_INTERFACE |
                                       ReqConstants.TYPE_CLASS,
                                       HidConstants.GET_REPORT,
-                                      (HidReportConstants.INPUT<<8) | 0x00, 0, 0)
+                                      (HidReportConstants.INPUT << 8) | 0x00,
+                                      0,
+                                      n)
 
-    def reset(self):
-        data = struct.pack("b", Constants.CMD_RESET)
-        self._write(data)
 
 
