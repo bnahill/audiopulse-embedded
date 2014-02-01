@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 
-from apulse_iface import APulseIface, FixedTone, APulseStatus
+from apulse_iface import APulseIface, FixedTone
 import numpy as np
 import sys
+import time
 
 import matplotlib
 matplotlib.use('Qt4Agg')
@@ -28,37 +29,61 @@ class PSDSeries(DataSeries):
         super(PSDSeries, self).__init__(label, data, "Hz", "dB SPL")
         assert len(data) == 257, "Wrong PSD length"
 
+
 class TimeSeries(DataSeries):
     def __init__(self, label, data):
-        super(TimeSeries, self).__init__(label, data, "Hz", "dB SPL")
-        assert len(data) == 257, "Wrong PSD length"
+        super(TimeSeries, self).__init__(label, data, "t", "dB SPL")
+        assert len(data) == 512, "Wrong Average length"
+
 
 class PlotFigure(object):
-    signals = None
+    signals = []
+    canvas = None
 
-    def __init__(self):
-        pass
+    def __init__(self, parent=None):
+        self.fig = Figure(figsize=(600, 600),
+                          dpi=72,
+                          facecolor=(1, 1, 1),
+                          edgecolor=(0, 0, 0))
+        self.canvas = FigureCanvas(self.fig)
 
     def addSeries(self, series):
+        self.rmSeries(series)
         # Add a new series
         if self.signals:
             if((self.signals[0].xunits == series.xunits) and
                (self.signals[0].yunits == series.yunits)):
                 self.signals.append(series)
+            else:
+                self.signals = [series]
         else:
             self.signals = [series]
 
-    def mkWidget(self, parent=None):
-        fig = Figure(figsize=(600, 600),
-                     dpi=72,
-                     facecolor=(1, 1, 1),
-                     edgecolor=(0, 0, 0))
-        ax = fig.add_subplot(1, 1, 1)
-        for s in self.signals:
-            ax.plot(s)
-        canvas = FigureCanvas(fig)
-        return canvas
+    def rmSeries(self, series):
+        if self.signals:
+            try:
+                self.signals.remove(series)
+            except:
+                pass
 
+    def clearSeries(self):
+        self.signals = []
+
+    def draw(self):
+        self.ax = self.fig.add_subplot(1, 1, 1)
+        self.ax.cla()
+        for s in self.signals:
+            self.ax.plot(s.data)
+        self.canvas.draw()
+
+    def getWidget(self):
+        return self.canvas
+
+
+class SignalListItem(QtGui.QListWidgetItem):
+    def __init__(self, signal):
+        super(SignalListItem, self).__init__(str(signal.label))
+        self.signal = signal
 
 
 class UIWindow(QtGui.QMainWindow):
@@ -71,7 +96,7 @@ class UIWindow(QtGui.QMainWindow):
 
     def setupUI(self):
         self.statusBar().showMessage("Started!")
-        self.setGeometry(0,0,800, 600)
+        self.setGeometry(0, 0, 800, 600)
         self.setWindowTitle("APulse UI")
 
         mainwidget = QtGui.QWidget(self)
@@ -178,6 +203,25 @@ class UIWindow(QtGui.QMainWindow):
         rightlayout.addWidget(plotpanel)
         rightlayout.addWidget(messagebox)
 
+        itemframe = QtGui.QFrame(lframe)
+        itemlayout = QtGui.QGridLayout(itemframe)
+        itemframe.setLayout(itemlayout)
+        clearbutton = QtGui.QPushButton("&Clear", itemframe)
+        clearallbutton = QtGui.QPushButton("&Clear All", itemframe)
+        deletebutton = QtGui.QPushButton("&Delete", itemframe)
+        deleteallbutton = QtGui.QPushButton("&Delete All", itemframe)
+        itemlayout.addWidget(clearbutton, 0, 0)
+        itemlayout.addWidget(clearallbutton, 0, 1)
+        itemlayout.addWidget(deletebutton, 1, 0)
+        itemlayout.addWidget(deleteallbutton, 1, 1)
+        leftlayout.addWidget(itemframe)
+
+        clearbutton.clicked.connect(self.clearhandler)
+        clearallbutton.clicked.connect(self.clearallhandler)
+        deletebutton.clicked.connect(self.deletehandler)
+        deleteallbutton.clicked.connect(self.deleteallhandler)
+        listlist.itemDoubleClicked.connect(self.addsignalhandler)
+
         self.connbutton = connbutton
         self.statbutton = statbutton
         self.rstbutton = rstbutton
@@ -192,6 +236,11 @@ class UIWindow(QtGui.QMainWindow):
 
         self.plotpanel = plotpanel
         self.messagebox = messagebox
+
+        self.fig = PlotFigure()
+        figlayout = QtGui.QHBoxLayout(self.plotpanel)
+        self.plotpanel.setLayout(figlayout)
+        figlayout.addWidget(self.fig.getWidget())
 
         self.tonetext = [
             [f_1, t1_1, t2_1, db_1],
@@ -245,14 +294,12 @@ class UIWindow(QtGui.QMainWindow):
             return
 
         (psd, avg) = self.iface.get_data()
-        print(psd)
-        print(avg)
 
-        fig = PlotFigure()
-        fig.addSeries(avg)
-        layout = QtGui.QHBoxLayout(self.plotpanel)
-        self.plotpanel.setLayout(layout)
-        layout.addWidget(fig.mkWidget(self.plotpanel))
+        t = time.localtime()
+        d = "{}.{}.{}.{}.{}".format(t.tm_mon, t.tm_mday, t.tm_hour,
+                                    t.tm_min, t.tm_sec)
+        self.datalist.addItem(SignalListItem(PSDSeries("PSD " + d, psd)))
+        self.datalist.addItem(SignalListItem(TimeSeries("Avg " + d, avg)))
 
     def disconnect(self):
         self.iface.disconnect()
@@ -274,6 +321,31 @@ class UIWindow(QtGui.QMainWindow):
         except:
             self.statusBar().showMessage("Couldn't connect...")
 
+    def clearhandler(self):
+        for i in self.datalist.selectedItems():
+            self.fig.rmSeries(i.signal)
+        self.fig.draw()
+
+    def clearallhandler(self):
+        for i in range(self.datalist.count()):
+            self.fig.rmSeries(self.datalist.item(i).signal)
+        self.fig.draw()
+
+    def deletehandler(self):
+        for i in self.datalist.selectedItems():
+            row = self.datalist.row(i)
+            self.datalist.takeItem(row)
+
+    def deleteallhandler(self):
+        self.clearallhandler()
+        for i in range(self.datalist.count()):
+            self.datalist.takeItem(0)
+
+    def addsignalhandler(self, item):
+        self.fig.addSeries(item.signal)
+        self.fig.draw()
+        print(item)
+
     def dumb_test(self):
         tone = FixedTone(1000, 1000, 10000, 65, 0)
         self.iface.config_tones([tone])
@@ -283,7 +355,6 @@ class UIWindow(QtGui.QMainWindow):
 
         status = self.iface.get_status()
         print(status)
-
 
 if __name__ == '__main__':
     app = QtGui.QApplication(sys.argv)
