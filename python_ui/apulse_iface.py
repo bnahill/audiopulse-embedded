@@ -4,6 +4,7 @@ import struct
 import usb.core
 import usb.util
 import sys
+import numpy as np
 
 
 class UsbConstants():
@@ -61,7 +62,7 @@ class Constants():
     TONE_CHIRP = 2
 
 
-class APulseStatus():
+class APulseStatus(object):
     WG_RESET = 0
     WG_READY = 1
     WG_RUNNING = 2
@@ -100,6 +101,9 @@ class APulseStatus():
         )
         return s
 
+    def is_done(self):
+        return self.controller_state == self.TEST_DONE
+
 
 class ToneConfig(object):
     TONE_OFF = 0
@@ -120,9 +124,11 @@ class ToneConfig(object):
             (self.ch << 4) | self.typ,
             int(self.db) << 8, self.f1, self.f2, self.t1, self.t2)
 
+
 class FixedTone(ToneConfig):
     def __init__(self, f1, t1, t2, db, ch):
-        super(FixedTone, self).__init__(ToneConfig.TONE_FIXED, f1, 0, t1, t2, db, ch)
+        super(FixedTone, self).__init__(ToneConfig.TONE_FIXED, f1, 0,
+                                        t1, t2, db, ch)
 
 
 class DummyTone(ToneConfig):
@@ -130,13 +136,17 @@ class DummyTone(ToneConfig):
         super(DummyTone, self).__init__(ToneConfig.TONE_OFF, 0, 0, 0, 0, 0, 0)
 
 
-class APulseIface():
+class APulseIface(object):
     dev = None
     out_ep = None
     in_ep = None
 
     def __init__(self):
         pass
+
+    def disconnect(self):
+        if self.dev:
+            self.dev.reset()
 
     def connect(self):
         dev = usb.core.find(idVendor=UsbConstants.USB_VID,
@@ -156,8 +166,7 @@ class APulseIface():
         ep = usb.util.find_descriptor(
             intf,
             # match the first IN endpoint (no OUT currently...)
-            custom_match =
-            lambda e:
+            custom_match=lambda e:
                 usb.util.endpoint_direction(e.bEndpointAddress) ==
                 usb.util.ENDPOINT_IN
         )
@@ -180,7 +189,7 @@ class APulseIface():
         buff = struct.pack("B", Constants.CMD_SETUPTONES)
         for t in tones:
             buff = buff + t.to_buff()
-        for i in range(3-len(tones)):
+        for i in range(3 - len(tones)):
             buff = buff + DummyTone().to_buff()
         assert len(buff) == 34, "Wrong sized buffer..."
         self._write(buff)
@@ -196,6 +205,30 @@ class APulseIface():
         status = self.get_status()
         if(status.err_code):
             sys.stderr.write("Error starting! {}".format(status.err_code))
+
+    def get_data(self):
+        psd = np.zeros(257, dtype=np.float128)
+        avg = np.zeros(512, dtype=np.float128)
+
+        if not self.get_status().is_done():
+            sys.stderr.write("Could not get data; test incomplete\n")
+            return (psd, avg)
+
+        self._write(struct.pack("B", Constants.CMD_GETDATA))
+        for i in range(16):
+            data = self._read(64)
+            psd[i * 16:(i + 1) * 16] = struct.unpack("<" + "i" * 16, data)
+        (psd[256],) = struct.unpack("<i", self._read(4))
+
+        for i in range(32):
+            data = self._read(64)
+            avg[i * 16:(i + 1) * 16] = struct.unpack("<" + "i" * 16, data)
+
+        # Normalize around 90dB
+        #psd /= np.float128(0x7FFFFFFF)
+        #avg /= np.float128(0x7FFFFFFF)
+
+        return (psd, avg)
 
     def _write(self, data):
         self.dev.ctrl_transfer(ReqConstants.DIR_OUT |
