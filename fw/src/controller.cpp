@@ -86,6 +86,20 @@ PT_THREAD(APulseController::pt_controller)(struct pt * pt){
 	PT_END(pt);
 }
 
+void APulseController::handle_eventI ( uint8_t event_type ) {
+	switch(event_type){
+	case USB_APP_ENUM_COMPLETE:
+		err_code = 0;
+		timer.reset();
+		Platform::led.set();
+
+		teststate = TEST_RESET;
+		WaveGen::request_resetI();
+		InputDSP::request_resetI();
+		break;
+	}
+}
+
 uint8_t * APulseController::get_response ( uint16_t& size ) {
 	static union {
 		uint8_t data[64];

@@ -151,6 +151,7 @@ public:
 	 */
 	static void handle_dataI(uint8_t * data, uint8_t size);
 
+	static void handle_eventI(uint8_t event_type);
 
 	/*!
 	 @brief Get a response

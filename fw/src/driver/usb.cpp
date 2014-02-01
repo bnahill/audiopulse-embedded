@@ -46,6 +46,8 @@ void USB::hidClassInit(){
 }
 
 void USB::callback(uint8_t controller_ID, uint8_t event_type, void *val){
+	APulseController::handle_eventI(event_type);
+
 	if((event_type == USB_APP_BUS_RESET) || (event_type == USB_APP_CONFIG_CHANGED)){
 //		keyboard_init=FALSE;
 	} else if(event_type == USB_APP_ENUM_COMPLETE) {
