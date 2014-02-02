@@ -56,6 +56,8 @@ class Constants():
     CMD_GETSTATUS = 4
     CMD_GETDATA = 5
     CMD_START = 6
+    CMD_CALIBRATE_MIC = 7
+    CMD_RESET_CALIB = 8
 
     TONE_OFF = 0
     TONE_FIXED = 1
@@ -83,8 +85,10 @@ class APulseStatus(object):
     TEST_READY = 2
     TEST_RUNNING = 3
     TEST_DONE = 4
+    TEST_CALIB_MIC = 5
 
-    str_test = ["Reset", "Configuring", "Ready", "Running", "Done"]
+    str_test = ["Reset", "Configuring", "Ready",
+                "Running", "Done", "Calibrating"]
 
     def __init__(self, data):
         assert len(data) == 5, "Not a status packet... Len:%d" % len(data)
@@ -194,7 +198,9 @@ class APulseIface(object):
         assert len(buff) == 34, "Wrong sized buffer..."
         self._write(buff)
 
-    def config_capture(self, t1, epochs, overlap):
+    def config_capture(self, t1, t2, overlap):
+        assert t2 > t1, "Non-positive record time!"
+        epochs = int(np.ceil((t2 - t1) * (16.0 / 256) - 1))
         buff = struct.pack("<BHBHH", Constants.CMD_SETUPCAPTURE,
             overlap, 0, epochs, t1)
         self._write(buff)
@@ -205,6 +211,12 @@ class APulseIface(object):
         status = self.get_status()
         if(status.err_code):
             sys.stderr.write("Error starting! {}".format(status.err_code))
+
+    def calibrate(self):
+        self._write(struct.pack("B", Constants.CMD_CALIBRATE_MIC))
+
+    def decalibrate(self):
+        self._write(struct.pack("B", Constants.CMD_RESET_CALIB))
 
     def get_data(self):
         psd = np.zeros(257, dtype=np.float128)

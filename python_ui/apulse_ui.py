@@ -17,22 +17,33 @@ from PySide import QtGui, QtCore
 
 
 class DataSeries(object):
-    def __init__(self, label, data, xunits, yunits):
+    def __init__(self, label, data, xunits, yunits, xvalues):
         self.data = data
         self.label = label
         self.xunits = xunits
         self.yunits = yunits
+        self.xvalues = xvalues
 
 
 class PSDSeries(DataSeries):
     def __init__(self, label, data):
-        super(PSDSeries, self).__init__(label, data, "Hz", "dB SPL")
+        xvals = np.linspace(0, 8000, 257)
+        super(PSDSeries, self).__init__(label, data, "Hz", "Power SPL", xvals)
+        assert len(data) == 257, "Wrong PSD length"
+
+
+class LogPSDSeries(DataSeries):
+    def __init__(self, label, data):
+        xvals = np.linspace(0, 8000, 257)
+        data = 10.0 * np.log10(0.7071 * data / np.float128(0x7FFFFFFF))
+        super(LogPSDSeries, self).__init__(label, data, "Hz", "dB SPL", xvals)
         assert len(data) == 257, "Wrong PSD length"
 
 
 class TimeSeries(DataSeries):
     def __init__(self, label, data):
-        super(TimeSeries, self).__init__(label, data, "t", "dB SPL")
+        xvals = np.linspace(0, 512.0 / 16000.0, 512)
+        super(TimeSeries, self).__init__(label, data, "t", "dB SPL", xvals)
         assert len(data) == 512, "Wrong Average length"
 
 
@@ -73,7 +84,7 @@ class PlotFigure(object):
         self.ax = self.fig.add_subplot(1, 1, 1)
         self.ax.cla()
         for s in self.signals:
-            self.ax.plot(s.data)
+            self.ax.plot(s.xvalues, s.data)
         self.canvas.draw()
 
     def getWidget(self):
@@ -148,22 +159,22 @@ class UIWindow(QtGui.QMainWindow):
         t2_label = QtGui.QLabel("t2 (ms)")
         db_label = QtGui.QLabel("A (dB SPL)")
 
-        f_1 = QtGui.QLineEdit("1000", buttonpanel)
+        f_1 = QtGui.QLineEdit("2000", buttonpanel)
         t1_1 = QtGui.QLineEdit("200", buttonpanel)
-        t2_1 = QtGui.QLineEdit("4000", buttonpanel)
+        t2_1 = QtGui.QLineEdit("8000", buttonpanel)
         db_1 = QtGui.QLineEdit("65.0", buttonpanel)
 
-        f_2 = QtGui.QLineEdit("1500", buttonpanel)
+        f_2 = QtGui.QLineEdit("2400", buttonpanel)
         t1_2 = QtGui.QLineEdit("200", buttonpanel)
-        t2_2 = QtGui.QLineEdit("4000", buttonpanel)
+        t2_2 = QtGui.QLineEdit("8000", buttonpanel)
         db_2 = QtGui.QLineEdit("65.0", buttonpanel)
 
         t1_capture_label = QtGui.QLabel("t1 (ms)")
-        n_epochs_label = QtGui.QLabel("Epochs")
+        t2_capture_label = QtGui.QLabel("t2 (ms")
         overlap_label = QtGui.QLabel("Overlap")
         capture_label = QtGui.QLabel("Capture")
         t1_capture = QtGui.QLineEdit("300", buttonpanel)
-        n_epochs = QtGui.QLineEdit("100", buttonpanel)
+        t2_capture = QtGui.QLineEdit("7500", buttonpanel)
         overlap = QtGui.QLineEdit("256", buttonpanel)
 
         buttongrid.addWidget(f_label, 6, 0, QtCore.Qt.AlignHCenter)
@@ -182,16 +193,16 @@ class UIWindow(QtGui.QMainWindow):
         buttongrid.addWidget(db_2, 8, 3)
 
         buttongrid.addWidget(t1_capture_label, 9, 1, QtCore.Qt.AlignHCenter)
-        buttongrid.addWidget(n_epochs_label, 9, 2, QtCore.Qt.AlignHCenter)
+        buttongrid.addWidget(t2_capture_label, 9, 2, QtCore.Qt.AlignHCenter)
         buttongrid.addWidget(overlap_label, 9, 3, QtCore.Qt.AlignHCenter)
 
         buttongrid.addWidget(capture_label, 10, 0, QtCore.Qt.AlignHCenter)
         buttongrid.addWidget(t1_capture, 10, 1, QtCore.Qt.AlignHCenter)
-        buttongrid.addWidget(n_epochs, 10, 2, QtCore.Qt.AlignHCenter)
+        buttongrid.addWidget(t2_capture, 10, 2, QtCore.Qt.AlignHCenter)
         buttongrid.addWidget(overlap, 10, 3, QtCore.Qt.AlignHCenter)
 
         for i in [f_1, t1_1, t2_1, db_1, f_2, t1_2, t2_2, db_2,
-                  t1_capture, n_epochs, db_2]:
+                  t1_capture, t2_capture, db_2]:
             i.setInputMethodHints(QtCore.Qt.ImhFormattedNumbersOnly)
 
         # Frame that will contain figures
@@ -221,6 +232,8 @@ class UIWindow(QtGui.QMainWindow):
         deletebutton.clicked.connect(self.deletehandler)
         deleteallbutton.clicked.connect(self.deleteallhandler)
         listlist.itemDoubleClicked.connect(self.addsignalhandler)
+        calbutton.clicked.connect(self.calibrate)
+        decalbutton.clicked.connect(self.decalibrate)
 
         self.connbutton = connbutton
         self.statbutton = statbutton
@@ -231,7 +244,7 @@ class UIWindow(QtGui.QMainWindow):
         self.databutton = databutton
 
         self.t1_capture = t1_capture
-        self.n_epochs = n_epochs
+        self.t2_capture = t2_capture
         self.overlap = overlap
 
         self.plotpanel = plotpanel
@@ -267,7 +280,7 @@ class UIWindow(QtGui.QMainWindow):
     def start(self):
         tones = list()
         try:
-            for i in range(1):
+            for i in range(2):
                 tones.append(
                     FixedTone(int(self.tonetext[i][0].displayText()),
                               int(self.tonetext[i][1].displayText()),
@@ -279,7 +292,7 @@ class UIWindow(QtGui.QMainWindow):
             return
         try:
             self.iface.config_capture(int(self.t1_capture.displayText()),
-                                      int(self.n_epochs.displayText()),
+                                      int(self.t2_capture.displayText()),
                                       int(self.overlap.displayText()))
         except:
             self.statusBar().showMessage(
@@ -298,6 +311,7 @@ class UIWindow(QtGui.QMainWindow):
         t = time.localtime()
         d = "{}.{}.{}.{}.{}".format(t.tm_mon, t.tm_mday, t.tm_hour,
                                     t.tm_min, t.tm_sec)
+        self.datalist.addItem(SignalListItem(LogPSDSeries("LogPSD " + d, psd)))
         self.datalist.addItem(SignalListItem(PSDSeries("PSD " + d, psd)))
         self.datalist.addItem(SignalListItem(TimeSeries("Avg " + d, avg)))
 
@@ -321,6 +335,14 @@ class UIWindow(QtGui.QMainWindow):
         except:
             self.statusBar().showMessage("Couldn't connect...")
 
+    def calibrate(self):
+        self.iface.calibrate()
+        self.statusBar().showMessage("Device calibrating...")
+
+    def decalibrate(self):
+        self.iface.decalibrate()
+        self.statusBar().showMessage("Device calibration cleared")
+
     def clearhandler(self):
         for i in self.datalist.selectedItems():
             self.fig.rmSeries(i.signal)
@@ -332,6 +354,7 @@ class UIWindow(QtGui.QMainWindow):
         self.fig.draw()
 
     def deletehandler(self):
+        self.clearhandler()
         for i in self.datalist.selectedItems():
             row = self.datalist.row(i)
             self.datalist.takeItem(row)
@@ -344,17 +367,7 @@ class UIWindow(QtGui.QMainWindow):
     def addsignalhandler(self, item):
         self.fig.addSeries(item.signal)
         self.fig.draw()
-        print(item)
 
-    def dumb_test(self):
-        tone = FixedTone(1000, 1000, 10000, 65, 0)
-        self.iface.config_tones([tone])
-
-        self.iface.config_capture(1500, 100, 256)
-        self.iface.start()
-
-        status = self.iface.get_status()
-        print(status)
 
 if __name__ == '__main__':
     app = QtGui.QApplication(sys.argv)
