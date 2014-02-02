@@ -115,7 +115,7 @@ protected:
 	//! @name Decimation variables and configuration
 	//! @{
 	//! The filter order for FIR decimation
-	static constexpr uint16_t decimate_fir_order = 21;
+	static constexpr uint16_t decimate_fir_order = 41;
 	static sample_t const decimate_coeffs[decimate_fir_order];
 	//! The number of samples processed in each iteration of ARM FIR decimate
 	static constexpr uint16_t decimate_block_size = 48;
