@@ -28,7 +28,8 @@ class DataSeries(object):
 class PSDSeries(DataSeries):
     def __init__(self, label, data):
         xvals = np.linspace(0, 8000, 257)
-        super(PSDSeries, self).__init__(label, data, "Hz", "Power SPL", xvals)
+        super(PSDSeries, self).__init__(label, data, "Frequency (Hz)",
+                                        "Power (SPL)", xvals)
         assert len(data) == 257, "Wrong PSD length"
 
 
@@ -36,14 +37,16 @@ class LogPSDSeries(DataSeries):
     def __init__(self, label, data):
         xvals = np.linspace(0, 8000, 257)
         data = 10.0 * np.log10(0.7071 * data / np.float128(0x7FFFFFFF))
-        super(LogPSDSeries, self).__init__(label, data, "Hz", "dB SPL", xvals)
+        super(LogPSDSeries, self).__init__(label, data, "Frequency (Hz)",
+                                           "Power (dB SPL)", xvals)
         assert len(data) == 257, "Wrong PSD length"
 
 
 class TimeSeries(DataSeries):
     def __init__(self, label, data):
         xvals = np.linspace(0, 512.0 / 16000.0, 512)
-        super(TimeSeries, self).__init__(label, data, "t", "dB SPL", xvals)
+        super(TimeSeries, self).__init__(label, data, "t (ms)",
+                                         "Amplitude", xvals)
         assert len(data) == 512, "Wrong Average length"
 
 
@@ -84,7 +87,15 @@ class PlotFigure(object):
         self.ax = self.fig.add_subplot(1, 1, 1)
         self.ax.cla()
         for s in self.signals:
-            self.ax.plot(s.xvalues, s.data)
+            self.ax.plot(s.xvalues, s.data, label=s.label)
+        if len(self.signals):
+            self.ax.set_xlabel(self.signals[0].xunits)
+            self.ax.set_ylabel(self.signals[0].yunits)
+
+        handles, labels = self.ax.get_legend_handles_labels()
+        self.ax.legend(handles[::-1], labels[::-1])
+        self.ax.legend(handles, labels)
+
         self.canvas.draw()
 
     def getWidget(self):
