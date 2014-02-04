@@ -7,8 +7,7 @@ import time
 
 import matplotlib
 matplotlib.use('Qt4Agg')
-matplotlib.rcParams['backend.qt4']='PySide'
-import pylab
+matplotlib.rcParams['backend.qt4'] = 'PySide'
 
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
