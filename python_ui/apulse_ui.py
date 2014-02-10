@@ -180,7 +180,7 @@ class UIWindow(QtGui.QMainWindow):
         db_2 = QtGui.QLineEdit("65.0", buttonpanel)
 
         t1_capture_label = QtGui.QLabel("t1 (ms)")
-        t2_capture_label = QtGui.QLabel("t2 (ms")
+        t2_capture_label = QtGui.QLabel("t2 (ms)")
         overlap_label = QtGui.QLabel("Overlap")
         capture_label = QtGui.QLabel("Capture")
         t1_capture = QtGui.QLineEdit("300", buttonpanel)

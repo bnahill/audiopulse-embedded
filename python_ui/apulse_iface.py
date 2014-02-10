@@ -200,7 +200,7 @@ class APulseIface(object):
 
     def config_capture(self, t1, t2, overlap):
         assert t2 > t1, "Non-positive record time!"
-        epochs = int(np.ceil((t2 - t1) * (16.0 / 256) - 1))
+        epochs = int(np.ceil((t2 - t1) * (16.0 / (512 - overlap)) - 1))
         buff = struct.pack("<BHBHH", Constants.CMD_SETUPCAPTURE,
             overlap, 0, epochs, t1)
         self._write(buff)
