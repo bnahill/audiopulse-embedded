@@ -129,7 +129,7 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 	// Configure CODEC
 	////////////////////////////
 	
-	AK4621::set_channels(AK4621::CH_MIC);
+	AK4621::set_source(AK4621::SRC_MIC);
 	AK4621::set_in_cb(put_samplesI);
 	
 	////////////////////////////

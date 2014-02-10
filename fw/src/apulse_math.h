@@ -23,6 +23,7 @@
 #define __APULSE_MATH_H_
 
 #include <stdint.h>
+#include <cstddef>
 
 /*!
  @brief Return the maximum of two values

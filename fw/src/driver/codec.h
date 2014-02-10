@@ -26,7 +26,9 @@
 
 #if __cplusplus
 
+#include <stdint.h>
 #include <driver/gpio.h>
+#include <apulse_math.h>
 
 class AK4621 {
 public:
@@ -34,6 +36,12 @@ public:
 	typedef int32_t sample_t;
 	//! A callback for handling either unused or full data buffers
 	typedef void (*audio_cb_t)(sample_t *);
+
+	typedef enum {
+		SRC_MIC = 0,
+		SRC_EXT = 1,
+		SRC_MIX = 2,
+	} source_t;
 	
 	/*!
 	 @brief Initialize all hardware and software elements for full-duplex stereo
@@ -84,7 +92,17 @@ public:
 	 */
 	static void dma_rx_isr(){
 		if(cb_in){
-			cb_in(&buffer_in[in_buffer_size * rx_buffer_sel]);
+			sample_t * buffer =  &buffer_in[in_buffer_size * rx_buffer_sel];
+			if(source == SRC_MIX){
+				for(uint32_t i = 0; i < (in_buffer_size / 2); i++){
+					sFractional<0,31> m, e;
+					m = buffer[2*i];
+					e = buffer[2*i + 1];
+					m = m * mix_mic + e * mix_ext;
+					buffer[i] = m.i;
+				}
+			}
+			cb_in(buffer);
 			rx_buffer_sel ^= 1;
 		}
 		DMA_CINT = DMA_CINT_CINT(1);
@@ -98,11 +116,6 @@ public:
 	 */
 	static void start();
 	
-	typedef enum {
-		CH_MIC = (1 << 0),
-		CH_EXT = (1 << 1)
-	} channels_t;
-	
 	/*!
 	 @brief Select which channels are enabled
 	 @param channels The bitwise OR of \ref channels_t to enable
@@ -113,9 +126,23 @@ public:
 	 @note The channel configuration is initialized to all channels disabled,
 	 allowing for the first assignment to occur after initialization.
 	 */
-	static void set_channels(uint32_t channels){
-		AK4621::channels = channels;
-		I2S->RMR = ~channels;
+	static void set_source(source_t new_source,
+	                       sFractional<1,31> new_mix_mic = 0.0,
+	                       sFractional<1,31> new_mix_ext = 0.0){
+		AK4621::source = new_source;
+		switch(new_source){
+		case SRC_MIC:
+			I2S->RMR = ~1;
+			break;
+		case SRC_EXT:
+			I2S->RMR = ~2;
+			break;
+		case SRC_MIX:
+			mix_ext = new_mix_ext;
+			mix_mic = new_mix_mic;
+			I2S->RMR = ~3;
+			break;
+		}
 	}
 	
 	/*!
@@ -141,6 +168,8 @@ protected:
 		REG_LCH_EXT     = 8,
 		REG_RCH_EXT     = 9
 	} reg_t;
+
+	static sFractional<0,31> mix_mic, mix_ext;
 
 	static void gpio_init();
 
@@ -196,7 +225,7 @@ protected:
 	static uint_fast8_t rx_buffer_sel;
 	static uint_fast8_t tx_buffer_sel;
 	
-	static uint32_t channels;
+	static source_t source;
 
 	//! @name DMA Buffers
 	//! @{

@@ -9,7 +9,9 @@ void (*AK4621::cb_out)(sample_t *) = nullptr;
 uint_fast8_t AK4621::rx_buffer_sel;
 uint_fast8_t AK4621::tx_buffer_sel;
 
-uint32_t AK4621::channels = 0;
+AK4621::source_t AK4621::source = AK4621::SRC_MIC;
+
+sFractional<0,31> AK4621::mix_mic, AK4621::mix_ext;
 
 void AK4621::init(){
 	__disable_irq();
@@ -136,7 +138,18 @@ void AK4621::i2s_init(){
 	/// RECEIVER
 	////////////////
 	
-	I2S->RMR = ~channels;
+	switch(source){
+		case SRC_MIC:
+			I2S->RMR = ~1;
+			break;
+		case SRC_EXT:
+			I2S->RMR = ~2;
+			break;
+		case SRC_MIX:
+			I2S->RMR = ~3;
+			break;
+		}
+	//I2S->RMR = ~channels;
 	
 	I2S->RCR1 =
 		I2S_RCR1_RFW(0);        // Always request immediately
