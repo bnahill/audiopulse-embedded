@@ -3,13 +3,13 @@
 AK4621::sample_t AK4621::buffer_in[in_buffer_size * 2];
 AK4621::sample_t AK4621::buffer_out[out_buffer_size * 2];
 
-void (*AK4621::cb_in)(sample_t *) = nullptr;
-void (*AK4621::cb_out)(sample_t *) = nullptr;
+void (*AK4621::cb_in)(sample_t *, size_t) = nullptr;
+void (*AK4621::cb_out)(sample_t *, size_t) = nullptr;
 
 uint_fast8_t AK4621::rx_buffer_sel;
 uint_fast8_t AK4621::tx_buffer_sel;
 
-AK4621::source_t AK4621::source = AK4621::SRC_MIC;
+AK4621::Src AK4621::source = AK4621::Src::MIC;
 
 sFractional<0,31> AK4621::mix_mic, AK4621::mix_ext;
 
@@ -139,13 +139,13 @@ void AK4621::i2s_init(){
 	////////////////
 	
 	switch(source){
-		case SRC_MIC:
+		case Src::MIC:
 			I2S->RMR = ~1;
 			break;
-		case SRC_EXT:
+		case Src::EXT:
 			I2S->RMR = ~2;
 			break;
-		case SRC_MIX:
+		case Src::MIX:
 			I2S->RMR = ~3;
 			break;
 		}
@@ -305,9 +305,9 @@ void AK4621::i2s_dma_init(){
 
 void AK4621::start(){
 	if(cb_out)
-		cb_out(&buffer_out[0]);
+		cb_out(&buffer_out[0], out_buffer_size);
 	if(cb_out)
-		cb_out(&buffer_out[out_buffer_size]);
+		cb_out(&buffer_out[out_buffer_size], out_buffer_size);
 	
 	I2S->RCSR |=
 		I2S_RCSR_FEF_MASK |

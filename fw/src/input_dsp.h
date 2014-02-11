@@ -29,6 +29,8 @@
 
 class InputDSP {
 public:
+	typedef AK4621::sample_t sample_t;
+	
 	/*!
 	 @brief The protothread for performing required DSP operations
 	 */
@@ -36,14 +38,17 @@ public:
 	
 	static void configure(uint16_t overlap,
 	                      uint16_t start_time_ms,
-	                      uint16_t num_windows);
+	                      uint16_t num_windows,
+	                      AK4621::Src src,
+	                      sFractional<0,31> scale_mic,
+	                      sFractional<0,31> scale_ext);
 		
 	/*!
 	 @brief Callback to receive new samples
 	 
 	 @note MUST BE CALLED FROM INTERRUPT OR LOCKED CONTEXT
 	 */
-	static void put_samplesI(AK4621::sample_t * samples);
+	static void put_samplesI(sample_t * samples, size_t n);
 
 	/*!
 	 @brief Transition from READY to RUN state
@@ -94,8 +99,6 @@ public:
 	static inline const state_t& get_state(){return state;}
 
 protected:
-	typedef AK4621::sample_t sample_t;
-	
 	//! The current state in the test state machine
 	static state_t state;
 
@@ -110,6 +113,9 @@ protected:
 	static uint32_t start_time_ms;
 	//! The number of windows to use
 	static uint16_t num_windows;
+	static AK4621::Src src;
+	static sampleFractional scale_mic;
+	static sampleFractional scale_ext;
 	//! @}
 	
 	//! @name Decimation variables and configuration

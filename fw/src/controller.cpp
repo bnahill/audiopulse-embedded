@@ -67,7 +67,7 @@ PT_THREAD(APulseController::pt_controller)(struct pt * pt){
 				PT_WAIT_UNTIL(pt, WaveGen::get_state() == WaveGen::ST_RESET);
 
 				WaveGen::set_tone(0, 0, f, 0, 500, calib_tone_level);
-				InputDSP::configure(256, 25, 15);
+				InputDSP::configure(256, 25, 15, AK4621::Src::MIC, 0.0, 0.0);
 
 				PT_WAIT_UNTIL(pt, InputDSP::is_ready() && WaveGen::is_ready());
 
@@ -170,7 +170,7 @@ void APulseController::handle_dataI ( uint8_t* data, uint8_t size ) {
 					"tone_setup_pkt_t wrong size");
 	static_assert(sizeof(status_pkt_t) == 5,
 					"status_pkt_t wrong size");
-	static_assert(sizeof(capture_config_pkt_t) == 8,
+	static_assert(sizeof(capture_config_pkt_t) == 16,
 					"capture_config_pkt wrong size");
 
 	switch(*data){
@@ -196,10 +196,17 @@ void APulseController::handle_dataI ( uint8_t* data, uint8_t size ) {
 		if(teststate == TEST_RESET ||
 		   teststate == TEST_CONFIGURING ||
 		   teststate == TEST_READY){
+			
+			if(!AK4621::is_Src(a->capture_config_pkt.source))
+				break;
+			
 			InputDSP::configure(
 				a->capture_config_pkt.overlap,
 				a->capture_config_pkt.start_time,
-				a->capture_config_pkt.num_windows
+				a->capture_config_pkt.num_windows,
+				a->capture_config_pkt.source,
+				a->capture_config_pkt.scale_mic,
+				a->capture_config_pkt.scale_ext
 			);
 			teststate = WaveGen::is_ready() ? TEST_READY : TEST_CONFIGURING;
 		}

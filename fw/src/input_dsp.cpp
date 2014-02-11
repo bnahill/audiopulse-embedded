@@ -73,6 +73,10 @@ decltype(InputDSP::overlap) InputDSP::overlap;
 
 decltype(InputDSP::state) InputDSP::state = ST_UNKNOWN;
 
+AK4621::Src InputDSP::src;
+InputDSP::sampleFractional InputDSP::scale_mic;
+InputDSP::sampleFractional InputDSP::scale_ext;
+
 /**
  * Generated coefficients from http://t-filter.appspot.com/fir/index.html
  * Passband 0-6kHz -0.5dB with 1dB ripple (max 0dB)
@@ -103,12 +107,18 @@ InputDSP::sample_t const InputDSP::decimate_coeffs[decimate_fir_order] = {
 
 void InputDSP::configure(uint16_t overlap,
                          uint16_t start_time_ms,
-	                     uint16_t num_windows){
+	                     uint16_t num_windows,
+						 AK4621::Src src,
+						 sFractional<0,31> scale_mic,
+						 sFractional<0,31> scale_ext){
 	if(state == ST_RESET || state == ST_READY){
 		is_reset = false;
 		InputDSP::overlap = overlap;
 		InputDSP::start_time_ms = start_time_ms;
 		InputDSP::num_windows = num_windows;
+		InputDSP::src = src;
+		InputDSP::scale_mic = scale_mic;
+		InputDSP::scale_ext = scale_ext;
 		state = ST_READY;
 	}
 }
@@ -129,7 +139,7 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 	// Configure CODEC
 	////////////////////////////
 	
-	AK4621::set_source(AK4621::SRC_MIC);
+	//AK4621::set_source(AK4621::Src::MIC);
 	AK4621::set_in_cb(put_samplesI);
 	
 	////////////////////////////
@@ -153,8 +163,17 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 		PT_WAIT_UNTIL(pt, pending_reset ||
 		                  APulseController::get_time_ms() > start_time_ms);
 		if(pending_reset){ do_reset(); continue; }
-
+		
+		// Switch to the correct source and reset buffers
+		AK4621::set_source(src, scale_mic, scale_ext);
+		new_samples = nullptr;
 		state = ST_CAPTURING;
+		
+		// Wait for new samples and then discard them. This is easier than
+		// resetting DMA but...
+		// TODO: Make setting source reset DMA
+		PT_WAIT_UNTIL(pt, new_samples);
+		new_samples = nullptr;
 
 		while(state == ST_CAPTURING){
 			PT_WAIT_UNTIL(pt, new_samples || pending_reset);
@@ -285,10 +304,10 @@ void InputDSP::do_decimate(sampleFractional * dst){
 	}
 }
 
-void InputDSP::put_samplesI(sample_t * samples){
+void InputDSP::put_samplesI(sample_t * samples, size_t n){
 	if(state == ST_CAPTURING){
 		new_samples = reinterpret_cast<sampleFractional *>(samples);
-		num_samples = AK4621::in_buffer_size;
+		num_samples = n;
 	}
 }
 

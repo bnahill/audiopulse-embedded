@@ -88,11 +88,13 @@ class APulseController {
 		//! Window overlap in samples
 		uint16_t overlap;
 		//! Window function (ignored)
-		uint8_t window_function;
+		AK4621::Src source;
 		//! Number of windows to capture
 		uint16_t num_windows;
 		//! The time in ms to start capturing
 		uint16_t start_time;
+		sFractional<0,31> scale_mic;
+		sFractional<0,31> scale_ext;
 	} __attribute__((packed)) capture_config_pkt_t;
 
 	typedef union {

@@ -85,19 +85,21 @@ public:
 	}
 
 	/*!
-	 * @brief A callback to get samples
-	 * @param dst The destination buffer (size known from \ref AK4621)
-	 * 
-	 * @note This should be called from interrupt or locked context
-	 * 
-	 * @note Generation will be performed immediately from this context due to
-	 * short deadline
-	 * 
-	 * @note Inlined because only a single caller
+	 @brief A callback to get samples
+	 @param dst The destination buffer
+	 @param n Ignored, number of samples requested(size known from \ref AK4621)
+	 
+	 @note This should be called from interrupt or locked context
+	 
+	 @note Generation will be performed immediately from this context due to
+	 short deadline
+	 
+	 @note Inlined because only a single caller
 	 */
-	static inline void get_samplesI(sample_t * dst){
+	static inline void get_samplesI(sample_t * dst, size_t n){
 		// Zero the whole damn thing first
 		zero16(dst, buffer_size);
+	
 		// Check if muting
 		if(silent)
 			return;
