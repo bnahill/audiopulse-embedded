@@ -207,8 +207,8 @@ class APulseIface(object):
     def config_capture(self, t1, t2, overlap, src=InputConfig.SRC_MIC,
                        mix_mic=0, mix_ext=0):
         assert t2 > t1, "Non-positive record time!"
-        assert abs(mix_mic) < 1
-        assert abs(mix_ext) < 1
+        assert abs(mix_mic) <= 1.0
+        assert abs(mix_ext) <= 1.0
         mix_mic = int(float(mix_mic) * 0x7FFFFFFF)
         mix_ext = int(float(mix_ext) * 0x7FFFFFFF)
         epochs = int(np.ceil((t2 - t1) * (16.0 / 256) - 1))

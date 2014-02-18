@@ -24,26 +24,44 @@ class DataSeries(object):
         self.yunits = yunits
         self.xvalues = xvalues
 
-    def save(self):
-        savemat(self.label, {'x': self.xvalues, 'y': self.data,
-                             'xunits': self.xunits, 'yunits': self.yunits})
+    def save(self, filename=None):
+        if not filename:
+            filename = self.label
+        savemat(filename, {'x': self.xvalues, 'y': self.data,
+                           'xunits': self.xunits, 'yunits': self.yunits})
 
 
 class PSDSeries(DataSeries):
-    def __init__(self, label, data):
+    def __init__(self, label, data, f1=None, f2=None):
         xvals = np.linspace(0, 8000, 257)
         super(PSDSeries, self).__init__(label, data, "Frequency (Hz)",
                                         "Power (SPL)", xvals)
+        self.f1 = f1
+        self.f2 = f2
+
         assert len(data) == 257, "Wrong PSD length"
+
+    def plotExtras(self):
+        # Draw 2*f2-f1 region
+        pass
 
 
 class LogPSDSeries(DataSeries):
-    def __init__(self, label, data):
+    def __init__(self, label, data, f1=None, f2=None):
         xvals = np.linspace(0, 8000, 257)
         data = 10.0 * np.log10(0.7071 * data / np.float128(0x7FFFFFFF))
         super(LogPSDSeries, self).__init__(label, data, "Frequency (Hz)",
                                            "Power (dB SPL)", xvals)
+
+        self.f1 = f1
+        self.f2 = f2
+
         assert len(data) == 257, "Wrong PSD length"
+
+    def plotExtras(self):
+        # Draw 2*f2-f1 region
+        print("APPLES")
+        pass
 
 
 class TimeSeries(DataSeries):
@@ -99,6 +117,11 @@ class PlotFigure(object):
         handles, labels = self.ax.get_legend_handles_labels()
         self.ax.legend(handles[::-1], labels[::-1])
         self.ax.legend(handles, labels)
+
+        try:
+            self.plotExtras()
+        except:
+            pass
 
         self.canvas.draw()
 
@@ -289,6 +312,7 @@ class UIWindow(QtGui.QMainWindow):
 
         listpanel = QtGui.QFrame(lframe)
         listlist = QtGui.QListWidget(listpanel)
+        #listlist.selectionChanged.connect(self.listchanged)
         listlayout = QtGui.QVBoxLayout(listpanel)
         listlayout.addWidget(listlist)
 
@@ -297,6 +321,7 @@ class UIWindow(QtGui.QMainWindow):
 
         # Frame that will contain figures
         plotpanel = QtGui.QFrame(rframe)
+        plotpanel.setFrameStyle(QtCore.Qt.SolidLine)
         plotpanel.setSizePolicy(QtGui.QSizePolicy.Expanding,
                                 QtGui.QSizePolicy.Expanding)
         messagebox = QtGui.QTextEdit(rframe)
@@ -312,11 +337,13 @@ class UIWindow(QtGui.QMainWindow):
         deletebutton = QtGui.QPushButton("&Delete", itemframe)
         deleteallbutton = QtGui.QPushButton("&Delete All", itemframe)
         savebutton = QtGui.QPushButton("&Save", itemframe)
+        filename = QtGui.QLineEdit(itemframe)
         itemlayout.addWidget(clearbutton, 0, 0)
         itemlayout.addWidget(clearallbutton, 0, 1)
         itemlayout.addWidget(deletebutton, 1, 0)
         itemlayout.addWidget(deleteallbutton, 1, 1)
-        itemlayout.addWidget(savebutton, 2, 0, 1, 2, QtCore.Qt.AlignHCenter)
+        itemlayout.addWidget(savebutton, 2, 0)
+        itemlayout.addWidget(filename, 2, 1)
         leftlayout.addWidget(itemframe)
 
         clearbutton.clicked.connect(self.clearhandler)
@@ -327,6 +354,8 @@ class UIWindow(QtGui.QMainWindow):
         buttonpanel.calbutton.clicked.connect(self.calibrate)
         buttonpanel.decalbutton.clicked.connect(self.decalibrate)
         savebutton.clicked.connect(self.savehandler)
+
+        self.filename = filename
 
         self.plotpanel = plotpanel
         self.messagebox = messagebox
@@ -368,8 +397,9 @@ class UIWindow(QtGui.QMainWindow):
                         float(self.buttonpanel.tonetext[i][3].displayText()),
                         i))
             self.iface.config_tones(tones)
-        except Exception:
+        except Exception as e:
             self.statusBar().showMessage("Please provide numeric tone values")
+            print(e)
             return
 
         mix_mic = self.buttonpanel.mix_mic.getValue()
@@ -378,15 +408,16 @@ class UIWindow(QtGui.QMainWindow):
             self.buttonpanel.src.currentIndex())
 
         try:
-            print(mix_mic, mix_ext, src)
+            print((mix_mic, mix_ext, src,))
             self.iface.config_capture(
                 int(self.buttonpanel.t1_capture.displayText()),
                 int(self.buttonpanel.t2_capture.displayText()),
                 int(self.buttonpanel.overlap.displayText()),
                 src, mix_mic, mix_ext)
-        except:
+        except Exception as e:
             self.statusBar().showMessage(
                 "Please provide numeric capture values")
+            print((e.message))
             return
         self.iface.start()
         self.getstat()
@@ -462,10 +493,20 @@ class UIWindow(QtGui.QMainWindow):
         self.fig.draw()
 
     def savehandler(self):
-        for i in self.datalist.selectedItems():
-            sig = self.datalist.item(self.datalist.row(i)).signal
-            sig.save()
-            self.statusBar().showMessage("File {} saved.".format(sig.label))
+        items = self.datalist.selectedItems()
+        if len(items) != 1:
+            return
+        i = items[0]
+        sig = self.datalist.item(self.datalist.row(i)).signal
+        sig.save()
+        self.statusBar().showMessage("File {} saved.".format(sig.label))
+
+    def listchanged(self):
+        items = self.datalist.selectedItems()
+        if len(items) != 1:
+            return
+        item = items[0]
+        self.filename.setText(str(item.label))
 
 
 if __name__ == '__main__':
