@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 
-from apulse_iface import APulseIface, FixedTone
+from apulse_iface import APulseIface, FixedTone, InputConfig
 import numpy as np
 import sys
 import time
+from scipy.io import savemat
 
 import matplotlib
 matplotlib.use('Qt4Agg')
@@ -23,22 +24,44 @@ class DataSeries(object):
         self.yunits = yunits
         self.xvalues = xvalues
 
+    def save(self, filename=None):
+        if not filename:
+            filename = self.label
+        savemat(filename, {'x': self.xvalues, 'y': self.data,
+                           'xunits': self.xunits, 'yunits': self.yunits})
+
 
 class PSDSeries(DataSeries):
-    def __init__(self, label, data):
+    def __init__(self, label, data, f1=None, f2=None):
         xvals = np.linspace(0, 8000, 257)
         super(PSDSeries, self).__init__(label, data, "Frequency (Hz)",
                                         "Power (SPL)", xvals)
+        self.f1 = f1
+        self.f2 = f2
+
         assert len(data) == 257, "Wrong PSD length"
+
+    def plotExtras(self):
+        # Draw 2*f2-f1 region
+        pass
 
 
 class LogPSDSeries(DataSeries):
-    def __init__(self, label, data):
+    def __init__(self, label, data, f1=None, f2=None):
         xvals = np.linspace(0, 8000, 257)
         data = 10.0 * np.log10(0.7071 * data / np.float128(0x7FFFFFFF))
         super(LogPSDSeries, self).__init__(label, data, "Frequency (Hz)",
                                            "Power (dB SPL)", xvals)
+
+        self.f1 = f1
+        self.f2 = f2
+
         assert len(data) == 257, "Wrong PSD length"
+
+    def plotExtras(self):
+        # Draw 2*f2-f1 region
+        print("APPLES")
+        pass
 
 
 class TimeSeries(DataSeries):
@@ -95,6 +118,11 @@ class PlotFigure(object):
         self.ax.legend(handles[::-1], labels[::-1])
         self.ax.legend(handles, labels)
 
+        try:
+            self.plotExtras()
+        except:
+            pass
+
         self.canvas.draw()
 
     def getWidget(self):
@@ -107,54 +135,56 @@ class SignalListItem(QtGui.QListWidgetItem):
         self.signal = signal
 
 
-class UIWindow(QtGui.QMainWindow):
-    iface = None
+class GainSlider(QtGui.QWidget):
+    def __init__(self, parent=None, label=None):
+        super(GainSlider, self).__init__(parent)
+        self.layout = QtGui.QHBoxLayout(self)
+        self.slider = QtGui.QSlider(QtCore.Qt.Horizontal, self)
+        self.label = QtGui.QLineEdit(" 0.0 ", self)
+        self.label.setFixedWidth(42)
+        self.setLayout(self.layout)
 
-    def __init__(self):
-        super(UIWindow, self).__init__()
-        self.iface = APulseIface()
-        self.setupUI()
+        if label:
+            self.title = QtGui.QLabel(str(label))
+            self.layout.addWidget(self.title)
 
-    def setupUI(self):
-        self.statusBar().showMessage("Started!")
-        self.setGeometry(0, 0, 800, 600)
-        self.setWindowTitle("APulse UI")
+        self.layout.addWidget(self.slider)
+        self.layout.addWidget(self.label)
 
-        mainwidget = QtGui.QWidget(self)
-        self.setCentralWidget(mainwidget)
-        hlayout = QtGui.QHBoxLayout(mainwidget)
-        mainwidget.setLayout(hlayout)
-        lframe = QtGui.QFrame(self)
-        rframe = QtGui.QFrame(self)
-        hlayout.addWidget(lframe)
-        hlayout.addWidget(rframe)
-        lframe.setFixedWidth(300)
-        rframe.setSizePolicy(QtGui.QSizePolicy.Expanding,
-                             QtGui.QSizePolicy.Expanding)
+        self.slider.setMinimum(-100)
+        self.slider.setMaximum(100)
+        self.slider.setTickInterval(10)
+        self.slider.setValue(0)
 
-        leftlayout = QtGui.QVBoxLayout(lframe)
-        rightlayout = QtGui.QVBoxLayout(rframe)
-        lframe.setLayout(leftlayout)
-        rframe.setLayout(rightlayout)
+        def setLabel(val):
+            self.label.setText("{:5.2f}".format(float(val) / 100.0))
 
-        buttonpanel = QtGui.QFrame(lframe)
-        buttongrid = QtGui.QGridLayout(buttonpanel)
+        def setSlider(val):
+            try:
+                self.slider.setValue(int(float(val) * 100))
+            except:
+                pass
 
-        listpanel = QtGui.QFrame(lframe)
-        listlist = QtGui.QListWidget(listpanel)
-        listlayout = QtGui.QVBoxLayout(listpanel)
-        listlayout.addWidget(listlist)
+        self.slider.sliderMoved.connect(setLabel)
+        self.label.textChanged.connect(setSlider)
 
-        leftlayout.addWidget(buttonpanel)
-        leftlayout.addWidget(listpanel)
+    def getValue(self):
+        return float(self.slider.value()) / 100.0
 
-        connbutton = QtGui.QPushButton("&Connect", buttonpanel)
-        rstbutton = QtGui.QPushButton("&Reset", buttonpanel)
-        statbutton = QtGui.QPushButton("&Get Status", buttonpanel)
-        startbutton = QtGui.QPushButton("&Start", buttonpanel)
-        calbutton = QtGui.QPushButton("&Calibrate", buttonpanel)
-        decalbutton = QtGui.QPushButton("&Decalibrate", buttonpanel)
-        databutton = QtGui.QPushButton("&Get Data", buttonpanel)
+
+class ButtonPanel(QtGui.QFrame):
+
+    def __init__(self, parent=None):
+        super(ButtonPanel, self).__init__(parent)
+        buttongrid = QtGui.QGridLayout(self)
+
+        connbutton = QtGui.QPushButton("&Connect", self)
+        rstbutton = QtGui.QPushButton("&Reset", self)
+        statbutton = QtGui.QPushButton("&Get Status", self)
+        startbutton = QtGui.QPushButton("&Start", self)
+        calbutton = QtGui.QPushButton("&Calibrate", self)
+        decalbutton = QtGui.QPushButton("&Decalibrate", self)
+        databutton = QtGui.QPushButton("&Get Data", self)
 
         buttongrid.addWidget(connbutton, 0, 0, 1, 2, QtCore.Qt.AlignHCenter)
         buttongrid.addWidget(rstbutton, 0, 2, 1, 2, QtCore.Qt.AlignHCenter)
@@ -169,23 +199,29 @@ class UIWindow(QtGui.QMainWindow):
         t2_label = QtGui.QLabel("t2 (ms)")
         db_label = QtGui.QLabel("A (dB SPL)")
 
-        f_1 = QtGui.QLineEdit("2000", buttonpanel)
-        t1_1 = QtGui.QLineEdit("200", buttonpanel)
-        t2_1 = QtGui.QLineEdit("8000", buttonpanel)
-        db_1 = QtGui.QLineEdit("65.0", buttonpanel)
+        f_1 = QtGui.QLineEdit("2000", self)
+        t1_1 = QtGui.QLineEdit("200", self)
+        t2_1 = QtGui.QLineEdit("8000", self)
+        db_1 = QtGui.QLineEdit("65.0", self)
 
-        f_2 = QtGui.QLineEdit("2400", buttonpanel)
-        t1_2 = QtGui.QLineEdit("200", buttonpanel)
-        t2_2 = QtGui.QLineEdit("8000", buttonpanel)
-        db_2 = QtGui.QLineEdit("65.0", buttonpanel)
+        f_2 = QtGui.QLineEdit("2400", self)
+        t1_2 = QtGui.QLineEdit("200", self)
+        t2_2 = QtGui.QLineEdit("8000", self)
+        db_2 = QtGui.QLineEdit("65.0", self)
 
         t1_capture_label = QtGui.QLabel("t1 (ms)")
         t2_capture_label = QtGui.QLabel("t2 (ms)")
         overlap_label = QtGui.QLabel("Overlap")
         capture_label = QtGui.QLabel("Capture")
-        t1_capture = QtGui.QLineEdit("300", buttonpanel)
-        t2_capture = QtGui.QLineEdit("7500", buttonpanel)
-        overlap = QtGui.QLineEdit("256", buttonpanel)
+        t1_capture = QtGui.QLineEdit("300", self)
+        t2_capture = QtGui.QLineEdit("7500", self)
+        overlap = QtGui.QLineEdit("256", self)
+        src = QtGui.QComboBox(self)
+        src.addItem("Mic", userData=InputConfig.SRC_MIC)
+        src.addItem("Ext", userData=InputConfig.SRC_EXT)
+        src.addItem("Mix", userData=InputConfig.SRC_MIX)
+        mix_mic = GainSlider(self, "Mic")
+        mix_ext = GainSlider(self, "Ext")
 
         buttongrid.addWidget(f_label, 6, 0, QtCore.Qt.AlignHCenter)
         buttongrid.addWidget(t1_label, 6, 1, QtCore.Qt.AlignHCenter)
@@ -211,12 +247,81 @@ class UIWindow(QtGui.QMainWindow):
         buttongrid.addWidget(t2_capture, 10, 2, QtCore.Qt.AlignHCenter)
         buttongrid.addWidget(overlap, 10, 3, QtCore.Qt.AlignHCenter)
 
+        buttongrid.addWidget(src, 11, 0)
+        buttongrid.addWidget(mix_mic, 11, 1, 1, 3)
+        buttongrid.addWidget(mix_ext, 12, 1, 1, 3)
+
         for i in [f_1, t1_1, t2_1, db_1, f_2, t1_2, t2_2, db_2,
                   t1_capture, t2_capture, db_2]:
             i.setInputMethodHints(QtCore.Qt.ImhFormattedNumbersOnly)
 
+        self.connbutton = connbutton
+        self.statbutton = statbutton
+        self.rstbutton = rstbutton
+        self.startbutton = startbutton
+        self.calbutton = calbutton
+        self.decalbutton = decalbutton
+        self.databutton = databutton
+
+        self.t1_capture = t1_capture
+        self.t2_capture = t2_capture
+        self.overlap = overlap
+
+        self.src = src
+        self.mix_mic = mix_mic
+        self.mix_ext = mix_ext
+
+        self.tonetext = [
+            [f_1, t1_1, t2_1, db_1],
+            [f_2, t1_2, t2_2, db_2],
+        ]
+
+
+class UIWindow(QtGui.QMainWindow):
+    iface = None
+
+    def __init__(self):
+        super(UIWindow, self).__init__()
+        self.iface = APulseIface()
+        self.setupUI()
+
+    def setupUI(self):
+        self.statusBar().showMessage("Started!")
+        self.setGeometry(0, 0, 800, 600)
+        self.setWindowTitle("APulse UI")
+
+        mainwidget = QtGui.QWidget(self)
+        self.setCentralWidget(mainwidget)
+        hlayout = QtGui.QHBoxLayout(mainwidget)
+        mainwidget.setLayout(hlayout)
+        lframe = QtGui.QFrame(self)
+        rframe = QtGui.QFrame(self)
+        hlayout.addWidget(lframe)
+        hlayout.addWidget(rframe)
+        lframe.setFixedWidth(325)
+        rframe.setSizePolicy(QtGui.QSizePolicy.Expanding,
+                             QtGui.QSizePolicy.Expanding)
+
+        leftlayout = QtGui.QVBoxLayout(lframe)
+        rightlayout = QtGui.QVBoxLayout(rframe)
+        lframe.setLayout(leftlayout)
+        rframe.setLayout(rightlayout)
+
+        # buttonpanel = QtGui.QFrame(lframe)
+        buttonpanel = ButtonPanel(lframe)
+
+        listpanel = QtGui.QFrame(lframe)
+        listlist = QtGui.QListWidget(listpanel)
+        #listlist.selectionChanged.connect(self.listchanged)
+        listlayout = QtGui.QVBoxLayout(listpanel)
+        listlayout.addWidget(listlist)
+
+        leftlayout.addWidget(buttonpanel)
+        leftlayout.addWidget(listpanel)
+
         # Frame that will contain figures
         plotpanel = QtGui.QFrame(rframe)
+        plotpanel.setFrameStyle(QtCore.Qt.SolidLine)
         plotpanel.setSizePolicy(QtGui.QSizePolicy.Expanding,
                                 QtGui.QSizePolicy.Expanding)
         messagebox = QtGui.QTextEdit(rframe)
@@ -231,10 +336,14 @@ class UIWindow(QtGui.QMainWindow):
         clearallbutton = QtGui.QPushButton("&Clear All", itemframe)
         deletebutton = QtGui.QPushButton("&Delete", itemframe)
         deleteallbutton = QtGui.QPushButton("&Delete All", itemframe)
+        savebutton = QtGui.QPushButton("&Save", itemframe)
+        filename = QtGui.QLineEdit(itemframe)
         itemlayout.addWidget(clearbutton, 0, 0)
         itemlayout.addWidget(clearallbutton, 0, 1)
         itemlayout.addWidget(deletebutton, 1, 0)
         itemlayout.addWidget(deleteallbutton, 1, 1)
+        itemlayout.addWidget(savebutton, 2, 0)
+        itemlayout.addWidget(filename, 2, 1)
         leftlayout.addWidget(itemframe)
 
         clearbutton.clicked.connect(self.clearhandler)
@@ -242,20 +351,11 @@ class UIWindow(QtGui.QMainWindow):
         deletebutton.clicked.connect(self.deletehandler)
         deleteallbutton.clicked.connect(self.deleteallhandler)
         listlist.itemDoubleClicked.connect(self.addsignalhandler)
-        calbutton.clicked.connect(self.calibrate)
-        decalbutton.clicked.connect(self.decalibrate)
+        buttonpanel.calbutton.clicked.connect(self.calibrate)
+        buttonpanel.decalbutton.clicked.connect(self.decalibrate)
+        savebutton.clicked.connect(self.savehandler)
 
-        self.connbutton = connbutton
-        self.statbutton = statbutton
-        self.rstbutton = rstbutton
-        self.startbutton = startbutton
-        self.calbutton = calbutton
-        self.decalbutton = decalbutton
-        self.databutton = databutton
-
-        self.t1_capture = t1_capture
-        self.t2_capture = t2_capture
-        self.overlap = overlap
+        self.filename = filename
 
         self.plotpanel = plotpanel
         self.messagebox = messagebox
@@ -265,17 +365,15 @@ class UIWindow(QtGui.QMainWindow):
         self.plotpanel.setLayout(figlayout)
         figlayout.addWidget(self.fig.getWidget())
 
-        self.tonetext = [
-            [f_1, t1_1, t2_1, db_1],
-            [f_2, t1_2, t2_2, db_2],
-        ]
-
         self.datalist = listlist
 
-        self.rstbutton.clicked.connect(self.reset)
-        self.statbutton.clicked.connect(self.getstat)
-        self.startbutton.clicked.connect(self.start)
-        self.databutton.clicked.connect(self.get_data)
+        buttonpanel.rstbutton.clicked.connect(self.reset)
+        buttonpanel.statbutton.clicked.connect(self.getstat)
+        buttonpanel.startbutton.clicked.connect(self.start)
+        buttonpanel.databutton.clicked.connect(self.get_data)
+
+        self.buttonpanel = buttonpanel
+
         self.disconnect()
 
         self.show()
@@ -292,21 +390,34 @@ class UIWindow(QtGui.QMainWindow):
         try:
             for i in range(2):
                 tones.append(
-                    FixedTone(int(self.tonetext[i][0].displayText()),
-                              int(self.tonetext[i][1].displayText()),
-                              int(self.tonetext[i][2].displayText()),
-                              float(self.tonetext[i][3].displayText()), i))
+                    FixedTone(
+                        int(self.buttonpanel.tonetext[i][0].displayText()),
+                        int(self.buttonpanel.tonetext[i][1].displayText()),
+                        int(self.buttonpanel.tonetext[i][2].displayText()),
+                        float(self.buttonpanel.tonetext[i][3].displayText()),
+                        i))
             self.iface.config_tones(tones)
-        except Exception:
+        except Exception as e:
             self.statusBar().showMessage("Please provide numeric tone values")
+            print(e)
             return
+
+        mix_mic = self.buttonpanel.mix_mic.getValue()
+        mix_ext = self.buttonpanel.mix_ext.getValue()
+        src = self.buttonpanel.src.itemData(
+            self.buttonpanel.src.currentIndex())
+
         try:
-            self.iface.config_capture(int(self.t1_capture.displayText()),
-                                      int(self.t2_capture.displayText()),
-                                      int(self.overlap.displayText()))
-        except:
+            print((mix_mic, mix_ext, src,))
+            self.iface.config_capture(
+                int(self.buttonpanel.t1_capture.displayText()),
+                int(self.buttonpanel.t2_capture.displayText()),
+                int(self.buttonpanel.overlap.displayText()),
+                src, mix_mic, mix_ext)
+        except Exception as e:
             self.statusBar().showMessage(
                 "Please provide numeric capture values")
+            print((e.message))
             return
         self.iface.start()
         self.getstat()
@@ -327,23 +438,26 @@ class UIWindow(QtGui.QMainWindow):
 
     def disconnect(self):
         self.iface.disconnect()
-        self.connbutton.setText("Connect")
-        self.connbutton.clicked.connect(self.connect)
-        for b in [self.statbutton, self.rstbutton, self.startbutton,
-                  self.calbutton, self.decalbutton, self.databutton]:
+        self.buttonpanel.connbutton.setText("Connect")
+        self.buttonpanel.connbutton.clicked.connect(self.connect)
+        for b in [self.buttonpanel.statbutton, self.buttonpanel.rstbutton,
+            self.buttonpanel.startbutton, self.buttonpanel.calbutton,
+            self.buttonpanel.decalbutton, self.buttonpanel.databutton]:
             b.setEnabled(False)
 
     def connect(self):
         try:
             self.iface.connect()
             self.iface.reset()
-            self.connbutton.setText("Disconnect")
-            self.connbutton.clicked.connect(self.disconnect)
-            for b in [self.statbutton, self.rstbutton, self.startbutton,
-                      self.calbutton, self.decalbutton, self.databutton]:
+            self.buttonpanel.connbutton.setText("Disconnect")
+            self.buttonpanel.connbutton.clicked.connect(self.disconnect)
+            for b in [self.buttonpanel.statbutton, self.buttonpanel.rstbutton,
+                self.buttonpanel.startbutton, self.buttonpanel.calbutton,
+                self.buttonpanel.decalbutton, self.buttonpanel.databutton]:
                 b.setEnabled(True)
-        except:
+        except Exception as e:
             self.statusBar().showMessage("Couldn't connect...")
+            print(e)
 
     def calibrate(self):
         self.iface.calibrate()
@@ -377,6 +491,22 @@ class UIWindow(QtGui.QMainWindow):
     def addsignalhandler(self, item):
         self.fig.addSeries(item.signal)
         self.fig.draw()
+
+    def savehandler(self):
+        items = self.datalist.selectedItems()
+        if len(items) != 1:
+            return
+        i = items[0]
+        sig = self.datalist.item(self.datalist.row(i)).signal
+        sig.save()
+        self.statusBar().showMessage("File {} saved.".format(sig.label))
+
+    def listchanged(self):
+        items = self.datalist.selectedItems()
+        if len(items) != 1:
+            return
+        item = items[0]
+        self.filename.setText(str(item.label))
 
 
 if __name__ == '__main__':

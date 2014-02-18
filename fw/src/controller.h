@@ -14,8 +14,8 @@
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  
- @file
- @brief
+ @file controller.h
+ @brief The main control logic (header)
  @author Ben Nahill <bnahill@gmail.com>
  */
 
@@ -29,6 +29,11 @@
 #include <wavegen.h>
 #include <input_dsp.h>
 
+/*!
+ @brief The main AudioPulse control logic is implemented here. It maintains a
+ state machine for processing USB commands, running tests, and performing
+ calibration.
+ */
 class APulseController {
 	//! @name Commands
 	//! @{
@@ -88,11 +93,13 @@ class APulseController {
 		//! Window overlap in samples
 		uint16_t overlap;
 		//! Window function (ignored)
-		uint8_t window_function;
+		AK4621::Src source;
 		//! Number of windows to capture
 		uint16_t num_windows;
 		//! The time in ms to start capturing
 		uint16_t start_time;
+		sFractional<0,31> scale_mic;
+		sFractional<0,31> scale_ext;
 	} __attribute__((packed)) capture_config_pkt_t;
 
 	typedef union {
@@ -140,6 +147,8 @@ class APulseController {
 		for(auto &i : coeffs) i = 1.0;
 	}
 public:
+	static constexpr uint8_t protocol_version = 3;
+
 	static InputDSP::powerFractional coeffs[16];
 
 	/*!

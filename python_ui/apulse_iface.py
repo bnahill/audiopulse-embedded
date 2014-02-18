@@ -12,6 +12,12 @@ class UsbConstants():
     USB_PID = 0xBEEF
 
 
+class InputConfig():
+    SRC_MIC = 0
+    SRC_EXT = 1
+    SRC_MIX = 2
+
+
 class ReqConstants():
     DIR_IN = 0x80
     DIR_OUT = 0x00
@@ -198,11 +204,16 @@ class APulseIface(object):
         assert len(buff) == 34, "Wrong sized buffer..."
         self._write(buff)
 
-    def config_capture(self, t1, t2, overlap):
+    def config_capture(self, t1, t2, overlap, src=InputConfig.SRC_MIC,
+                       mix_mic=0, mix_ext=0):
         assert t2 > t1, "Non-positive record time!"
+        assert abs(mix_mic) <= 1.0
+        assert abs(mix_ext) <= 1.0
+        mix_mic = int(float(mix_mic) * 0x7FFFFFFF)
+        mix_ext = int(float(mix_ext) * 0x7FFFFFFF)
         epochs = int(np.ceil((t2 - t1) * (16.0 / (512 - overlap)) - 1))
-        buff = struct.pack("<BHBHH", Constants.CMD_SETUPCAPTURE,
-            overlap, 0, epochs, t1)
+        buff = struct.pack("<BHBHHii", Constants.CMD_SETUPCAPTURE,
+            overlap, src, epochs, t1, mix_mic, mix_ext)
         self._write(buff)
 
     def start(self):

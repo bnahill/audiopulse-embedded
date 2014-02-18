@@ -29,6 +29,8 @@
 
 class InputDSP {
 public:
+	typedef AK4621::sample_t sample_t;
+	
 	/*!
 	 @brief The protothread for performing required DSP operations
 	 */
@@ -36,14 +38,17 @@ public:
 	
 	static void configure(uint16_t overlap,
 	                      uint16_t start_time_ms,
-	                      uint16_t num_windows);
+	                      uint16_t num_windows,
+	                      AK4621::Src src,
+	                      sFractional<0,31> scale_mic,
+	                      sFractional<0,31> scale_ext);
 		
 	/*!
 	 @brief Callback to receive new samples
 	 
 	 @note MUST BE CALLED FROM INTERRUPT OR LOCKED CONTEXT
 	 */
-	static void put_samplesI(AK4621::sample_t * samples);
+	static void put_samplesI(sample_t * samples, size_t n);
 
 	/*!
 	 @brief Transition from READY to RUN state
@@ -94,13 +99,13 @@ public:
 	static inline const state_t& get_state(){return state;}
 
 protected:
-	typedef AK4621::sample_t sample_t;
-	
 	//! The current state in the test state machine
 	static state_t state;
 
 	//! A pointer to new samples
 	static sampleFractional const * new_samples;
+	//! Number of raw samples provided
+	static uint32_t num_received;
 	// MUST HAVE PROTECTED ACCESS
 	static uint32_t num_samples;
 
@@ -110,6 +115,9 @@ protected:
 	static uint32_t start_time_ms;
 	//! The number of windows to use
 	static uint16_t num_windows;
+	static AK4621::Src src;
+	static sampleFractional scale_mic;
+	static sampleFractional scale_ext;
 	//! @}
 	
 	//! @name Decimation variables and configuration
@@ -128,11 +136,15 @@ protected:
 	//! The decimate state
 	static arm_fir_decimate_instance_q31 decimate;
 	//! Perform the decimation (separate function because it is in small chunks
-	static void do_decimate(sampleFractional * dst);
+	static void do_decimate(sampleFractional const * src,
+	                        sampleFractional * dst,
+							size_t n_in);
+	//! An iterator for writing to the decimation buffer
+	static uint32_t decimation_write_head;
 
 	//! An iterator through the decimated buffer
 	//! Incremented every transform/averaging frame
-	static uint32_t decimated_iter;
+	static uint32_t decimation_read_head;
 	//! Since inputs are of fixed sizes, they are placed sequentially in three
 	//! buffers. This selects between them.
 	static uint8_t buffer_sel;
@@ -193,8 +205,9 @@ protected:
 	static void do_reset(){
 		new_samples = nullptr;
 		num_samples = 0;
-		buffer_sel = 0;
-		decimated_iter = 0;
+		num_received = 0;
+		decimation_write_head = 0;
+		decimation_read_head = 0;
 		start_time_ms = -1;
 		window_count = 0;
 

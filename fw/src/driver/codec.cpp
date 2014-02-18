@@ -3,13 +3,16 @@
 AK4621::sample_t AK4621::buffer_in[in_buffer_size * 2];
 AK4621::sample_t AK4621::buffer_out[out_buffer_size * 2];
 
-void (*AK4621::cb_in)(sample_t *) = nullptr;
-void (*AK4621::cb_out)(sample_t *) = nullptr;
+void (*AK4621::cb_in)(sample_t *, size_t) = nullptr;
+void (*AK4621::cb_out)(sample_t *, size_t) = nullptr;
 
 uint_fast8_t AK4621::rx_buffer_sel;
 uint_fast8_t AK4621::tx_buffer_sel;
 
-uint32_t AK4621::channels = 0;
+AK4621::Src AK4621::source = AK4621::Src::MIC;
+
+decltype(AK4621::mix_mic) AK4621::mix_mic;
+decltype(AK4621::mix_ext) AK4621::mix_ext;
 
 void AK4621::init(){
 	__disable_irq();
@@ -136,7 +139,18 @@ void AK4621::i2s_init(){
 	/// RECEIVER
 	////////////////
 	
-	I2S->RMR = ~channels;
+	switch(source){
+		case Src::MIC:
+			I2S->RMR = ~1;
+			break;
+		case Src::EXT:
+			I2S->RMR = ~2;
+			break;
+		case Src::MIX:
+			I2S->RMR = ~3;
+			break;
+		}
+	//I2S->RMR = ~channels;
 	
 	I2S->RCR1 =
 		I2S_RCR1_RFW(0);        // Always request immediately
@@ -292,9 +306,9 @@ void AK4621::i2s_dma_init(){
 
 void AK4621::start(){
 	if(cb_out)
-		cb_out(&buffer_out[0]);
+		cb_out(&buffer_out[0], out_buffer_size);
 	if(cb_out)
-		cb_out(&buffer_out[out_buffer_size]);
+		cb_out(&buffer_out[out_buffer_size], out_buffer_size);
 	
 	I2S->RCSR |=
 		I2S_RCSR_FEF_MASK |
