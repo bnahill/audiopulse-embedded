@@ -25,7 +25,8 @@
 #include <controller.h>
 
 InputDSP::sampleFractional const * InputDSP::new_samples  = nullptr;
-uint32_t InputDSP::num_samples                    = 0;
+uint32_t InputDSP::num_samples = 0;
+uint32_t InputDSP::num_received = 0;
 
 __attribute__((aligned(512)))
 __attribute__((section(".m_data2")))
@@ -40,8 +41,8 @@ decltype(InputDSP::num_windows) InputDSP::num_windows;
 
 bool InputDSP::is_reset, InputDSP::pending_reset;
 
-uint32_t InputDSP::decimated_iter = 0;
-uint8_t InputDSP::buffer_sel = 0;
+uint32_t InputDSP::decimation_read_head = 0;
+uint32_t InputDSP::decimation_write_head = 0;
 uint32_t InputDSP::num_before_end = 0;
 
 
@@ -179,11 +180,17 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 			PT_WAIT_UNTIL(pt, new_samples || pending_reset);
 			if(pending_reset){ do_reset(); break;}
 
+			num_samples += num_received;
 			old_new_samples = new_samples;
 		
-			do_decimate(&decimated_frame_buffer[buffer_sel * decimate_output_size]);
-			buffer_sel = (buffer_sel + 1) % 3;
-			num_samples += 256;
+			do_decimate(new_samples,
+			            &decimated_frame_buffer[decimation_write_head],
+						num_received);
+			decimation_write_head += num_received / 3;
+			static_assert(decimated_frame_buffer_size == 768, "Decimation size has changed");
+			if(decimation_write_head >= decimated_frame_buffer_size)
+				decimation_write_head -= decimated_frame_buffer_size;
+			num_samples += num_received;
 
 			if(debug){
 				// Quick check for overrun
@@ -193,7 +200,7 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 			
 			new_samples = nullptr;
 
-			num_decimated += 256;
+			num_decimated += num_received / 3;
 
 			PT_YIELD(pt);
 
@@ -203,10 +210,10 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 				constants = mk_multipliers();
 
 				// The number of samples remaining before the end of the decimated_frame_buffer
-				num_before_end = decimated_frame_buffer_size - decimated_iter;
+				num_before_end = decimated_frame_buffer_size - decimation_read_head;
 				if(num_before_end < transform_len){
 					// Split in two
-					arm_mult_q31((q31_t*)&decimated_frame_buffer[decimated_iter],
+					arm_mult_q31((q31_t*)&decimated_frame_buffer[decimation_read_head],
 					             (q31_t*)hamming512, (q31_t*)transform_buffer,
 					             num_before_end);
 					arm_mult_q31((q31_t*)&decimated_frame_buffer,
@@ -216,7 +223,7 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 
 					weighted_vector_sum(
 						constants.one_over,
-						&decimated_frame_buffer[decimated_iter],
+						&decimated_frame_buffer[decimation_read_head],
 						constants.one_minus,
 						average_buffer,
 						average_buffer,
@@ -243,7 +250,7 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 
 					weighted_vector_sum(
 						constants.one_over,
-						&decimated_frame_buffer[decimated_iter],
+						&decimated_frame_buffer[decimation_read_head],
 						constants.one_minus,
 						average_buffer,
 						average_buffer,
@@ -252,7 +259,7 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 				}
 
 				num_decimated -= (transform_len - overlap);
-				decimated_iter = ( decimated_iter + (transform_len - overlap)) &
+				decimation_read_head = ( decimation_read_head + (transform_len - overlap)) &
 						(decimated_frame_buffer_size - 1);
 
 				PT_YIELD(pt);
@@ -293,10 +300,12 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 
 
 
-void InputDSP::do_decimate(sampleFractional * dst){
+void InputDSP::do_decimate(sampleFractional const * src,
+	                       sampleFractional * dst,
+                           size_t n_in){
 	static sampleFractional const * iter_in;
-	iter_in = new_samples;
-	for(auto i = 0; i < (768 / decimate_block_size); i++){
+	iter_in = src;
+	for(auto i = 0; i < (n_in / decimate_block_size); i++){
 		arm_fir_decimate_fast_q31(&decimate, (q31_t*)iter_in,
 		                          (q31_t*)dst, decimate_block_size);
 		iter_in += decimate_block_size;
@@ -307,7 +316,7 @@ void InputDSP::do_decimate(sampleFractional * dst){
 void InputDSP::put_samplesI(sample_t * samples, size_t n){
 	if(state == ST_CAPTURING){
 		new_samples = reinterpret_cast<sampleFractional *>(samples);
-		num_samples = n;
+		num_received = n;
 	}
 }
 

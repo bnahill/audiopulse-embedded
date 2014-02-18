@@ -14,8 +14,8 @@
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  
- @file
- @brief
+ @file controller.h
+ @brief The main control logic (header)
  @author Ben Nahill <bnahill@gmail.com>
  */
 
@@ -29,6 +29,11 @@
 #include <wavegen.h>
 #include <input_dsp.h>
 
+/*!
+ @brief The main AudioPulse control logic is implemented here. It maintains a
+ state machine for processing USB commands, running tests, and performing
+ calibration.
+ */
 class APulseController {
 	//! @name Commands
 	//! @{
@@ -142,6 +147,8 @@ class APulseController {
 		for(auto &i : coeffs) i = 1.0;
 	}
 public:
+	static constexpr uint8_t protocol_version = 3;
+
 	static InputDSP::powerFractional coeffs[16];
 
 	/*!

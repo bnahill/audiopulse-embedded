@@ -104,6 +104,8 @@ protected:
 
 	//! A pointer to new samples
 	static sampleFractional const * new_samples;
+	//! Number of raw samples provided
+	static uint32_t num_received;
 	// MUST HAVE PROTECTED ACCESS
 	static uint32_t num_samples;
 
@@ -134,11 +136,15 @@ protected:
 	//! The decimate state
 	static arm_fir_decimate_instance_q31 decimate;
 	//! Perform the decimation (separate function because it is in small chunks
-	static void do_decimate(sampleFractional * dst);
+	static void do_decimate(sampleFractional const * src,
+	                        sampleFractional * dst,
+							size_t n_in);
+	//! An iterator for writing to the decimation buffer
+	static uint32_t decimation_write_head;
 
 	//! An iterator through the decimated buffer
 	//! Incremented every transform/averaging frame
-	static uint32_t decimated_iter;
+	static uint32_t decimation_read_head;
 	//! Since inputs are of fixed sizes, they are placed sequentially in three
 	//! buffers. This selects between them.
 	static uint8_t buffer_sel;
@@ -199,8 +205,9 @@ protected:
 	static void do_reset(){
 		new_samples = nullptr;
 		num_samples = 0;
-		buffer_sel = 0;
-		decimated_iter = 0;
+		num_received = 0;
+		decimation_write_head = 0;
+		decimation_read_head = 0;
 		start_time_ms = -1;
 		window_count = 0;
 

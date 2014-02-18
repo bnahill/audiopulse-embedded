@@ -14,12 +14,17 @@
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  
- @file
- @brief
+ @file controller.cpp
+ @brief The main control logic (implementation)
  @author Ben Nahill <bnahill@gmail.com>
  */
 
 #include <controller.h>
+
+
+//////////////////////////////////////////////////////////
+// Static allocations
+//////////////////////////////////////////////////////////
 
 APulseController::state_t APulseController::state;
 uint32_t APulseController::cmd_idx;
@@ -132,21 +137,11 @@ uint8_t * APulseController::get_response ( uint16_t& size ) {
 	case ST_RESETTING:
 	default:
 		// Send the status packet
-		p.status.version = 02;
+		p.status.version = protocol_version;
 		p.status.input_state = InputDSP::get_state();
 		p.status.wavegen_state = WaveGen::get_state();
 		p.status.controller_state = teststate;
 
-// 		p.status.is_started = timer.is_running() ? 1 : 0;
-// 		p.status.is_capturing = InputDSP::is_running() ? 1 : 0;
-// 		p.status.is_playing = WaveGen::is_running() ? 1 : 0;
-//
-// 		p.status.reset_controller = (state == ST_RESET) ? 1 : 0;
-// 		p.status.reset_input = InputDSP::is_resetI() ? 1 : 0;
-// 		p.status.reset_wavegen = WaveGen::is_resetI() ? 1 : 0;
-//
-// 		p.status.test_ready = (WaveGen::is_ready() &&
-// 		                       InputDSP::is_ready()) ? 1 : 0;
 		p.status.err_code = err_code;
 
 		
