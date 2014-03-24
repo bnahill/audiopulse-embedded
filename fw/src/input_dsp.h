@@ -135,7 +135,7 @@ protected:
 	static sampleFractional decimated_frame_buffer[decimated_frame_buffer_size];
 	//! The decimate state
 	static arm_fir_decimate_instance_q31 decimate;
-	//! Perform the decimation (separate function because it is in small chunks
+	//! Perform the decimation
 	static void do_decimate(sampleFractional const * src,
 	                        sampleFractional * dst,
 							size_t n_in);

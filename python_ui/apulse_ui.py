@@ -210,7 +210,7 @@ class ButtonPanel(QtGui.QFrame):
         db_2 = QtGui.QLineEdit("65.0", self)
 
         t1_capture_label = QtGui.QLabel("t1 (ms)")
-        t2_capture_label = QtGui.QLabel("t2 (ms)")
+        t2_capture_label = QtGui.QLabel("t2 (ms")
         overlap_label = QtGui.QLabel("Overlap")
         capture_label = QtGui.QLabel("Capture")
         t1_capture = QtGui.QLineEdit("300", self)
@@ -312,7 +312,7 @@ class UIWindow(QtGui.QMainWindow):
 
         listpanel = QtGui.QFrame(lframe)
         listlist = QtGui.QListWidget(listpanel)
-        #listlist.selectionChanged.connect(self.listchanged)
+        listlist.itemSelectionChanged.connect(self.listchanged)
         listlayout = QtGui.QVBoxLayout(listpanel)
         listlayout.addWidget(listlist)
 
@@ -433,8 +433,9 @@ class UIWindow(QtGui.QMainWindow):
         d = "{}.{}.{}.{}.{}".format(t.tm_mon, t.tm_mday, t.tm_hour,
                                     t.tm_min, t.tm_sec)
         self.datalist.addItem(SignalListItem(LogPSDSeries("LogPSD " + d, psd)))
-        self.datalist.addItem(SignalListItem(PSDSeries("PSD " + d, psd)))
-        self.datalist.addItem(SignalListItem(TimeSeries("Avg " + d, avg)))
+        print("Deliberately only presenting LogPSD option")
+        #self.datalist.addItem(SignalListItem(PSDSeries("PSD " + d, psd)))
+        #self.datalist.addItem(SignalListItem(TimeSeries("Avg " + d, avg)))
 
     def disconnect(self):
         self.iface.disconnect()
@@ -498,15 +499,17 @@ class UIWindow(QtGui.QMainWindow):
             return
         i = items[0]
         sig = self.datalist.item(self.datalist.row(i)).signal
-        sig.save()
-        self.statusBar().showMessage("File {} saved.".format(sig.label))
+        sig.save(self.filename.text())
+        self.statusBar().showMessage("File {} saved.".format(
+            self.filename.text()))
 
     def listchanged(self):
         items = self.datalist.selectedItems()
         if len(items) != 1:
+            self.filename.setText("")
             return
         item = items[0]
-        self.filename.setText(str(item.label))
+        self.filename.setText(str(item.signal.label))
 
 
 if __name__ == '__main__':

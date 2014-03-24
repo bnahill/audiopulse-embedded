@@ -33,7 +33,22 @@ decltype(APulseController::teststate) APulseController::teststate = TEST_RESET;
 constexpr TimerPIT APulseController::timer;
 InputDSP::powerFractional APulseController::coeffs[16];
 
+BufferDump APulseController::waveform_dump(
+	(uint8_t const *)dump_buffer,
+	sizeof(dump_buffer)
+);
+
+InputDSP::sampleFractional APulseController::dump_buffer[InputDSP::transform_len];
+
 uint32_t APulseController::most_recent_t_ms;
+
+
+
+void APulseController::feed_data(InputDSP::sampleFractional const * src,
+                                 size_t n) {
+
+}
+
 
 PT_THREAD(APulseController::pt_controller)(struct pt * pt){
 	static uint32_t i;
@@ -144,6 +159,7 @@ uint8_t * APulseController::get_response ( uint16_t& size ) {
 
 		p.status.err_code = err_code;
 
+		waveform_dump.reset();
 		
 		size = sizeof(status_pkt_t);
 		return p.data;

@@ -211,7 +211,7 @@ class APulseIface(object):
         assert abs(mix_ext) <= 1.0
         mix_mic = int(float(mix_mic) * 0x7FFFFFFF)
         mix_ext = int(float(mix_ext) * 0x7FFFFFFF)
-        epochs = int(np.ceil((t2 - t1) * (16.0 / (512 - overlap)) - 1))
+        epochs = int(np.ceil((t2 - t1) * (16.0 / 256) - 1))
         buff = struct.pack("<BHBHHii", Constants.CMD_SETUPCAPTURE,
             overlap, src, epochs, t1, mix_mic, mix_ext)
         self._write(buff)

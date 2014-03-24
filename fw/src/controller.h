@@ -30,6 +30,72 @@
 #include <input_dsp.h>
 
 /*!
+ @brief A container for maintaining the state of a large buffer dump over USB
+ */
+class BufferDump {
+public:
+	BufferDump(uint8_t const * buffer, size_t n) :
+		buffer(buffer),
+		n(n),
+		state(ST_EMPTY)
+		{}
+
+	/*!
+	 @brief Copy a frame of data from the buffer
+	 @param dst The destination buffer
+	 @returns The number of bytes copied
+	 */
+	size_t get_frame_copy(uint8_t * dst, size_t bytes){
+		if(state == ST_EMPTY)
+			return 0;
+		size_t to_copy = min(bytes, (size_t)(buffer + n) - (size_t)iter);
+		memcpy((void *)dst, iter, to_copy);
+		iter += to_copy;
+		if(iter == buffer + n){
+			state = ST_EMPTY;
+		}
+	}
+
+	bool copy_data(uint8_t const * src){
+		if(state != ST_EMPTY)
+			return false;
+
+		memcpy((void *)buffer, (void const *)src, n);
+		iter = buffer;
+
+		state = ST_DUMPING;
+		return true;
+	}
+
+	bool set_data(uint8_t const * src){
+		if(state != ST_EMPTY)
+			return false;
+
+		buffer = src;
+		iter = buffer;
+		state = ST_DUMPING;
+		return true;
+	}
+
+	void reset(){
+		state = ST_EMPTY;
+	}
+
+private:
+	uint8_t const * iter;
+	uint8_t const * buffer;
+
+	size_t const n;
+
+	typedef enum {
+		ST_EMPTY,
+		ST_DUMPING
+	} state_t;
+
+	state_t state;
+};
+
+/*!
  @brief The main AudioPulse control logic is implemented here. It maintains a
  state machine for processing USB commands, running tests, and performing
  calibration.
@@ -146,10 +212,19 @@ class APulseController {
 	static void clear_calibration(){
 		for(auto &i : coeffs) i = 1.0;
 	}
+
+	static InputDSP::sampleFractional dump_buffer[InputDSP::transform_len];
 public:
+	static BufferDump waveform_dump;
+
 	static constexpr uint8_t protocol_version = 3;
 
 	static InputDSP::powerFractional coeffs[16];
+
+	/*!
+	 @brief Feed some waveform data for USB output
+	 */
+	static void feed_data(InputDSP::sampleFractional const * src, size_t n);
 
 	/*!
 	 @brief Handle a USB command (or data sent)

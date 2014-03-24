@@ -176,6 +176,8 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 		PT_WAIT_UNTIL(pt, new_samples);
 		new_samples = nullptr;
 
+		static auto window_scale = sampleFractional::mk_frac(1, num_windows);
+
 		while(state == ST_CAPTURING){
 			PT_WAIT_UNTIL(pt, new_samples || pending_reset);
 			if(pending_reset){ do_reset(); break;}
@@ -220,6 +222,8 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 					             (q31_t*)&hamming512[num_before_end],
 					             (q31_t*)&transform_buffer[num_before_end],
 					             transform_len - num_before_end);
+
+//					APulseController::waveform_dump.copy_data((uint8_t const *)transform_buffer);
 
 					weighted_vector_sum(
 						constants.one_over,
@@ -270,14 +274,21 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 				PT_YIELD(pt);
 
 
-				complex_power_avg_update(
-					(powerFractional)constants.one_over,
+				complex_psd_mac(
+					window_scale,
 					complex_transform,
-					(powerFractional)constants.one_minus,
 					mag_psd,
 					mag_psd,
 					transform_len + 2
 				);
+// 				complex_power_avg_update(
+// 					(powerFractional)constants.one_over,
+// 					complex_transform,
+// 					(powerFractional)constants.one_minus,
+// 					mag_psd,
+// 					mag_psd,
+// 					transform_len + 2
+// 				);
 
 				// Check if we've processed enough windows to shut down
 				if(++window_count >= num_windows){
