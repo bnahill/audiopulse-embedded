@@ -22,7 +22,7 @@
 #include <driver/tpa6130a2.h>
 
 bool TPA6130A2::enabled = false;
-uint8_t TPA6130A2::volume = 26;
+uint8_t TPA6130A2::volume = 30;
 
 void TPA6130A2::init(){
 	if(I2C == I2C0_BASE_PTR){
@@ -48,7 +48,7 @@ void TPA6130A2::init(){
 	// ENABLE IT
 	write_reg(1, 0xC0);
 	// Half volume
-	write_reg(2, 20);
+	write_reg(2, volume);
 
 	enable();
 }

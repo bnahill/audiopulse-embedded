@@ -38,6 +38,10 @@ void WaveGen::set_tone (uint8_t idx, uint8_t ch, uint16_t f1, uint16_t t1,
 	if(state == ST_READY || state == ST_RESET){
 		if(gaindb.normalize<7,0>().i >= 80)
 			return;
+		if(gaindb.i == 0){
+			set_off(idx);
+			return;
+		}
 		state = ST_READY;
 		Generator &gen = generators[idx];
 		gen.type = Generator::GEN_OFF;

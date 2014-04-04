@@ -34,64 +34,50 @@
  */
 class BufferDump {
 public:
-	BufferDump(uint8_t const * buffer, size_t n) :
-		buffer(buffer),
-		n(n),
-		state(ST_EMPTY)
-		{}
+	BufferDump(uint8_t const * buffer, size_t n);
 
 	/*!
 	 @brief Copy a frame of data from the buffer
 	 @param dst The destination buffer
 	 @returns The number of bytes copied
 	 */
-	size_t get_frame_copy(uint8_t * dst, size_t bytes){
-		if(state == ST_EMPTY)
-			return 0;
-		size_t to_copy = min(bytes, (size_t)(buffer + n) - (size_t)iter);
-		memcpy((void *)dst, iter, to_copy);
-		iter += to_copy;
-		if(iter == buffer + n){
-			state = ST_EMPTY;
-		}
-	}
+	size_t get_frame_copy(uint8_t * dst, size_t bytes);
 
-	bool copy_data(uint8_t const * src){
-		if(state != ST_EMPTY)
-			return false;
+	/*!
+	 @brief Copy new data to the current buffer
+	 @param src The source data
+	 @returns True if buffer was empty
+	 */
+	bool copy_data(uint8_t const * src);
 
-		memcpy((void *)buffer, (void const *)src, n);
-		iter = buffer;
+	/*!
+	 @brief Asign a different buffer (of the same length
+	 @param src New buffer
+	 @returns True if buffer was empty
+	 */
+	bool set_data(uint8_t const * src);
 
-		state = ST_DUMPING;
-		return true;
-	}
-
-	bool set_data(uint8_t const * src){
-		if(state != ST_EMPTY)
-			return false;
-
-		buffer = src;
-		iter = buffer;
-		state = ST_DUMPING;
-		return true;
-	}
-
-	void reset(){
+	inline void reset(){
 		state = ST_EMPTY;
 	}
+
+	inline bool is_full() const {return state == ST_FULL;}
+	inline bool has_data() const {return state != ST_EMPTY;}
 
 private:
 	uint8_t const * iter;
 	uint8_t const * buffer;
 
+	//! The number of elements contained in buffer
 	size_t const n;
 
 	typedef enum {
 		ST_EMPTY,
+		ST_FULL,
 		ST_DUMPING
 	} state_t;
 
+	//! The current state of the buffer
 	state_t state;
 };
 
@@ -114,6 +100,7 @@ class APulseController {
 		CMD_START = 6,
 		CMD_CALIBRATE_MIC = 7,
 		CMD_RESET_CALIB = 8,
+		CMD_PULLWAVEFORM = 9,
 
 		CMD_NONE = 255,
 	} cmd_t;
@@ -199,7 +186,7 @@ class APulseController {
 		TEST_READY       = 2,
 		TEST_RUNNING     = 3,
 		TEST_DONE        = 4,
-		TEST_CALIB_MIC   = 5
+		TEST_CALIB_MIC   = 5,
 	} teststate_t;
 
 	typedef enum {
@@ -207,7 +194,15 @@ class APulseController {
 		ST_GETPSD,
 		ST_GETAVG,
 		ST_RESETTING,
+		ST_DUMPWAVE
 	} state_t;
+
+	typedef enum {
+		ERR_WAVEGEN = 1,
+		ERR_INPUT = 2,
+		ERR_TEST = 4,
+		ERR_CMD = 8
+	} err_t;
 
 	static void clear_calibration(){
 		for(auto &i : coeffs) i = 1.0;
@@ -220,11 +215,6 @@ public:
 	static constexpr uint8_t protocol_version = 3;
 
 	static InputDSP::powerFractional coeffs[16];
-
-	/*!
-	 @brief Feed some waveform data for USB output
-	 */
-	static void feed_data(InputDSP::sampleFractional const * src, size_t n);
 
 	/*!
 	 @brief Handle a USB command (or data sent)
@@ -243,9 +233,12 @@ public:
 	 This response should already be prepared
 	 */
 	static uint8_t * get_response(uint16_t &size);
-	
+
+	/*!
+	 @brief Get the current time in the test
+	 @returns the number of ms since the start of the test
+	 */
 	static uint16_t get_time_ms(){
-		//return timer.get_count();
 		uint32_t t = timer.get_ms();
 		most_recent_t_ms = t;
 		return t;

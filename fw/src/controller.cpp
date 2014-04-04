@@ -33,25 +33,61 @@ decltype(APulseController::teststate) APulseController::teststate = TEST_RESET;
 constexpr TimerPIT APulseController::timer;
 InputDSP::powerFractional APulseController::coeffs[16];
 
-BufferDump APulseController::waveform_dump(
-	(uint8_t const *)dump_buffer,
-	sizeof(dump_buffer)
-);
-
 InputDSP::sampleFractional APulseController::dump_buffer[InputDSP::transform_len];
+
+BufferDump APulseController::waveform_dump(reinterpret_cast<uint8_t const *>(dump_buffer), sizeof(dump_buffer));
 
 uint32_t APulseController::most_recent_t_ms;
 
 
+BufferDump::BufferDump(uint8_t const * _buffer, size_t _n) :
+	buffer(_buffer),
+	n(_n),
+	state(ST_EMPTY),
+	iter(_buffer)
+	{}
 
-void APulseController::feed_data(InputDSP::sampleFractional const * src,
-                                 size_t n) {
-
+size_t BufferDump::get_frame_copy(uint8_t * dst, size_t bytes){
+	if(state == ST_EMPTY)
+		return 0;
+	state = ST_DUMPING;
+	size_t to_copy = min(bytes, (size_t)(buffer + n) - (size_t)iter);
+	memcpy((void *)dst, iter, to_copy);
+	iter += to_copy;
+	if(iter == buffer + n){
+		state = ST_EMPTY;
+	}
+	return to_copy;
 }
+
+bool BufferDump::copy_data(uint8_t const * src){
+	if(state != ST_EMPTY)
+		return false;
+
+	memcpy((void *)buffer, (void const *)src, n);
+	iter = buffer;
+
+	state = ST_FULL;
+	return true;
+}
+
+bool BufferDump::set_data(uint8_t const * src){
+	if(state != ST_EMPTY)
+		return false;
+
+	buffer = src;
+	iter = buffer;
+	state = ST_FULL;
+	return true;
+}
+
+
 
 
 PT_THREAD(APulseController::pt_controller)(struct pt * pt){
 	static uint32_t i;
+
+	//waveform_dump = BufferDump(reinterpret_cast<uint8_t const *>(dump_buffer),sizeof(dump_buffer));
 
 	PT_BEGIN(pt);
 
@@ -145,6 +181,17 @@ uint8_t * APulseController::get_response ( uint16_t& size ) {
 		if(cmd_idx == 32){
 			state = ST_RESET;
 			cmd_idx = 0;
+		}
+		size = 64;
+		return p.data;
+	case ST_DUMPWAVE:
+		if(waveform_dump.has_data()){
+			waveform_dump.get_frame_copy(p.data, 64);
+		} else {
+			zero16(p.data32, 16);
+		}
+		if(!waveform_dump.has_data()){
+			state = ST_RESET;
 		}
 		size = 64;
 		return p.data;
@@ -264,24 +311,27 @@ void APulseController::handle_dataI ( uint8_t* data, uint8_t size ) {
 	case CMD_START:
 		err_code = 0;
 		if(!WaveGen::is_ready()){
-			err_code = 1;
+			err_code = ERR_WAVEGEN;
 		}
 		if(!InputDSP::is_ready()){
-			err_code |= 2;
+			err_code |= ERR_INPUT;
 		}
 		if(!(teststate == TEST_READY)){
-			err_code |= 4;
+			err_code |= ERR_TEST;
 		}
 		if(err_code)
 			break;
-// 		timer.stop();
-// 		timer.reset_count();
 		timer.reset();
 		WaveGen::runI();
 		InputDSP::runI();
 		timer.start();
 		teststate = TEST_RUNNING;
 		Platform::led.set();
+		break;
+	case CMD_PULLWAVEFORM:
+		if(state == ST_RESET){
+			state = ST_DUMPWAVE;
+		}
 		break;
 	default:
 		return;

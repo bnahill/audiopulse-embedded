@@ -124,13 +124,19 @@ void AK4621::i2s_init(){
 	/// MCLK
 	////////////////
 
-	I2S->MDR =
-			I2S_MDR_FRACT(mclk_gen_frac - 1) |
-			I2S_MDR_DIVIDE(mclk_gen_div - 1);
+	if(ext_mclk){
+		// Just disable MCLK generation...
+		I2S->MDR = 0;
+		I2S->MCR = 0;
+	} else {
+		I2S->MDR =
+				I2S_MDR_FRACT(mclk_gen_frac - 1) |
+				I2S_MDR_DIVIDE(mclk_gen_div - 1);
 
-	I2S->MCR =
-			I2S_MCR_MOE_MASK | // Enable MCLK output
-			I2S_MCR_MICS(0);   // Use PLL for input - could use 0 (sys)
+		I2S->MCR =
+				I2S_MCR_MOE_MASK | // Enable MCLK output
+				I2S_MCR_MICS(0);   // Use PLL for input - could use 0 (sys)
+	}
 
 	I2S->RCSR = I2S_RCSR_SR_MASK;
 	I2S->TCSR = I2S_TCSR_SR_MASK;

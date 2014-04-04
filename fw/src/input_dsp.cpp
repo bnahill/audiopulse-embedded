@@ -172,11 +172,11 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 		
 		// Wait for new samples and then discard them. This is easier than
 		// resetting DMA but...
-		// TODO: Make setting source reset DMA
+		// TODO: Make setting source reset DMA (but this is still safe
 		PT_WAIT_UNTIL(pt, new_samples);
 		new_samples = nullptr;
 
-		static auto window_scale = sampleFractional::mk_frac(1, num_windows);
+		static sampleFractional window_scale = 1.0 / (float)num_windows;
 
 		while(state == ST_CAPTURING){
 			PT_WAIT_UNTIL(pt, new_samples || pending_reset);
@@ -223,8 +223,6 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 					             (q31_t*)&transform_buffer[num_before_end],
 					             transform_len - num_before_end);
 
-//					APulseController::waveform_dump.copy_data((uint8_t const *)transform_buffer);
-
 					weighted_vector_sum(
 						constants.one_over,
 						&decimated_frame_buffer[decimation_read_head],
@@ -246,7 +244,7 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 				} else {
 					// All in one shot
 					arm_mult_q31(
-						(q31_t*)decimated_frame_buffer,
+						(q31_t*)&decimated_frame_buffer[decimation_read_head],
 						(q31_t*)hamming512,
 						(q31_t*)transform_buffer,
 						transform_len
@@ -262,6 +260,8 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 					);
 				}
 
+				APulseController::waveform_dump.copy_data((uint8_t const *)transform_buffer);
+
 				num_decimated -= (transform_len - overlap);
 				decimation_read_head = ( decimation_read_head + (transform_len - overlap)) &
 						(decimated_frame_buffer_size - 1);
@@ -273,14 +273,20 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 
 				PT_YIELD(pt);
 
-
-				complex_psd_mac(
-					window_scale,
+				complex_psd_acc(
 					complex_transform,
 					mag_psd,
 					mag_psd,
 					transform_len + 2
 				);
+
+// 				complex_psd_mac(
+// 					window_scale,
+// 					complex_transform,
+// 					mag_psd,
+// 					mag_psd,
+// 					transform_len + 2
+// 				);
 // 				complex_power_avg_update(
 // 					(powerFractional)constants.one_over,
 // 					complex_transform,
@@ -295,6 +301,7 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 					for(uint32_t i = 0; i < transform_len / 2; i++){
 						mag_psd[i] = mag_psd[i] * APulseController::coeffs[i / 16];
 					}
+					vector_mult_scalar(window_scale, mag_psd, mag_psd, transform_len/2 + 1);
 					mag_psd[transform_len / 2] = mag_psd[transform_len / 2] * APulseController::coeffs[15];
 					state = ST_DONE;
 					break;

@@ -225,9 +225,12 @@ protected:
 
 	static constexpr uint32_t mclk_gen_frac = 32;
 	static constexpr uint32_t mclk_gen_div = 125;
+	//static constexpr uint32_t mclk_gen_frac = 1;
+	//static constexpr uint32_t mclk_gen_div = 8;
 	
 	static constexpr bool enable_dma_tx = true;
 	static constexpr bool enable_dma_rx = true;
+	static constexpr bool ext_mclk = false;
 	
 	static uint_fast8_t rx_buffer_sel;
 	static uint_fast8_t tx_buffer_sel;

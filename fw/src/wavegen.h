@@ -70,10 +70,11 @@ public:
 	}
 
 	typedef enum {
-		ST_RESET   = 0,
-		ST_READY   = 1,
-		ST_RUNNING = 2,
-		ST_DONE    = 3
+		ST_RESET    = 0,
+		ST_READY    = 1,
+		ST_RUNNING  = 2,
+		ST_DONE     = 3,
+		ST_STARTING = 4  //!< Told to start, but not necessarily ready
 	} state_t;
 
 	static constexpr uint32_t num_generators = 3;
@@ -81,7 +82,7 @@ public:
 	static inline state_t& get_state(){return state;}
 
 	static inline bool is_ready() {
-		return generators[0].type;
+		return state == ST_READY;
 	}
 
 	/*!
@@ -101,8 +102,11 @@ public:
 		zero16(dst, buffer_size);
 	
 		// Check if muting
-		if(silent)
+		if(silent){
+			if(state == ST_RUNNING)
+				state = ST_DONE;
 			return;
+		}
 		
 		auto t = get_time_ms();
 
@@ -146,14 +150,21 @@ public:
 	static inline void set_off(uint8_t idx){
 		if(state == ST_RESET || state == ST_READY){
 			generators[idx].type = Generator::GEN_OFF;
+			state = ST_READY;
 		}
 	}
 	//! @}
 
 	static inline void runI(){
 		if(state == ST_READY){
-			state = ST_RUNNING;
-			unmute();
+			state = ST_STARTING;
+			bool have_active = false;
+			for(auto &gen : generators){
+				if(gen.type != Generator::GEN_OFF)
+					have_active = true;
+			}
+			if(have_active)
+				unmute();
 		}
 	}
 
@@ -170,9 +181,16 @@ public:
 				do_reset();
 			}
 			// Enable output if relevant
-			if((state != ST_RESET) && !TPA6130A2::is_ready()){
-				TPA6130A2::enable();
+			if(state == ST_STARTING){
+				state = ST_RUNNING;
+				if(!silent && !TPA6130A2::is_ready()){
+					TPA6130A2::enable();
+				}
 			}
+			if((state != ST_RUNNING) && TPA6130A2::is_ready()){
+				TPA6130A2::disable();
+			}
+
 			PT_YIELD(pt);
 		}
 
@@ -276,7 +294,8 @@ protected:
 	 sine wave to achieve the desired gain.
 	 */
 	static sFractional<0,31> db_to_pp(sFractional<7,8> db){
-		return pow10f(db.asFloat()/20.0) / 31623.0;
+		//return pow10f(db.asFloat()/20.0) / 31623.0;
+		return pow10f(db.asFloat()/20.0) / 4096;
 	}
 
 	static sFractional<0,31> get_speaker_gain(uint16_t freq){

@@ -271,8 +271,8 @@ public:
 /*!
  @brief Compute dst = a * B
  */
-template<typename T>
-void vector_mult_scalar(T a, T const * B, T * dst, size_t n){
+template<typename Ts, typename T>
+void vector_mult_scalar(Ts a, T const * B, T * dst, size_t n){
 	while(n >= 8){
 		T b1 = B[0];
 		T b2 = B[1];
@@ -360,6 +360,11 @@ void weighted_vector_sum(T const a,
 
 /*!
  @brief Compute dst = aX + Y
+ @param a The scalar multiplier for X
+ @param X The first input vector
+ @param Y The second input vector (which will not be multiplied)
+ @param dst The target location
+ @param n The number of words to process
 
  This performs each computation in groups of 4 outputs at a time.
  This is more-or-less optimized for 32-bit types
@@ -406,8 +411,8 @@ void vector_mac(Ts const a,
 
 /*!
  @brief Compute the real power of a complex transform output from ARM libraries
-   and add it to the previous average
- @param a A scalar to multiply with power output
+   and compute weighted sum with the previous average PSD
+ @param a A scalar to multiply with power of X
  @param X The input array of complex values, as returned from CMSIS-DSP
  @param Y The old PSD to which the new transform will be added
  @param dst A buffer for output -- may be the same as input
@@ -480,7 +485,80 @@ void complex_psd_mac(Ts a,
 	}
 }
 
+/*!
+ @brief Compute the real power of a complex transform output from ARM libraries
+   and add it to the previous average
+ @param a A scalar to multiply with power output
+ @param X The input array of complex values, as returned from CMSIS-DSP
+ @param Y The old PSD to which the new transform will be added
+ @param dst A buffer for output -- may be the same as input
+  It must be able to hold at least (n/2 + 1) elements
+ @param n The number of input elements
 
+ Computes (roughly) dst = a * mag(X)^2 + Y
+ X is formatted a bit funny, hence the "roughly"
+
+ @note Y may refer to the same buffer as dst
+ */
+template<typename T, typename Tpwr>
+void complex_psd_acc(T const * X,
+                     Tpwr const * Y,
+                     Tpwr * dst,
+                     size_t n){
+// 	// First bin is real X[0]
+// 	*dst++ = (Tpwr)(*X * *X) * a + (Tpwr)(*Y * b);
+// 	X++;
+// 	// Second bin is real X[N/2]
+// 	dst[n/2] = (Tpwr)(*X * *X) * a + (Tpwr)(Y[n/2] * b);
+// 	Y++;
+// 	X++;
+// 	n -= 2;
+	while(n >= 8){
+		T x1 = X[0];
+		T x2 = X[1];
+		T x3 = X[2];
+		T x4 = X[3];
+		T x5 = X[4];
+		T x6 = X[5];
+		T x7 = X[6];
+		T x8 = X[7];
+
+		X += 8;
+
+		Tpwr pwr1 = (x1*x1) + (x2*x2);
+		Tpwr pwr2 = (x3*x3) + (x4*x4);
+		Tpwr pwr3 = (x5*x5) + (x6*x6);
+		Tpwr pwr4 = (x7*x7) + (x8*x8);
+
+		Tpwr old1 = Y[0];
+		Tpwr old2 = Y[1];
+		Tpwr old3 = Y[2];
+		Tpwr old4 = Y[3];
+
+		Y += 4;
+
+		old1 = (pwr1) + (old1);
+		old2 = (pwr2) + (old2);
+		old3 = (pwr3) + (old3);
+		old4 = (pwr4) + (old4);
+
+		dst[0] = old1;
+		dst[1] = old2;
+		dst[2] = old3;
+		dst[3] = old4;
+
+		dst += 4;
+
+		n -= 8;
+	}
+	while(n > 1){
+		T x1 = *X++;
+		T x2 = *X++;
+		Tpwr pwr1 = (x1*x1) + (x2*x2);
+		*dst++ = pwr1 + *Y++;
+		n -= 2;
+	}
+}
 
 
 /*!
