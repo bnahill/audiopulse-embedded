@@ -65,6 +65,22 @@ LoopCopyDataInit:
   ldr r2, =__START_BSS
   b LoopFillZerobss
 
+Construct:
+  push   {r4, r5, lr}
+  ldr    r4, =__init_array_start
+  ldr    r5, =__init_array_end
+LoopConstruct:
+  cmp    r4, r5
+  beq    EndConstruct
+  ldr    r3, [r4]
+  blx    r3
+  add    r4, #4
+  b      LoopConstruct
+EndConstruct:
+  pop    {r4, r5, lr}
+  bx     lr
+
+
 /* Zero fill the bss segment: */ 
 FillZerobss:
   movs r3, #0
@@ -75,6 +91,7 @@ LoopFillZerobss:
   ldr r3, = __END_BSS
   cmp r2, r3
   bcc FillZerobss
+  bl  Construct
 /* Call the clock system intitialization function: */
   bl  __init_hardware
 /* Call the application's entry point: */
