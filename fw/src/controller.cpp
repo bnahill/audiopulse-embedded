@@ -54,7 +54,7 @@ size_t BufferDump::get_frame_copy(uint8_t * dst, size_t bytes){
 	size_t to_copy = min(bytes, (size_t)(buffer + n) - (size_t)iter);
 	memcpy((void *)dst, iter, to_copy);
 	iter += to_copy;
-	if(iter == buffer + n){
+	if(iter == (buffer + n)){
 		state = ST_EMPTY;
 	}
 	return to_copy;
@@ -188,7 +188,9 @@ uint8_t * APulseController::get_response ( uint16_t& size ) {
 		if(waveform_dump.has_data()){
 			waveform_dump.get_frame_copy(p.data, 64);
 		} else {
-			zero16(p.data32, 16);
+			size = 0;
+			state = ST_RESET;
+			return p.data;
 		}
 		if(!waveform_dump.has_data()){
 			state = ST_RESET;
@@ -205,8 +207,6 @@ uint8_t * APulseController::get_response ( uint16_t& size ) {
 		p.status.controller_state = teststate;
 
 		p.status.err_code = err_code;
-
-		waveform_dump.reset();
 		
 		size = sizeof(status_pkt_t);
 		return p.data;
@@ -238,6 +238,7 @@ void APulseController::handle_dataI ( uint8_t* data, uint8_t size ) {
 		//timer.reset_count();
 		timer.reset();
 		Platform::led.clear();
+		waveform_dump.reset();
 
 		teststate = TEST_RESET;
 		WaveGen::request_resetI();
@@ -322,6 +323,7 @@ void APulseController::handle_dataI ( uint8_t* data, uint8_t size ) {
 		if(err_code)
 			break;
 		timer.reset();
+		waveform_dump.reset();
 		WaveGen::runI();
 		InputDSP::runI();
 		timer.start();

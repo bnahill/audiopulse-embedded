@@ -13,8 +13,11 @@ matplotlib.rcParams['backend.qt4'] = 'PySide'
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 
+import pylab
+
 from PySide import QtGui, QtCore
 
+import threading
 
 class DataSeries(object):
     def __init__(self, label, data, xunits, yunits, xvalues):
@@ -49,7 +52,7 @@ class PSDSeries(DataSeries):
 class LogPSDSeries(DataSeries):
     def __init__(self, label, data, f1=None, f2=None):
         xvals = np.linspace(0, 8000, 257)
-        data = 10.0 * np.log10(0.7071 * data / np.float128(0x7FFFFFFF))
+        data = 10.0 * np.log10(0.7071 * data / np.float128(0x7FFFFFFF >> 3))
         super(LogPSDSeries, self).__init__(label, data, "Frequency (Hz)",
                                            "Power (dB SPL)", xvals)
 
@@ -277,8 +280,59 @@ class ButtonPanel(QtGui.QFrame):
         ]
 
 
+class SigCollection(object):
+
+    ST_RESET = 0
+    ST_RUNNING = 1
+    ST_DONE = 2
+
+    def __init__(self, iface):
+        self.sigs = []
+        self.iface = iface
+        self.failures = 0
+        self.state = self.ST_RESET
+        self.thread = None
+
+    def __del__(self):
+        if self.thread:
+            self.thread.join()
+
+    def get_waveforms(self, cb):
+        """ Attempt to get a waveform"""
+
+        failures = 0
+        while failures < 20:
+            time.sleep(0.05)
+            sig = self.iface.receive_waveform()
+            if sig is not None:
+                self.sigs.append(sig)
+            else:
+                time.sleep(0.1)
+                sig = self.iface.receive_waveform()
+                if sig is None:
+                    failures += 1
+                else:
+                    self.sigs.append(sig)
+
+        print((len(self.sigs)))
+        cb(self.sigs)
+
+    def start_collection(self, cb):
+        """ Start collecting data
+        This will return once either a frame is received or timeout occurs
+
+        Returns the boolean success of the operation
+        """
+        self.thread = threading.Thread(target=self.get_waveforms, args=(cb,))
+        self.thread.start()
+
+    def __len__(self):
+        return len(self.sigs)
+
+
 class UIWindow(QtGui.QMainWindow):
     iface = None
+    sigcol = None
 
     def __init__(self):
         super(UIWindow, self).__init__()
@@ -379,14 +433,34 @@ class UIWindow(QtGui.QMainWindow):
         self.show()
 
     def reset(self):
+        self.sigcol = None
         self.iface.reset()
         self.messagebox.setText(str(self.iface.get_status()))
 
     def getstat(self):
         self.messagebox.setText(str(self.iface.get_status()))
 
+    def add_waveform_set(self, sigs):
+        savemat("waves", {'waves': sigs})
+        fft = np.zeros(257, dtype=np.float128)
+        for s in sigs:
+            fft += np.abs(np.fft.rfft(s) ** 2)
+        fft /= len(sigs)
+        print(fft)
+        #pylab.plot(fft)
+        #pylab.show()
+
+        t = time.localtime()
+        d = "{}.{}.{}.{}.{}".format(t.tm_mon, t.tm_mday, t.tm_hour,
+                                    t.tm_min, t.tm_sec)
+        self.datalist.addItem(SignalListItem(LogPSDSeries("RAW " + d, fft)))
+        print(("Got {} signals!".format(len(sigs))))
+
     def start(self):
+        self.sigcol = SigCollection(self.iface)
+
         tones = list()
+
         try:
             for i in range(2):
                 tones.append(
@@ -421,6 +495,8 @@ class UIWindow(QtGui.QMainWindow):
             return
         self.iface.start()
         self.getstat()
+
+        self.sigcol.start_collection(self.add_waveform_set)
 
     def get_data(self):
         if not self.iface.get_status().is_done():

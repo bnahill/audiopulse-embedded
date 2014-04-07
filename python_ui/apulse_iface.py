@@ -5,6 +5,8 @@ import usb.core
 import usb.util
 import sys
 import numpy as np
+import threading
+import time
 
 
 class UsbConstants():
@@ -64,6 +66,7 @@ class Constants():
     CMD_START = 6
     CMD_CALIBRATE_MIC = 7
     CMD_RESET_CALIB = 8
+    CMD_PULLWAVEFORM = 9
 
     TONE_OFF = 0
     TONE_FIXED = 1
@@ -150,8 +153,10 @@ class APulseIface(object):
     dev = None
     out_ep = None
     in_ep = None
+    lock = None
 
     def __init__(self):
+        self.lock = threading.RLock()
         pass
 
     def disconnect(self):
@@ -159,41 +164,74 @@ class APulseIface(object):
             self.dev.reset()
 
     def connect(self):
-        dev = usb.core.find(idVendor=UsbConstants.USB_VID,
-                            idProduct=UsbConstants.USB_PID)
-        if dev is None:
-            raise ValueError("No device found")
+        with self.lock:
+            dev = usb.core.find(idVendor=UsbConstants.USB_VID,
+                                idProduct=UsbConstants.USB_PID)
+            if dev is None:
+                raise ValueError("No device found")
 
-        if dev.is_kernel_driver_active(0) is True:
-            sys.stderr.write("Releasing kernel driver\n")
-            dev.detach_kernel_driver(0)
+            if dev.is_kernel_driver_active(0) is True:
+                sys.stderr.write("Releasing kernel driver\n")
+                dev.detach_kernel_driver(0)
 
-        dev.set_configuration()
+            dev.set_configuration()
 
-        cfg = dev.get_active_configuration()
-        intf = cfg[(0, 0)]
+            cfg = dev.get_active_configuration()
+            intf = cfg[(0, 0)]
 
-        ep = usb.util.find_descriptor(
-            intf,
-            # match the first IN endpoint (no OUT currently...)
-            custom_match=lambda e:
-                usb.util.endpoint_direction(e.bEndpointAddress) ==
-                usb.util.ENDPOINT_IN
-        )
+            ep = usb.util.find_descriptor(
+                intf,
+                # match the first IN endpoint (no OUT currently...)
+                custom_match=lambda e:
+                    usb.util.endpoint_direction(e.bEndpointAddress) ==
+                    usb.util.ENDPOINT_IN
+            )
 
-        assert ep is not None
+            assert ep is not None
 
-        self.in_ep = ep
-        self.out_ep = ep
-        self.dev = dev
+            self.in_ep = ep
+            self.out_ep = ep
+            self.dev = dev
 
     def reset(self):
-        data = struct.pack("B", Constants.CMD_RESET)
-        self._write(data)
+        with self.lock:
+            data = struct.pack("B", Constants.CMD_RESET)
+            self._write(data)
 
     def get_status(self):
-        data = self._read(5)
-        return APulseStatus(data)
+        with self.lock:
+            data = self._read(5)
+            r = APulseStatus(data)
+        return r
+
+    def receive_waveform(self):
+        with self.lock:
+            s = self.get_status()
+            if s.input_state != APulseStatus.IN_CAPTURING:
+                str_instate = s.str_instate[s.input_state]
+                print(("State was actually {}".format(str_instate)))
+                return None
+
+            sig = np.zeros(512, dtype=np.float128)
+            self._write(struct.pack("B", Constants.CMD_PULLWAVEFORM))
+            for i in range(32):
+                for j in range(50):
+                    try:
+                        data = self._read(64)
+                        break
+                    except:
+                        pass
+                if len(data) < 64:
+                    print(("Got {} bytes instead of 64".format(len(data))))
+                    return None
+                else:
+                    pass
+                    #print("Actually got 64 bytes!")
+                segment = struct.unpack("<" + "i" * 16, data)
+                sig[i * 16:(i + 1) * 16] = segment
+            print("Received a waveform!")
+
+        return sig
 
     def config_tones(self, tones):
         buff = struct.pack("B", Constants.CMD_SETUPTONES)
@@ -202,7 +240,8 @@ class APulseIface(object):
         for i in range(3 - len(tones)):
             buff = buff + DummyTone().to_buff()
         assert len(buff) == 34, "Wrong sized buffer..."
-        self._write(buff)
+        with self.lock:
+            self._write(buff)
 
     def config_capture(self, t1, t2, overlap, src=InputConfig.SRC_MIC,
                        mix_mic=0, mix_ext=0):
@@ -214,7 +253,8 @@ class APulseIface(object):
         epochs = int(np.ceil((t2 - t1) * (16.0 / 256) - 1))
         buff = struct.pack("<BHBHHii", Constants.CMD_SETUPCAPTURE,
             overlap, src, epochs, t1, mix_mic, mix_ext)
-        self._write(buff)
+        with self.lock:
+            self._write(buff)
 
     def start(self):
         buff = struct.pack("B", Constants.CMD_START)
@@ -224,28 +264,31 @@ class APulseIface(object):
             sys.stderr.write("Error starting! {}".format(status.err_code))
 
     def calibrate(self):
-        self._write(struct.pack("B", Constants.CMD_CALIBRATE_MIC))
+        with self.lock:
+            self._write(struct.pack("B", Constants.CMD_CALIBRATE_MIC))
 
     def decalibrate(self):
-        self._write(struct.pack("B", Constants.CMD_RESET_CALIB))
+        with self.lock:
+            self._write(struct.pack("B", Constants.CMD_RESET_CALIB))
 
     def get_data(self):
         psd = np.zeros(257, dtype=np.float128)
         avg = np.zeros(512, dtype=np.float128)
 
-        if not self.get_status().is_done():
-            sys.stderr.write("Could not get data; test incomplete\n")
-            return (psd, avg)
+        with self.lock:
+            if not self.get_status().is_done():
+                sys.stderr.write("Could not get data; test incomplete\n")
+                return (psd, avg)
 
-        self._write(struct.pack("B", Constants.CMD_GETDATA))
-        for i in range(16):
-            data = self._read(64)
-            psd[i * 16:(i + 1) * 16] = struct.unpack("<" + "i" * 16, data)
-        (psd[256],) = struct.unpack("<i", self._read(4))
+            self._write(struct.pack("B", Constants.CMD_GETDATA))
+            for i in range(16):
+                data = self._read(64)
+                psd[i * 16:(i + 1) * 16] = struct.unpack("<" + "i" * 16, data)
+            (psd[256],) = struct.unpack("<i", self._read(4))
 
-        for i in range(32):
-            data = self._read(64)
-            avg[i * 16:(i + 1) * 16] = struct.unpack("<" + "i" * 16, data)
+            for i in range(32):
+                data = self._read(64)
+                avg[i * 16:(i + 1) * 16] = struct.unpack("<" + "i" * 16, data)
 
         # Normalize around 90dB
         #psd /= np.float128(0x7FFFFFFF)
