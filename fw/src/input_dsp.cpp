@@ -324,8 +324,9 @@ void InputDSP::do_decimate(sampleFractional const * src,
 	static sampleFractional const * iter_in;
 	iter_in = src;
 	for(auto i = 0; i < (n_in / decimate_block_size); i++){
-		arm_fir_decimate_fast_q31(&decimate, (q31_t*)iter_in,
-		                          (q31_t*)dst, decimate_block_size);
+		arm_shift_q31((q31_t*)iter_in, -6, (q31_t*)iter_in, decimate_block_size);
+		arm_fir_decimate_q31(&decimate, (q31_t*)iter_in,
+		                     (q31_t*)dst, decimate_block_size);
 		iter_in += decimate_block_size;
 		dst += decimate_block_size / 3;
 	}

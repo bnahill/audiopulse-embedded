@@ -52,7 +52,7 @@ class PSDSeries(DataSeries):
 class LogPSDSeries(DataSeries):
     def __init__(self, label, data, f1=None, f2=None):
         xvals = np.linspace(0, 8000, 257)
-        data = 10.0 * np.log10(0.7071 * data / np.float128(0x7FFFFFFF >> 3))
+        data = 10.0 * np.log10(0.7071 * data / np.float128(0x7FFFFFFF >> 10))
         super(LogPSDSeries, self).__init__(label, data, "Frequency (Hz)",
                                            "Power (dB SPL)", xvals)
 
@@ -446,6 +446,8 @@ class UIWindow(QtGui.QMainWindow):
         for s in sigs:
             fft += np.abs(np.fft.rfft(s) ** 2)
         fft /= len(sigs)
+        fft >>= 6  # Compensate for scaling applied in fixed FFT
+
         print(fft)
         #pylab.plot(fft)
         #pylab.show()
@@ -509,8 +511,8 @@ class UIWindow(QtGui.QMainWindow):
         d = "{}.{}.{}.{}.{}".format(t.tm_mon, t.tm_mday, t.tm_hour,
                                     t.tm_min, t.tm_sec)
         self.datalist.addItem(SignalListItem(LogPSDSeries("LogPSD " + d, psd)))
-        print("Deliberately only presenting LogPSD option")
-        #self.datalist.addItem(SignalListItem(PSDSeries("PSD " + d, psd)))
+        #print("Deliberately only presenting LogPSD option")
+        self.datalist.addItem(SignalListItem(PSDSeries("PSD " + d, psd)))
         #self.datalist.addItem(SignalListItem(TimeSeries("Avg " + d, avg)))
 
     def disconnect(self):

@@ -294,8 +294,8 @@ protected:
 	 sine wave to achieve the desired gain.
 	 */
 	static sFractional<0,31> db_to_pp(sFractional<7,8> db){
-		//return pow10f(db.asFloat()/20.0) / 31623.0;
-		return pow10f(db.asFloat()/20.0) / 4096;
+		return pow10f(db.asFloat()/20.0) / 31623.0;
+		//return pow10f(db.asFloat()/20.0) / 4096;
 	}
 
 	static sFractional<0,31> get_speaker_gain(uint16_t freq){

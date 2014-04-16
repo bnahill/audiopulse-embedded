@@ -218,10 +218,15 @@ protected:
 		for(auto &a : mag_psd) a.setInternal(0);
 		for(auto &a : average_buffer) a.setInternal(0);
 
-		arm_fir_decimate_init_q31(&decimate, 5, 3,//decimate_fir_order, 3,
+		auto result =
+		arm_fir_decimate_init_q31(&decimate, decimate_fir_order, 3,
 	                             (q31_t*)decimate_coeffs,
 	                             (q31_t*)decimate_buffer,
 	                             decimate_block_size);
+
+		if(result != ARM_MATH_SUCCESS){
+			while(true);
+		}
 
 		is_reset = true;
 		pending_reset = false;
