@@ -1,4 +1,4 @@
-PCBNEW-LibModule-V1  Fri 11 Oct 2013 05:33:22 PM EDT
+PCBNEW-LibModule-V1  Fri 02 May 2014 09:25:16 PM EDT
 # encoding utf-8
 Units mm
 $INDEX
@@ -11,6 +11,7 @@ HDR_2X1_50MIL
 HDR_5X1_50MIL
 HDR_6X1_50MIL
 HDR_6X2_50MIL
+LED-6PLCC
 LT_DFN16_QUAD
 LT_DFN8_DUAL
 SB_2-1
@@ -26,12 +27,13 @@ SMD1411_POL
 TI_WSON6
 TO92-STRAIGHT-CBE
 TPA8130A2-QFN20
+TPS61252_QFN8
 TP_HOLE
 TXC_7A
 XRCGB_F_N
 $EndINDEX
 $MODULE AK4621_VSOP30
-Po 0 0 0 15 52518560 00000000 ~~
+Po 0 0 0 15 53582F21 00000000 ~~
 Li AK4621_VSOP30
 Sc 0
 AR 
@@ -44,210 +46,210 @@ DS 4.85 -2.8 4.85 2.8 0.15 21
 DS 4.85 2.8 -4.85 2.8 0.15 21
 DS -4.85 2.8 -4.85 -2.8 0.15 21
 $PAD
-Sh "1" R 0.25 0.5 0 0 0
+Sh "1" R 0.3 0.8 0 0 0
 Dr 0 0 0
 At SMD N 00888000
 Ne 0 ""
 Po -4.55 3.6
 $EndPAD
 $PAD
-Sh "2" R 0.25 0.5 0 0 0
+Sh "2" R 0.3 0.8 0 0 0
 Dr 0 0 0
 At SMD N 00888000
 Ne 0 ""
 Po -3.9 3.6
 $EndPAD
 $PAD
-Sh "4" R 0.25 0.5 0 0 0
+Sh "4" R 0.3 0.8 0 0 0
 Dr 0 0 0
 At SMD N 00888000
 Ne 0 ""
 Po -2.6 3.6
 $EndPAD
 $PAD
-Sh "3" R 0.25 0.5 0 0 0
+Sh "3" R 0.3 0.8 0 0 0
 Dr 0 0 0
 At SMD N 00888000
 Ne 0 ""
 Po -3.25 3.6
 $EndPAD
 $PAD
-Sh "7" R 0.25 0.5 0 0 0
+Sh "7" R 0.3 0.8 0 0 0
 Dr 0 0 0
 At SMD N 00888000
 Ne 0 ""
 Po -0.65 3.6
 $EndPAD
 $PAD
-Sh "8" R 0.25 0.5 0 0 0
+Sh "8" R 0.3 0.8 0 0 0
 Dr 0 0 0
 At SMD N 00888000
 Ne 0 ""
 Po 0 3.6
 $EndPAD
 $PAD
-Sh "6" R 0.25 0.5 0 0 0
+Sh "6" R 0.3 0.8 0 0 0
 Dr 0 0 0
 At SMD N 00888000
 Ne 0 ""
 Po -1.3 3.6
 $EndPAD
 $PAD
-Sh "5" R 0.25 0.5 0 0 0
+Sh "5" R 0.3 0.8 0 0 0
 Dr 0 0 0
 At SMD N 00888000
 Ne 0 ""
 Po -1.95 3.6
 $EndPAD
 $PAD
-Sh "13" R 0.25 0.5 0 0 0
+Sh "13" R 0.3 0.8 0 0 0
 Dr 0 0 0
 At SMD N 00888000
 Ne 0 ""
 Po 3.25 3.6
 $EndPAD
 $PAD
-Sh "14" R 0.25 0.5 0 0 0
+Sh "14" R 0.3 0.8 0 0 0
 Dr 0 0 0
 At SMD N 00888000
 Ne 0 ""
 Po 3.9 3.6
 $EndPAD
 $PAD
-Sh "15" R 0.25 0.5 0 0 0
+Sh "15" R 0.3 0.8 0 0 0
 Dr 0 0 0
 At SMD N 00888000
 Ne 0 ""
 Po 4.55 3.6
 $EndPAD
 $PAD
-Sh "11" R 0.25 0.5 0 0 0
+Sh "11" R 0.3 0.8 0 0 0
 Dr 0 0 0
 At SMD N 00888000
 Ne 0 ""
 Po 1.95 3.6
 $EndPAD
 $PAD
-Sh "12" R 0.25 0.5 0 0 0
+Sh "12" R 0.3 0.8 0 0 0
 Dr 0 0 0
 At SMD N 00888000
 Ne 0 ""
 Po 2.6 3.6
 $EndPAD
 $PAD
-Sh "10" R 0.25 0.5 0 0 0
+Sh "10" R 0.3 0.8 0 0 0
 Dr 0 0 0
 At SMD N 00888000
 Ne 0 ""
 Po 1.3 3.6
 $EndPAD
 $PAD
-Sh "9" R 0.25 0.5 0 0 0
+Sh "9" R 0.3 0.8 0 0 0
 Dr 0 0 0
 At SMD N 00888000
 Ne 0 ""
 Po 0.65 3.6
 $EndPAD
 $PAD
-Sh "22" R 0.25 0.5 0 0 0
+Sh "22" R 0.3 0.8 0 0 0
 Dr 0 0 0
 At SMD N 00888000
 Ne 0 ""
 Po 0.65 -3.6
 $EndPAD
 $PAD
-Sh "21" R 0.25 0.5 0 0 0
+Sh "21" R 0.3 0.8 0 0 0
 Dr 0 0 0
 At SMD N 00888000
 Ne 0 ""
 Po 1.3 -3.6
 $EndPAD
 $PAD
-Sh "19" R 0.25 0.5 0 0 0
+Sh "19" R 0.3 0.8 0 0 0
 Dr 0 0 0
 At SMD N 00888000
 Ne 0 ""
 Po 2.6 -3.6
 $EndPAD
 $PAD
-Sh "20" R 0.25 0.5 0 0 0
+Sh "20" R 0.3 0.8 0 0 0
 Dr 0 0 0
 At SMD N 00888000
 Ne 0 ""
 Po 1.95 -3.6
 $EndPAD
 $PAD
-Sh "16" R 0.25 0.5 0 0 0
+Sh "16" R 0.3 0.8 0 0 0
 Dr 0 0 0
 At SMD N 00888000
 Ne 0 ""
 Po 4.55 -3.6
 $EndPAD
 $PAD
-Sh "17" R 0.25 0.5 0 0 0
+Sh "17" R 0.3 0.8 0 0 0
 Dr 0 0 0
 At SMD N 00888000
 Ne 0 ""
 Po 3.9 -3.6
 $EndPAD
 $PAD
-Sh "18" R 0.25 0.5 0 0 0
+Sh "18" R 0.3 0.8 0 0 0
 Dr 0 0 0
 At SMD N 00888000
 Ne 0 ""
 Po 3.25 -3.6
 $EndPAD
 $PAD
-Sh "26" R 0.25 0.5 0 0 0
+Sh "26" R 0.3 0.8 0 0 0
 Dr 0 0 0
 At SMD N 00888000
 Ne 0 ""
 Po -1.95 -3.6
 $EndPAD
 $PAD
-Sh "25" R 0.25 0.5 0 0 0
+Sh "25" R 0.3 0.8 0 0 0
 Dr 0 0 0
 At SMD N 00888000
 Ne 0 ""
 Po -1.3 -3.6
 $EndPAD
 $PAD
-Sh "23" R 0.25 0.5 0 0 0
+Sh "23" R 0.3 0.8 0 0 0
 Dr 0 0 0
 At SMD N 00888000
 Ne 0 ""
 Po 0 -3.6
 $EndPAD
 $PAD
-Sh "24" R 0.25 0.5 0 0 0
+Sh "24" R 0.3 0.8 0 0 0
 Dr 0 0 0
 At SMD N 00888000
 Ne 0 ""
 Po -0.65 -3.6
 $EndPAD
 $PAD
-Sh "28" R 0.25 0.5 0 0 0
+Sh "28" R 0.3 0.8 0 0 0
 Dr 0 0 0
 At SMD N 00888000
 Ne 0 ""
 Po -3.25 -3.6
 $EndPAD
 $PAD
-Sh "27" R 0.25 0.5 0 0 0
+Sh "27" R 0.3 0.8 0 0 0
 Dr 0 0 0
 At SMD N 00888000
 Ne 0 ""
 Po -2.6 -3.6
 $EndPAD
 $PAD
-Sh "29" R 0.25 0.5 0 0 0
+Sh "29" R 0.3 0.8 0 0 0
 Dr 0 0 0
 At SMD N 00888000
 Ne 0 ""
 Po -3.9 -3.6
 $EndPAD
 $PAD
-Sh "30" R 0.25 0.5 0 0 0
+Sh "30" R 0.3 0.8 0 0 0
 Dr 0 0 0
 At SMD N 00888000
 Ne 0 ""
@@ -1400,6 +1402,62 @@ Po -3.175 0.635
 .ZoneConnection 2
 $EndPAD
 $EndMODULE HDR_6X2_50MIL
+$MODULE LED-6PLCC
+Po 0 0 0 15 5364457A 00000000 ~~
+Li LED-6PLCC
+Sc 0
+AR 
+Op 0 0 0
+T0 0.0125 -3.1125 1 1 0 0.15 N V 21 N "LED-6PLCC"
+T1 0 2.55 1 1 0 0.15 N I 21 N "VAL**"
+DS -1.5 -1.6 1.5 -1.6 0.15 21
+DS 1.5 -1.6 1.5 1.6 0.15 21
+DS 1.5 1.6 -1.5 1.6 0.15 21
+DS -1.5 1.6 -1.5 -1.6 0.15 21
+DC -1.25 -2.3 -1.1 -2.1 0.15 21
+$PAD
+Sh "A3" R 1.3 0.7 0 0 0
+Dr 0 0 0
+At SMD N 00888000
+Ne 0 ""
+Po 1.65 1.1
+$EndPAD
+$PAD
+Sh "C3" R 1.3 0.7 0 0 0
+Dr 0 0 0
+At SMD N 00888000
+Ne 0 ""
+Po -1.7 1.1
+$EndPAD
+$PAD
+Sh "C2" R 1.3 0.7 0 0 0
+Dr 0 0 0
+At SMD N 00888000
+Ne 0 ""
+Po -1.7 0
+$EndPAD
+$PAD
+Sh "A2" R 1.3 0.7 0 0 0
+Dr 0 0 0
+At SMD N 00888000
+Ne 0 ""
+Po 1.65 0
+$EndPAD
+$PAD
+Sh "A1" R 1.3 0.7 0 0 0
+Dr 0 0 0
+At SMD N 00888000
+Ne 0 ""
+Po 1.65 -1.1
+$EndPAD
+$PAD
+Sh "C1" R 1.3 0.7 0 0 0
+Dr 0 0 0
+At SMD N 00888000
+Ne 0 ""
+Po -1.7 -1.1
+$EndPAD
+$EndMODULE LED-6PLCC
 $MODULE LT_DFN16_QUAD
 Po 0 0 0 15 524F3BCC 00000000 ~~
 Li LT_DFN16_QUAD
@@ -2275,6 +2333,95 @@ Of 0 0 0
 Ro 0 0 0
 $EndSHAPE3D
 $EndMODULE TPA8130A2-QFN20
+$MODULE TPS61252_QFN8
+Po 0 0 0 15 535D88FF 00000000 ~~
+Li TPS61252_QFN8
+Sc 0
+AR 
+Op 0 0 0
+T0 2.075 0 1 1 900 0.15 N V 21 N "TPS61252_QFN8"
+T1 -2.05 0 1 1 900 0.15 N I 21 N "VAL**"
+DS -0.875 -1.0125 -0.875 1 0.15 21
+DS -0.875 1 -0.7375 0.9875 0.15 21
+DS -0.7375 0.9875 -0.725 -0.9875 0.15 21
+DS -0.725 -0.9875 -0.6125 -0.9875 0.15 21
+DS -0.6125 -0.9875 -0.6125 0.95 0.15 21
+DS -1 -1 1 -1 0.15 21
+DS 1 -1 1 1 0.15 21
+DS 1 1 -1 1 0.15 21
+DS -1 1 -1 -1 0.15 21
+$PAD
+Sh "4" R 0.28 0.5 0 0 0
+Dr 0 0 0
+At SMD N 00888000
+Ne 0 ""
+Po 0.75 0.95
+.SolderMask 0.07
+$EndPAD
+$PAD
+Sh "3" R 0.28 0.5 0 0 0
+Dr 0 0 0
+At SMD N 00888000
+Ne 0 ""
+Po 0.2 0.95
+.SolderMask 0.07
+$EndPAD
+$PAD
+Sh "1" R 0.28 0.5 0 0 0
+Dr 0 0 0
+At SMD N 00888000
+Ne 0 ""
+Po -0.75 0.95
+.SolderMask 0.07
+$EndPAD
+$PAD
+Sh "2" R 0.28 0.5 0 0 0
+Dr 0 0 0
+At SMD N 00888000
+Ne 0 ""
+Po -0.25 0.95
+.SolderMask 0.07
+$EndPAD
+$PAD
+Sh "7" R 0.28 0.5 0 0 0
+Dr 0 0 0
+At SMD N 00888000
+Ne 0 ""
+Po -0.25 -0.95
+.SolderMask 0.07
+$EndPAD
+$PAD
+Sh "8" R 0.28 0.5 0 0 0
+Dr 0 0 0
+At SMD N 00888000
+Ne 0 ""
+Po -0.75 -0.95
+.SolderMask 0.07
+$EndPAD
+$PAD
+Sh "6" R 0.28 0.5 0 0 0
+Dr 0 0 0
+At SMD N 00888000
+Ne 0 ""
+Po 0.25 -0.95
+.SolderMask 0.07
+$EndPAD
+$PAD
+Sh "PAD" R 1.6 0.9 0 0 0
+Dr 0 0 0
+At SMD N 00888000
+Ne 0 ""
+Po 0 0
+$EndPAD
+$PAD
+Sh "5" R 0.28 0.5 0 0 0
+Dr 0 0 0
+At SMD N 00888000
+Ne 0 ""
+Po 0.75 -0.95
+.SolderMask 0.07
+$EndPAD
+$EndMODULE TPS61252_QFN8
 $MODULE TP_HOLE
 Po 0 0 0 15 52519C71 00000000 ~~
 Li TP_HOLE
