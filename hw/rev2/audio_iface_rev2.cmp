@@ -1,4 +1,4 @@
-Cmp-Mod V01 Created by CvPcb (2013-may-18)-stable date = Fri 02 May 2014 09:32:21 PM EDT
+Cmp-Mod V01 Created by CvPcb (2013-may-18)-stable date = Tue 06 May 2014 06:49:05 PM EDT
 
 BeginCmp
 TimeStamp = /535741F7;
@@ -484,9 +484,23 @@ IdModule  = SMD0402;
 EndCmp
 
 BeginCmp
+TimeStamp = /523B0E12/53685897;
+Reference = C70;
+ValeurCmp = 0.01u;
+IdModule  = SMD0402;
+EndCmp
+
+BeginCmp
+TimeStamp = /523BF424/53697AF9;
+Reference = C71;
+ValeurCmp = 10n;
+IdModule  = SMD0402;
+EndCmp
+
+BeginCmp
 TimeStamp = /523BF424/53645218;
 Reference = D1;
-ValeurCmp = LED3;
+ValeurCmp = LTST-C19FD1WT;
 IdModule  = LED-6PLCC;
 EndCmp
 
@@ -964,6 +978,13 @@ TimeStamp = /523BF424/524D93F7;
 Reference = X1;
 ValeurCmp = XTAL;
 IdModule  = TXC_7A;
+EndCmp
+
+BeginCmp
+TimeStamp = /523BF424/53695566;
+Reference = X2;
+ValeurCmp = ASFLM2-12.288MHZ;
+IdModule  = ASFLM;
 EndCmp
 
 EndListe
