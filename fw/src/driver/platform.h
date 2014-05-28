@@ -48,15 +48,22 @@ public:
 
 		USB::lateInit();
 
-		AK4621::init();
+		AK4621::init_hw();
 		
-		TPA6130A2::init();
+		TPA6130A2::init_hw();
 		
-		led.clear();
+		leds[0].clear();
 	}
 	
+
 	//! The one debug LED
-	static constexpr GPIOPin led = {PTB_BASE_PTR, 19};
+	static GPIOPin const leds[3];
+
+	//! Analog power enable
+	static GPIOPin const power_en;
+
+	//! The external 12.288MHz oscillator
+	static GPIOPin const xtal_ex;
 };
 
 #endif // __cplusplus

@@ -187,6 +187,7 @@ class APulseController {
 		TEST_RUNNING     = 3,
 		TEST_DONE        = 4,
 		TEST_CALIB_MIC   = 5,
+		TEST_STARTING    = 6
 	} teststate_t;
 
 	typedef enum {

@@ -14,7 +14,7 @@ AK4621::Src AK4621::source = AK4621::Src::MIC;
 decltype(AK4621::mix_mic) AK4621::mix_mic;
 decltype(AK4621::mix_ext) AK4621::mix_ext;
 
-void AK4621::init(){
+void AK4621::init_hw() {
 	__disable_irq();
 	SIM_SCGC6 |= SIM_SCGC6_I2S_MASK | SIM_SCGC6_DMAMUX_MASK;
 	if(SPI == SPI0_BASE_PTR){
@@ -50,11 +50,17 @@ void AK4621::init(){
 			buffer_out[i] = 0x00FF00FF;
 		}
 	}
-	
+
 	i2s_init();
 
+	// WHY?
 	for(uint32_t volatile a = 0xFFFF; a; a--);
 
+	i2s_dma_init();
+}
+
+
+void AK4621::init(){
 	spi_write_reg(REG_RESET, 0x00); // Reset
 	spi_write_reg(REG_CLK_FORMAT, 0x40); // MCLK = 256fs, fs = 48k
 	//spi_write_reg(REG_DEEM_VOL, 0x02); // 48k de-emph
@@ -62,8 +68,6 @@ void AK4621::init(){
 	//spi_write_reg(REG_POWER_DOWN, 0x07); // These are defaults...
 
 	spi_write_reg(REG_RESET, 0x03); // Enable stuff
-	
-	i2s_dma_init();
 }
 
 void AK4621::gpio_init(){

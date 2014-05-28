@@ -101,14 +101,39 @@ PT_THREAD(APulseController::pt_controller)(struct pt * pt){
 
 	while(true){
 		PT_YIELD(pt);
+
+		// Is a test completed?
 		if(InputDSP::get_state() == InputDSP::ST_DONE &&
 		   WaveGen::get_state() == WaveGen::ST_DONE){
+			// Clean up after test
 			teststate = TEST_DONE;
-			Platform::led.clear();
+			// Turn off lights
+			Platform::leds[0].clear();
+			// Disable analog supply
+			Platform::power_en.clear();
 			if(timer.is_running())
 				timer.reset();
 		}
+
+		// Is it time to calibrate the microphone?
 		if(teststate == TEST_CALIB_MIC){
+			Platform::power_en.set();
+
+			// Delay for startup
+			timer.reset();
+			timer.start();
+			PT_WAIT_UNTIL(pt, timer.get_ms() > 50);
+			timer.reset();
+
+			TPA6130A2::init();
+			TPA6130A2::enable();
+			AK4621::init();
+
+			// Delay for init
+			timer.reset();
+			timer.start();
+			PT_WAIT_UNTIL(pt, timer.get_ms() > 50);
+			timer.reset();
 
 			for(i = 0; i < 16; i++){
 				// Calibrating 16 evenly spaced bins across 8kHz, aligned to lower bin
@@ -136,6 +161,33 @@ PT_THREAD(APulseController::pt_controller)(struct pt * pt){
 
 				coeffs[i] = (1.0 / 16.0)  / InputDSP::get_psd()[bin].asFloat();
 			}
+			Platform::power_en.clear();
+		}
+
+		// Should we start a test?
+		if(teststate == TEST_STARTING){
+			// Supply was already enabled
+			// Delay for startup
+			timer.reset();
+			timer.start();
+			PT_WAIT_UNTIL(pt, timer.get_ms() > 50);
+
+			TPA6130A2::init();
+			TPA6130A2::enable();
+			AK4621::init();
+
+			// Delay for init
+			timer.reset();
+			timer.start();
+			PT_WAIT_UNTIL(pt, timer.get_ms() > 50);
+			timer.reset();
+
+			waveform_dump.reset();
+			WaveGen::runI();
+			InputDSP::runI();
+			timer.start();
+			teststate = TEST_RUNNING;
+			Platform::leds[0].set();
 		}
 	}
 
@@ -147,7 +199,7 @@ void APulseController::handle_eventI ( uint8_t event_type ) {
 	case USB_APP_ENUM_COMPLETE:
 		err_code = 0;
 		timer.reset();
-		Platform::led.set();
+		Platform::leds[0].set();
 
 		teststate = TEST_RESET;
 		WaveGen::request_resetI();
@@ -237,7 +289,7 @@ void APulseController::handle_dataI ( uint8_t* data, uint8_t size ) {
 		//timer.stop();
 		//timer.reset_count();
 		timer.reset();
-		Platform::led.clear();
+		Platform::leds[0].clear();
 		waveform_dump.reset();
 
 		teststate = TEST_RESET;
@@ -322,13 +374,8 @@ void APulseController::handle_dataI ( uint8_t* data, uint8_t size ) {
 		}
 		if(err_code)
 			break;
-		timer.reset();
-		waveform_dump.reset();
-		WaveGen::runI();
-		InputDSP::runI();
-		timer.start();
-		teststate = TEST_RUNNING;
-		Platform::led.set();
+		Platform::power_en.set();
+		teststate = TEST_STARTING;
 		break;
 	case CMD_PULLWAVEFORM:
 		if(state == ST_RESET){

@@ -47,7 +47,7 @@ void main(){
 	
 	AK4621::start();
 
-	Platform::led.set();
+	Platform::leds[0].set();
 	
 	while(true){
 		InputDSP::pt_dsp(&pt_dsp);

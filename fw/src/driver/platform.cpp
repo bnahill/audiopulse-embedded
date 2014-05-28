@@ -21,6 +21,10 @@
 
 #include <driver/platform.h>
 
+GPIOPin const Platform::leds[] = {{PTD_BASE_PTR, 4}, {PTD_BASE_PTR, 5}, {PTC_BASE_PTR, 4}};
+GPIOPin const Platform::power_en = {PTD_BASE_PTR, 3};
+GPIOPin const Platform::xtal_ex = {PTB_BASE_PTR, 18};
+
 void earlyInitC(){
 	WDOG_UNLOCK = 0xC520;
 	WDOG_UNLOCK = 0xD928;
@@ -36,10 +40,21 @@ void Platform::earlyInit(){
 			  | SIM_SCGC5_PORTD_MASK
 			  | SIM_SCGC5_PORTE_MASK);
 
-	// Setup that one LED so it can be used for debugging
-	led.make_output();
-	led.clear();
-	led.configure(GPIOPin::MUX_GPIO, true);
+	power_en.clear();
+	power_en.make_output();
+	power_en.configure(GPIOPin::MUX_GPIO, true);
+
+
+	for(auto &led : leds){
+		// Setup that one LED so it can be used for debugging
+		led.make_output();
+		led.clear();
+		led.configure(GPIOPin::MUX_GPIO, true);
+	}
+
+	xtal_ex.clear();
+	xtal_ex.make_output();
+	xtal_ex.configure(GPIOPin::MUX_GPIO, true);
 
 	Clock::setupClocks();
 }

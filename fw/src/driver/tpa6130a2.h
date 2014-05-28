@@ -30,7 +30,17 @@
 class TPA6130A2 {
 public:
 	/*!
+	 @brief Initialize the local hardware. Actual device may be off still.
+	 @post Ready to call init()
+	 */
+	static void init_hw();
+
+	/*!
 	 @brief Initialize the device
+	 @pre init_hw() has been called
+	 @pre Power has been enabled for the analog circuitry
+	 
+	 @note This must be called after any loss of power on analog circuitry
 	 */
 	static void init();
 	

@@ -24,7 +24,7 @@
 bool TPA6130A2::enabled = false;
 uint8_t TPA6130A2::volume = 40;
 
-void TPA6130A2::init(){
+void TPA6130A2::init_hw(){
 	if(I2C == I2C0_BASE_PTR){
 		SIM_SCGC4 |= SIM_SCGC4_I2C0_MASK;
 	} else if(I2C == I2C1_BASE_PTR){
@@ -42,7 +42,10 @@ void TPA6130A2::init(){
 	         I2C_F_ICR(0x27); // / 480 = 100kHz
 
 	I2C->C1 = I2C_C1_IICEN_MASK;
+}
 
+
+void TPA6130A2::init(){
 	nSD.set();
 
 	// ENABLE IT

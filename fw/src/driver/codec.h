@@ -46,13 +46,24 @@ public:
 	static bool is_Src(Src val){
 		return (val == Src::MIC) || (val == Src::EXT) || (val == Src::MIX);
 	}
-	
+
 	/*!
-	 @brief Initialize all hardware and software elements for full-duplex stereo
+	 @brief Initialize all local hardware and software elements for full-duplex stereo
 	 audio
-	 
+
 	 This involves initializing GPIO pins, SPI, I2S, and DMA. I2S streaming by
 	 DMA will not begin until \ref start() is called.
+
+	 @post Ready to call init()
+	 */
+	static void init_hw();
+	
+	/*!
+	 @brief Configure the actual device
+	 @pre init_hw() has been called
+	 @pre Power has been enabled for the analog circuitry
+
+	 @note This must be called after any loss of power on analog circuitry
 	 */
 	static void init();
 	
