@@ -189,7 +189,7 @@ uint_8 USB_DESC_CONST USB_STR_2[USB_STR_2_SIZE+USB_STR_DESC_SIZE]
                                'E',0,
                                ' ',0,
                                'R',0,
-                               '1',0,
+                               '2',0,
                                'A',0
                           };
 
