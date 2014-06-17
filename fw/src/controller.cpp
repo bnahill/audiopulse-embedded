@@ -100,6 +100,12 @@ PT_THREAD(APulseController::pt_controller)(struct pt * pt){
 	//timer.reset_count(0);
 
 	while(true){
+		static constexpr float bins_f = 16.0;
+		static constexpr uint32_t bins = 16;
+
+		static_assert(sizeof(coeffs) / sizeof(*coeffs) >= bins,
+		              "Calibration coefficient storage insufficient");
+
 		PT_YIELD(pt);
 
 		// Is a test completed?
@@ -117,7 +123,7 @@ PT_THREAD(APulseController::pt_controller)(struct pt * pt){
 
 		// Is it time to calibrate the microphone?
 		if(teststate == TEST_CALIB_MIC){
-			Platform::power_en.set();
+			// Analog supply was already enabled in USB driver
 
 			// Delay for startup
 			timer.reset();
@@ -125,7 +131,6 @@ PT_THREAD(APulseController::pt_controller)(struct pt * pt){
 			PT_WAIT_UNTIL(pt, timer.get_ms() > 50);
 			timer.reset();
 
-			TPA6130A2::init();
 			TPA6130A2::enable();
 			AK4621::init();
 
@@ -135,11 +140,12 @@ PT_THREAD(APulseController::pt_controller)(struct pt * pt){
 			PT_WAIT_UNTIL(pt, timer.get_ms() > 50);
 			timer.reset();
 
-			for(i = 0; i < 16; i++){
-				// Calibrating 16 evenly spaced bins across 8kHz, aligned to lower bin
-				static uint32_t f = 500 * i + 500 - 16;
+			for(i = 0; i < bins; i++){
+				// Calibrating {bins} evenly spaced bins across 8kHz,
+				// aligned to lower bin
+				static uint32_t f = (8000 / bins) * i + (8000 / bins) - bins;
 				// Will land in this bin
-				static uint32_t bin = 16 * i + 7;
+				static uint32_t bin = bins * i + (bins / 2 - 1);
 
 				InputDSP::request_resetI();
 				WaveGen::request_resetI();
@@ -159,9 +165,13 @@ PT_THREAD(APulseController::pt_controller)(struct pt * pt){
 
 				PT_WAIT_UNTIL(pt, InputDSP::get_state() == InputDSP::ST_DONE);
 
-				coeffs[i] = (1.0 / 16.0)  / InputDSP::get_psd()[bin].asFloat();
+				// And this should be the only actualy floating-point math
+				coeffs[i] = (1.0 / bins_f) / InputDSP::get_psd()[bin].asFloat();
 			}
+
 			Platform::power_en.clear();
+			// TODO: Is this the correct transition?
+			teststate = TEST_DONE;
 		}
 
 		// Should we start a test?
@@ -172,7 +182,6 @@ PT_THREAD(APulseController::pt_controller)(struct pt * pt){
 			timer.start();
 			PT_WAIT_UNTIL(pt, timer.get_ms() > 50);
 
-			TPA6130A2::init();
 			TPA6130A2::enable();
 			AK4621::init();
 
@@ -355,6 +364,7 @@ void APulseController::handle_dataI ( uint8_t* data, uint8_t size ) {
 		break;
 	case CMD_CALIBRATE_MIC:
 		if(teststate == TEST_RESET)
+			Platform::power_en.set();
 			teststate = TEST_CALIB_MIC;
 		break;
 	case CMD_RESET_CALIB:

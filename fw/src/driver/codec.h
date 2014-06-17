@@ -219,6 +219,8 @@ protected:
 	static constexpr GPIOPin SDIN = {PTC_BASE_PTR, 5};
 	static constexpr GPIOPin::mux_t SDIN_mux = GPIOPin::MUX_ALT4;
 
+	static constexpr GPIOPin XTAL_12288 = {PTB_BASE_PTR, 18};
+
 	static constexpr GPIOPin PDN  = {PTC_BASE_PTR, 0};
 
 	static constexpr I2S_MemMapPtr I2S = I2S0_BASE_PTR;

@@ -31,6 +31,8 @@ void TPA6130A2::init_hw(){
 		SIM_SCGC4 |= SIM_SCGC4_I2C1_MASK;
 	}
 
+	// Disable by default
+	enabled = false;
 	nSD.clear();
 	nSD.configure(GPIOPin::MUX_GPIO);
 	nSD.make_output();
@@ -42,18 +44,6 @@ void TPA6130A2::init_hw(){
 	         I2C_F_ICR(0x27); // / 480 = 100kHz
 
 	I2C->C1 = I2C_C1_IICEN_MASK;
-}
-
-
-void TPA6130A2::init(){
-	nSD.set();
-
-	// ENABLE IT
-	write_reg(1, 0xC0);
-	// Half volume
-	write_reg(2, volume);
-
-	enable();
 }
 
 void TPA6130A2::enable(){

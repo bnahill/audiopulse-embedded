@@ -75,6 +75,10 @@ void AK4621::gpio_init(){
 	PDN.make_output();
 	PDN.clear();
 
+	XTAL_12288.clear();
+	XTAL_12288.make_output();
+	XTAL_12288.set_mux(GPIOPin::MUX_GPIO);
+
 	MOSI.configure(MOSI_mux);
 	SCLK.configure(SCLK_mux);
 	NCS.configure(NCS_mux);
