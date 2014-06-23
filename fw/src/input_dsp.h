@@ -202,37 +202,7 @@ protected:
 	/*!
 	 @brief Reset the whole state of the input DSP block
 	 */
-	static void do_reset(){
-		new_samples = nullptr;
-		num_samples = 0;
-		num_received = 0;
-		decimation_write_head = 0;
-		decimation_read_head = 0;
-		start_time_ms = -1;
-		window_count = 0;
-
-		// Decimated frame buffer really doesn't need to be zero'd...
-		for(auto &a : decimated_frame_buffer) a.setInternal(0);
-
-		// These ones are important though...
-		for(auto &a : mag_psd) a.setInternal(0);
-		for(auto &a : average_buffer) a.setInternal(0);
-
-		auto result =
-		arm_fir_decimate_init_q31(&decimate, decimate_fir_order, 3,
-	                             (q31_t*)decimate_coeffs,
-	                             (q31_t*)decimate_buffer,
-	                             decimate_block_size);
-
-		if(result != ARM_MATH_SUCCESS){
-			while(true);
-		}
-
-		is_reset = true;
-		pending_reset = false;
-
-		state = ST_RESET;
-	}
+	static void do_reset();
 	
 	static constexpr bool debug = true;
 };

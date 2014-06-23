@@ -158,6 +158,7 @@ public:
 	static inline void runI(){
 		if(state == ST_READY){
 			state = ST_STARTING;
+			AK4621::set_out_cb(get_samplesI);
 			bool have_active = false;
 			for(auto &gen : generators){
 				if(gen.type != Generator::GEN_OFF)

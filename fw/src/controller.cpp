@@ -183,7 +183,9 @@ PT_THREAD(APulseController::pt_controller)(struct pt * pt){
 			PT_WAIT_UNTIL(pt, timer.get_ms() > 50);
 
 			TPA6130A2::enable();
+			AK4621::init_hw();
 			AK4621::init();
+			AK4621::start();
 
 			// Delay for init
 			timer.reset();

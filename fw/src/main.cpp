@@ -45,11 +45,12 @@ void main(){
 
 	USB::hidClassInit();
 	
-	AK4621::start();
+	// AK4621::start();
 
 	Platform::leds[0].set();
 	
 	while(true){
+		Platform::power_en.set();
 		InputDSP::pt_dsp(&pt_dsp);
 		WaveGen::pt_wavegen(&pt_wavegen);
 		APulseController::pt_controller(&pt_controller);

@@ -36,8 +36,8 @@ void AK4621::init_hw() {
 	// Turn on
 	PDN.set();
 
-	cb_in = nullptr;
-	cb_out = nullptr;
+	//cb_in = nullptr;
+	//cb_out = nullptr;
 
 	__enable_irq();
 
@@ -61,6 +61,7 @@ void AK4621::init_hw() {
 
 
 void AK4621::init(){
+	PDN.set();
 	spi_write_reg(REG_RESET, 0x00); // Reset
 	spi_write_reg(REG_CLK_FORMAT, 0x40); // MCLK = 256fs, fs = 48k
 	//spi_write_reg(REG_DEEM_VOL, 0x02); // 48k de-emph

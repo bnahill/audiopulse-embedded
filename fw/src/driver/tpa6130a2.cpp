@@ -47,7 +47,7 @@ void TPA6130A2::init_hw(){
 }
 
 void TPA6130A2::enable(){
-	if(!enabled){
+	if(!enabled && false){
 		nSD.set();
 		// ENABLE IT
 		write_reg(1, 0xC0);

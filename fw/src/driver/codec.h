@@ -221,7 +221,7 @@ protected:
 
 	static constexpr GPIOPin XTAL_12288 = {PTB_BASE_PTR, 18};
 
-	static constexpr GPIOPin PDN  = {PTC_BASE_PTR, 0};
+	static constexpr GPIOPin PDN  = {PTB_BASE_PTR, 3};
 
 	static constexpr I2S_MemMapPtr I2S = I2S0_BASE_PTR;
 	static constexpr uint32_t I2S_DMAMUX_SOURCE_RX = 14; // p77 of RM
