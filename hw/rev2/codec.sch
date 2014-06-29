@@ -37,8 +37,8 @@ $Descr A 11000 8500
 encoding utf-8
 Sheet 3 6
 Title "Android DPOAE Interface"
-Date "6 may 2014"
-Rev "2a"
+Date "29 jun 2014"
+Rev "2b"
 Comp "Sana AudioPulse"
 Comment1 "Ben Nahill <bnahill@gmail.com>"
 Comment2 ""

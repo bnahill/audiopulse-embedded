@@ -37,8 +37,8 @@ $Descr A4 11693 8268
 encoding utf-8
 Sheet 5 6
 Title ""
-Date "6 may 2014"
-Rev "2a"
+Date "29 jun 2014"
+Rev "2b"
 Comp ""
 Comment1 ""
 Comment2 ""
@@ -217,7 +217,7 @@ L IND L1
 U 1 1 53512D6C
 P 3900 2150
 F 0 "L1" H 3970 2115 50  0000 L TNN
-F 1 "1.5u" H 3900 2205 30  0000 C BNN
+F 1 "MLZ2012A1R5WT000" H 3900 2205 30  0000 C BNN
 F 2 "~" H 3900 2150 60  0000 C CNN
 F 3 "~" H 3900 2150 60  0000 C CNN
 	1    3900 2150
@@ -436,7 +436,7 @@ Wire Wire Line
 Wire Wire Line
 	6350 4450 6900 4450
 Wire Wire Line
-	7800 4350 7800 4250
+	7800 4050 7800 4350
 Wire Wire Line
 	7500 4250 8400 4250
 Wire Wire Line
@@ -594,4 +594,29 @@ $EndComp
 Wire Wire Line
 	10150 5150 10150 5400
 Connection ~ 9800 5150
+$Comp
+L TP TP5
+U 1 1 53AF6D72
+P 7800 3950
+F 0 "TP5" H 7800 3850 60  0000 C CNN
+F 1 "TP" H 7800 4050 60  0000 C CNN
+F 2 "~" H 7800 3950 60  0000 C CNN
+F 3 "~" H 7800 3950 60  0000 C CNN
+	1    7800 3950
+	0    -1   -1   0   
+$EndComp
+$Comp
+L TP TP6
+U 1 1 53AF7518
+P 6550 3950
+F 0 "TP6" H 6550 3850 60  0000 C CNN
+F 1 "TP" H 6550 4050 60  0000 C CNN
+F 2 "~" H 6550 3950 60  0000 C CNN
+F 3 "~" H 6550 3950 60  0000 C CNN
+	1    6550 3950
+	0    -1   -1   0   
+$EndComp
+Wire Wire Line
+	6550 4050 6550 4250
+Connection ~ 6550 4250
 $EndSCHEMATC

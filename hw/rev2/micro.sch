@@ -37,8 +37,8 @@ $Descr A 11000 8500
 encoding utf-8
 Sheet 4 6
 Title "Android DPOAE Interface"
-Date "6 may 2014"
-Rev "2a"
+Date "29 jun 2014"
+Rev "2b"
 Comp "Sana AudioPulse"
 Comment1 "Ben Nahill <bnahill@gmail.com>"
 Comment2 ""
@@ -268,17 +268,6 @@ F 3 "" H 4900 1650 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L TP TP6
-U 1 1 5251B77F
-P 8200 3000
-F 0 "TP6" H 8200 2900 60  0000 C CNN
-F 1 "TP_PTB16" H 8200 3100 60  0000 C CNN
-F 2 "~" H 8200 3000 60  0000 C CNN
-F 3 "~" H 8200 3000 60  0000 C CNN
-	1    8200 3000
-	1    0    0    -1  
-$EndComp
-$Comp
 L RES R23
 U 1 1 5251B82C
 P 8300 5850
@@ -298,17 +287,6 @@ F 1 "DGND" H 8300 6580 40  0000 C CNN
 F 2 "" H 8300 6650 60  0000 C CNN
 F 3 "" H 8300 6650 60  0000 C CNN
 	1    8300 6650
-	1    0    0    -1  
-$EndComp
-$Comp
-L TP TP5
-U 1 1 5251B955
-P 7800 3100
-F 0 "TP5" H 7800 3000 60  0000 C CNN
-F 1 "TP_PTB3" H 7800 3200 60  0000 C CNN
-F 2 "~" H 7800 3100 60  0000 C CNN
-F 3 "~" H 7800 3100 60  0000 C CNN
-	1    7800 3100
 	1    0    0    -1  
 $EndComp
 $Comp
@@ -525,10 +503,6 @@ Wire Wire Line
 Wire Wire Line
 	6400 6000 5950 6000
 Wire Wire Line
-	8100 3000 5950 3000
-Wire Wire Line
-	5950 3100 7700 3100
-Wire Wire Line
 	3850 3700 3850 3600
 Connection ~ 3850 3700
 Wire Wire Line
@@ -537,10 +511,6 @@ Wire Wire Line
 	8500 6000 8500 6100
 Wire Wire Line
 	8500 6650 8500 6500
-Text Label 6900 3100 0    60   ~ 0
-UART_TX
-Text Label 6900 3000 0    60   ~ 0
-UART_RX
 Text HLabel 7250 2600 2    60   BiDi ~ 0
 I2C_SCL
 Text HLabel 7250 2700 2    60   BiDi ~ 0

@@ -1,4 +1,4 @@
-Cmp-Mod V01 Created by CvPcb (2013-may-18)-stable date = Tue 06 May 2014 06:49:05 PM EDT
+Cmp-Mod V01 Created by CvPcb (2013-may-18)-stable date = Tue 24 Jun 2014 10:04:10 AM EDT
 
 BeginCmp
 TimeStamp = /535741F7;
@@ -102,13 +102,6 @@ BeginCmp
 TimeStamp = /523B0E12/524E3E21;
 Reference = C15;
 ValeurCmp = 0.1u 6.3V;
-IdModule  = SMD0402;
-EndCmp
-
-BeginCmp
-TimeStamp = /523B0E12/534E8B5E;
-Reference = C16;
-ValeurCmp = 1u;
 IdModule  = SMD0402;
 EndCmp
 
@@ -498,6 +491,13 @@ IdModule  = SMD0402;
 EndCmp
 
 BeginCmp
+TimeStamp = /523BC94C/53A98FC3;
+Reference = C72;
+ValeurCmp = 1u;
+IdModule  = SMD0402;
+EndCmp
+
+BeginCmp
 TimeStamp = /523BF424/53645218;
 Reference = D1;
 ValeurCmp = LTST-C19FD1WT;
@@ -570,7 +570,7 @@ EndCmp
 BeginCmp
 TimeStamp = /524EE3EB/53512D6C;
 Reference = L1;
-ValeurCmp = 1.5u;
+ValeurCmp = MLZ2012A1R5WT000;
 IdModule  = SMD0805;
 EndCmp
 

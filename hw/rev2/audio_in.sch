@@ -37,8 +37,8 @@ $Descr A 11000 8500
 encoding utf-8
 Sheet 2 6
 Title "Android DPOAE Interface"
-Date "6 may 2014"
-Rev "2a"
+Date "29 jun 2014"
+Rev "2b"
 Comp "Sana AudioPulse"
 Comment1 "Ben Nahill <bnahill@gmail.com>"
 Comment2 ""
@@ -636,17 +636,6 @@ F 3 "~" H 2700 3000 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L CAP C16
-U 1 1 534E8B5E
-P 6950 3550
-F 0 "C16" H 6970 3520 50  0000 L TNN
-F 1 "1u" H 6975 3570 30  0000 L BNN
-F 2 "~" H 6950 3550 60  0000 C CNN
-F 3 "~" H 6950 3550 60  0000 C CNN
-	1    6950 3550
-	1    0    0    -1  
-$EndComp
-$Comp
 L RES R15
 U 1 1 534E8F70
 P 3600 3400
@@ -772,13 +761,8 @@ Wire Wire Line
 Connection ~ 7500 3950
 Wire Wire Line
 	7700 3750 7500 3750
-Connection ~ 7700 3550
-Wire Wire Line
-	7700 3550 7700 3450
 Wire Wire Line
 	3600 3150 3600 3250
-Wire Wire Line
-	6650 3550 6850 3550
 Wire Wire Line
 	2800 3000 3150 3000
 Wire Wire Line
@@ -961,7 +945,7 @@ Wire Wire Line
 Wire Wire Line
 	6050 3650 6150 3650
 Wire Wire Line
-	7050 3550 8200 3550
+	6650 3550 8200 3550
 Wire Wire Line
 	6050 3450 6050 3250
 Wire Wire Line
