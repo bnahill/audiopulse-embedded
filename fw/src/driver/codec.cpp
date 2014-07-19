@@ -137,6 +137,8 @@ void AK4621::i2s_init(){
 		// Just disable MCLK generation...
 		I2S->MDR = 0;
 		I2S->MCR = 0;
+		// And enable the external oscillator
+		XTAL_12288.set();
 	} else {
 		I2S->MDR =
 				I2S_MDR_FRACT(mclk_gen_frac - 1) |
@@ -193,6 +195,7 @@ void AK4621::i2s_init(){
 		I2S_RCR5_FBT(word_width - 1) |
 		I2S_RCR5_WNW(word_width - 1) |  // Has to be >= W0W
 		I2S_RCR5_W0W(word_width - 1);   // One 32-bit word
+
 	
 	////////////////
 	/// TRANSMITTER

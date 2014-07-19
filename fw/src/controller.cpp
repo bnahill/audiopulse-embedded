@@ -248,7 +248,7 @@ uint8_t * APulseController::get_response ( uint16_t& size ) {
 		size = 64;
 		return p.data;
 	case ST_DUMPWAVE:
-		if(waveform_dump.has_data()){
+		if(do_buffer_dumps and waveform_dump.has_data()){
 			waveform_dump.get_frame_copy(p.data, 64);
 		} else {
 			size = 0;

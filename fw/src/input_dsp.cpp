@@ -260,7 +260,9 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 					);
 				}
 
-				APulseController::waveform_dump.copy_data((uint8_t const *)transform_buffer);
+				if(APulseController::do_buffer_dumps){
+					APulseController::waveform_dump.copy_data((uint8_t const *)transform_buffer);
+				}
 
 				num_decimated -= (transform_len - overlap);
 				decimation_read_head = ( decimation_read_head + (transform_len - overlap)) &
