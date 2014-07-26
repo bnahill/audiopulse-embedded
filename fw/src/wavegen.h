@@ -199,7 +199,7 @@ public:
 	}
 protected:
 	static constexpr uint32_t buffer_size = AK4621::out_buffer_size;
-	static constexpr uint32_t wavetable_len = 4096;
+	static constexpr uint32_t wavetable_len = 8192;
 	static const sFractional<0,31> wavetable[wavetable_len];
 	static constexpr uint32_t fs = AK4621::fs;
 	

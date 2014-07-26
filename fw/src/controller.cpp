@@ -33,6 +33,7 @@ decltype(APulseController::teststate) APulseController::teststate = TEST_RESET;
 constexpr TimerPIT APulseController::timer;
 InputDSP::powerFractional APulseController::coeffs[16];
 
+__attribute__((section(".m_data2")))
 InputDSP::sampleFractional APulseController::dump_buffer[InputDSP::transform_len];
 
 BufferDump APulseController::waveform_dump(reinterpret_cast<uint8_t const *>(dump_buffer), sizeof(dump_buffer));
