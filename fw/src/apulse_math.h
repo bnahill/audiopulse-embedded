@@ -104,12 +104,12 @@ public:
 		i(val.normalize<i_bits, f_bits>().i){}
 	constexpr uFractional(const uFractional<i_bits, f_bits> &val) :
 		i(val.i){}
-	constexpr uFractional(const internal_t &val) :
-		i(val){}
+	//constexpr uFractional(const internal_t &val) :
+	//	i(val){}
 	constexpr uFractional(const double &val) :
-		i(val * (1 << f_bits)){}
-	constexpr uFractional(const float &val) :
-		i(val * (1 << f_bits)){}
+		i(val * ((typename IntLength<f_bits + 1>::unsigned_t)1 << f_bits)){}
+	//constexpr uFractional(const float &val) :
+	//	i(val * (1 << f_bits)){}
 	constexpr double asDouble() const{
 		return ((double)i) / (double)((1 << f_bits) - 1);
 	}
@@ -186,12 +186,13 @@ public:
 	template<size_t mi_bits, size_t mf_bits>
 	constexpr inline sFractional(const sFractional<mi_bits, mf_bits> &val) :
 		i(val.normalize<i_bits, f_bits>().i){}
-	constexpr inline sFractional(const internal_t &val) :
-			 i(val){}
+	static constexpr inline sFractional<i_bits, f_bits> fromInternal(const internal_t &val){
+		return *reinterpret_cast< const sFractional<i_bits, f_bits> *>(&val);
+	}
 	constexpr sFractional(const double &val) :
-		i(val * ((1 << f_bits) - 1)){}
-	constexpr sFractional(const float &val) :
-		i(val * (1 << f_bits)){}
+		i(val * ( (typename IntLength<i_bits + f_bits + 1>::unsigned_t)1 << f_bits) - 1){}
+	//constexpr sFractional(const float &val) :
+	//	i(val * (1 << f_bits)){}
 //	constexpr sFractional(const int &val) :
 //		i(((signed int)val) << f_bits){}
 	constexpr double asDouble() const {
@@ -259,6 +260,10 @@ public:
 	template<size_t mi_bits, size_t mf_bits>
 	constexpr sFractional<max(mi_bits, i_bits), max(mf_bits, f_bits)> operator - (sFractional<mi_bits, mf_bits> const &m) const {
 		return i - m.i;
+	}
+
+	constexpr sFractional<i_bits, f_bits> operator-() const {
+		return sFractional<i_bits, f_bits>::fromInternal(-i);
 	}
 	
 	

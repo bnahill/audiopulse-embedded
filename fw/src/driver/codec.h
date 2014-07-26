@@ -33,7 +33,7 @@
 class AK4621 {
 public:
 	//! A single audio sample
-	typedef int32_t sample_t;
+	typedef sFractional<0,31> sample_t;
 	//! A callback for handling either unused or full data buffers
 	typedef void (*audio_cb_t)(sample_t *, size_t);
 
@@ -145,8 +145,8 @@ public:
 	 allowing for the first assignment to occur after initialization.
 	 */
 	static void set_source(Src new_source,
-	                       sFractional<1,31> new_mix_mic = 0.0,
-	                       sFractional<1,31> new_mix_ext = 0.0){
+	                       sFractional<0,31> new_mix_mic = 0.0,
+	                       sFractional<0,31> new_mix_ext = 0.0){
 		AK4621::source = new_source;
 		switch(new_source){
 		case Src::MIC:

@@ -37,7 +37,7 @@ public:
 		MUX_ALT7   = 7
 	} mux_t;
 
-	constexpr GPIOPin(GPIO_MemMapPtr const gpio, uint32_t const offset) :
+	constexpr GPIOPin(GPIO_MemMapPtr gpio, uint32_t offset) :
 		gpio(gpio),
 		offset(offset)
 	{}

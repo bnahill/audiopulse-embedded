@@ -33,7 +33,7 @@
 class Generator {
 public:
 	Generator() :
-		type(GEN_OFF)
+		type(GEN_OFF), gain(0)
 		{}
 	typedef enum {
 		GEN_OFF = 0,
@@ -51,7 +51,7 @@ public:
 	uint16_t theta;  //!< Current phase in wavetable
 	uint16_t w_current; //!< Theta for angular rate in chirp, might not use
 	uint8_t ch;      //!< Which channel is it?
-	AK4621::sample_t gain;   //!< Gain applied to each full-scale sample
+	uFractional<0,32> gain;   //!< Gain applied to each full-scale sample
 
 	inline operator bool() const {return type != GEN_OFF;}
 	inline bool operator !() const {return type == GEN_OFF;}
@@ -59,7 +59,7 @@ public:
 
 class WaveGen {
 public:
-	typedef AK4621::sample_t sample_t;
+	typedef sFractional<0,31> sample_t;
 
 	static inline void request_resetI(){
 		pending_reset = true;
@@ -200,7 +200,7 @@ public:
 protected:
 	static constexpr uint32_t buffer_size = AK4621::out_buffer_size;
 	static constexpr uint32_t wavetable_len = 4096;
-	static const sample_t wavetable[wavetable_len];
+	static const sFractional<0,31> wavetable[wavetable_len];
 	static constexpr uint32_t fs = AK4621::fs;
 	
 	static bool silent;
@@ -237,17 +237,17 @@ protected:
 		// Just some temporary storage
 		sample_t s;
 		uint32_t theta = generator.theta;
-		q31_t gain = generator.gain;
+		uFractional<0,32> gain = generator.gain;
 		for(uint32_t i = 0; i < buffer_size / 2; i++){
 			s = wavetable[theta & (wavetable_len - 1)];
 			// Negate for second half-wave
 			if(theta & wavetable_len)
 				s = -s;
 			
-			s = __SSAT((((q63_t) s * gain) >> 32),31);
+			s = s * gain;//__SSAT((((q63_t) s * gain) >> 32),31);
 			
 			// Add this sample to the output
-			*dst += (get_speaker_gain(generator.f1)*(sFractional<0,31>)s).normalize<0,31>().i;
+			*dst = *dst + get_speaker_gain(generator.f1) * s;
 			//*dst += s;
 			dst += 2;
 			
