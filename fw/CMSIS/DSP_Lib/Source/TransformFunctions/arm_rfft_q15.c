@@ -1,8 +1,8 @@
 /* ----------------------------------------------------------------------    
-* Copyright (C) 2010-2013 ARM Limited. All rights reserved.    
+* Copyright (C) 2010-2014 ARM Limited. All rights reserved.    
 *    
-* $Date:        17. January 2013  
-* $Revision: 	V1.4.1  
+* $Date:        12. March 2014  
+* $Revision: 	V1.4.3  
 *    
 * Project: 	    CMSIS DSP Library    
 * Title:	    arm_rfft_q15.c    
@@ -108,6 +108,7 @@ void arm_rfft_q15(
   q15_t * pDst)
 {
   const arm_cfft_radix4_instance_q15 *S_CFFT = S->pCfft;
+  uint32_t i;
 
   /* Calculation of RIFFT of input */
   if(S->ifftFlagR == 1u)
@@ -126,6 +127,11 @@ void arm_rfft_q15(
     {
       arm_bitreversal_q15(pDst, S_CFFT->fftLen,
                           S_CFFT->bitRevFactor, S_CFFT->pBitRevTable);
+    }
+    
+    for(i=0;i<S->fftLenReal;i++)
+    {
+      pDst[i] = pDst[i] << 1;
     }
   }
   else
@@ -221,7 +227,7 @@ void arm_split_rfft_q15(
 
     /* pSrc[2 * n - 2 * i] * pBTable[2 * i] +    
        pSrc[2 * n - 2 * i + 1] * pBTable[2 * i + 1]) */
-    outR = __SMLAD(*__SIMD32(pSrc2), *__SIMD32(pCoefB), outR) >> 15u;
+    outR = __SMLAD(*__SIMD32(pSrc2), *__SIMD32(pCoefB), outR) >> 16u;
 
     /* pIn[2 * n - 2 * i] * pBTable[2 * i + 1] -    
        pIn[2 * n - 2 * i + 1] * pBTable[2 * i] */
@@ -241,11 +247,11 @@ void arm_split_rfft_q15(
 
     /* write output */
     pDst[2u * i] = (q15_t) outR;
-    pDst[(2u * i) + 1u] = outI >> 15u;
+    pDst[(2u * i) + 1u] = outI >> 16u;
 
     /* write complex conjugate output */
     pDst[(4u * fftLen) - (2u * i)] = (q15_t) outR;
-    pDst[((4u * fftLen) - (2u * i)) + 1u] = -(outI >> 15u);
+    pDst[((4u * fftLen) - (2u * i)) + 1u] = -(outI >> 16u);
 
     /* update coefficient pointer */
     pCoefB = pCoefB + (2u * modifier);
@@ -255,10 +261,10 @@ void arm_split_rfft_q15(
 
   }
 
-  pDst[2u * fftLen] = pSrc[0] - pSrc[1];
+  pDst[2u * fftLen] = (pSrc[0] - pSrc[1]) >> 1;
   pDst[(2u * fftLen) + 1u] = 0;
 
-  pDst[0] = pSrc[0] + pSrc[1];
+  pDst[0] = (pSrc[0] + pSrc[1]) >> 1;
   pDst[1] = 0;
 
 
@@ -279,7 +285,7 @@ void arm_split_rfft_q15(
     outR = *pSrc1 * *pCoefA;
     outR = outR - (*(pSrc1 + 1) * *(pCoefA + 1));
     outR = outR + (*pSrc2 * *pCoefB);
-    outR = (outR + (*(pSrc2 + 1) * *(pCoefB + 1))) >> 15;
+    outR = (outR + (*(pSrc2 + 1) * *(pCoefB + 1))) >> 16;
 
 
     /* outI = (pIn[2 * i + 1] * pATable[2 * i] + pIn[2 * i] * pATable[2 * i + 1] +    
@@ -298,11 +304,11 @@ void arm_split_rfft_q15(
 
     /* write output */
     pDst[2u * i] = (q15_t) outR;
-    pDst[(2u * i) + 1u] = outI >> 15u;
+    pDst[(2u * i) + 1u] = outI >> 16u;
 
     /* write complex conjugate output */
     pDst[(4u * fftLen) - (2u * i)] = (q15_t) outR;
-    pDst[((4u * fftLen) - (2u * i)) + 1u] = -(outI >> 15u);
+    pDst[((4u * fftLen) - (2u * i)) + 1u] = -(outI >> 16u);
 
     /* update coefficient pointer */
     pCoefB = pCoefB + (2u * modifier);
@@ -312,10 +318,10 @@ void arm_split_rfft_q15(
 
   }
 
-  pDst[2u * fftLen] = pSrc[0] - pSrc[1];
+  pDst[2u * fftLen] = (pSrc[0] - pSrc[1]) >> 1;
   pDst[(2u * fftLen) + 1u] = 0;
 
-  pDst[0] = pSrc[0] + pSrc[1];
+  pDst[0] = (pSrc[0] + pSrc[1]) >> 1;
   pDst[1] = 0;
 
 #endif /* #ifndef ARM_MATH_CM0_FAMILY */
@@ -391,7 +397,7 @@ void arm_split_rifft_q15(
 
     /* pIn[2 * i] * pATable[2 * i] + pIn[2 * i + 1] * pATable[2 * i + 1] +    
        pIn[2 * n - 2 * i] * pBTable[2 * i] */
-    outR = __SMLAD(*__SIMD32(pSrc1), *__SIMD32(pCoefA), outR) >> 15u;
+    outR = __SMLAD(*__SIMD32(pSrc1), *__SIMD32(pCoefA), outR) >> 16u;
 
     /*    
        -pIn[2 * n - 2 * i] * pBTable[2 * i + 1] +    
@@ -413,11 +419,11 @@ void arm_split_rifft_q15(
 
 #ifndef ARM_MATH_BIG_ENDIAN
 
-    *__SIMD32(pDst1)++ = __PKHBT(outR, (outI >> 15u), 16);
+    *__SIMD32(pDst1)++ = __PKHBT(outR, (outI >> 16u), 16);
 
 #else
 
-    *__SIMD32(pDst1)++ = __PKHBT((outI >> 15u), outR, 16);
+    *__SIMD32(pDst1)++ = __PKHBT((outI >> 16u), outR, 16);
 
 #endif /*      #ifndef ARM_MATH_BIG_ENDIAN     */
 
@@ -448,7 +454,7 @@ void arm_split_rifft_q15(
     outR = *pSrc2 * *pCoefB;
     outR = outR - (*(pSrc2 + 1) * *(pCoefB + 1));
     outR = outR + (*pSrc1 * *pCoefA);
-    outR = (outR + (*(pSrc1 + 1) * *(pCoefA + 1))) >> 15;
+    outR = (outR + (*(pSrc1 + 1) * *(pCoefA + 1))) >> 16;
 
     /*   
        outI = (pIn[2 * i + 1] * pATable[2 * i] - pIn[2 * i] * pATable[2 * i + 1] -   
@@ -467,7 +473,7 @@ void arm_split_rifft_q15(
 
     /* write output */
     *pDst1++ = (q15_t) outR;
-    *pDst1++ = (q15_t) (outI >> 15);
+    *pDst1++ = (q15_t) (outI >> 16);
 
     /* update coefficient pointer */
     pCoefB = pCoefB + (2u * modifier);

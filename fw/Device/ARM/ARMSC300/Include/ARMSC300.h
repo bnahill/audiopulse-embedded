@@ -2,13 +2,13 @@
  * @file     ARMSC300.h
  * @brief    CMSIS Core Peripheral Access Layer Header File for
  *           ARMSC300 Device Series
- * @version  V1.08
- * @date     23. November 2012
+ * @version  V2.00
+ * @date     17. Februar 2014
  *
  * @note
  *
  ******************************************************************************/
-/* Copyright (c) 2011 - 2012 ARM LIMITED
+/* Copyright (c) 2011 - 2014 ARM LIMITED
 
    All rights reserved.
    Redistribution and use in source and binary forms, with or without
@@ -116,6 +116,8 @@ typedef enum IRQn
 /* anonymous unions are enabled by default */
 #elif defined(__TASKING__)
   #pragma warning 586
+#elif defined ( __CSMC__ )		/* Cosmic */
+/* anonymous unions are enabled by default */
 #else
   #warning Not supported compiler type
 #endif
@@ -219,6 +221,8 @@ typedef struct
   /* anonymous unions are enabled by default */
 #elif defined(__TASKING__)
   #pragma warning restore
+#elif defined ( __CSMC__ )		/* Cosmic */
+/* anonymous unions are enabled by default */
 #else
   #warning Not supported compiler type
 #endif

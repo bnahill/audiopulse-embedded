@@ -1,8 +1,8 @@
 /* ----------------------------------------------------------------------    
-* Copyright (C) 2010-2013 ARM Limited. All rights reserved.    
+* Copyright (C) 2010-2014 ARM Limited. All rights reserved.    
 *    
-* $Date:        17. January 2013  
-* $Revision: 	V1.4.1  
+* $Date:        12. March 2014  
+* $Revision: 	V1.4.3  
 *    
 * Project: 	    CMSIS DSP Library    
 * Title:	    arm_cfft_f32.c   
@@ -89,7 +89,7 @@ extern void arm_bitreversal_32(
 * inverse transform includes a scale of <code>1/fftLen</code> as part of the
 * calculation and this matches the textbook definition of the inverse FFT.
 * \par
-* Preinitialized data structures containing twiddle factors and bit reversal
+* Pre-initialized data structures containing twiddle factors and bit reversal
 * tables are provided and defined in <code>arm_const_structs.h</code>.  Include 
 * this header in your function and then pass one of the constant structures as 
 * an argument to arm_cfft_f32.  For example:
@@ -107,38 +107,39 @@ extern void arm_bitreversal_32(
 * than the new functions.
 * \par
 * An example of initialization of the constants for the arm_cfft_f32 function follows:
-* \par
+* \code
 * const static arm_cfft_instance_f32 *S;
 * ...
-*		switch (length) {
-*    		case 16:
-*    			S = & arm_cfft_sR_f32_len16;
-*    		break;
-*    		case 32:
-*    			S = & arm_cfft_sR_f32_len32;
-*    		break;
-*			case 64:
-*    			S = & arm_cfft_sR_f32_len64;
-*    		break;
-*    		case 128:
-*    			S = & arm_cfft_sR_f32_len128;
-*    		break;
-*    		case 256:
-*    			S = & arm_cfft_sR_f32_len256;
-*    		break;
-*    		case 512:
-*    			S = & arm_cfft_sR_f32_len512;
-*    		break;
-*    		case 1024:
-*    			S = & arm_cfft_sR_f32_len1024;
-*    		break;
-*    		case 2048:
-*    			S = & arm_cfft_sR_f32_len2048;
-*    		break;
-*    		case 4096:
-*    			S = & arm_cfft_sR_f32_len4096;
-*    		break;
-*			}
+*   switch (length) {
+*     case 16:
+*       S = &arm_cfft_sR_f32_len16;
+*       break;
+*     case 32:
+*       S = &arm_cfft_sR_f32_len32;
+*       break;
+*     case 64:
+*       S = &arm_cfft_sR_f32_len64;
+*       break;
+*     case 128:
+*       S = &arm_cfft_sR_f32_len128;
+*       break;
+*     case 256:
+*       S = &arm_cfft_sR_f32_len256;
+*       break;
+*     case 512:
+*       S = &arm_cfft_sR_f32_len512;
+*       break;
+*     case 1024:
+*       S = &arm_cfft_sR_f32_len1024;
+*       break;
+*     case 2048:
+*       S = &arm_cfft_sR_f32_len2048;
+*       break;
+*     case 4096:
+*       S = &arm_cfft_sR_f32_len4096;
+*       break;
+*   }
+* \endcode
 * \par Q15 and Q31
 * The library provides radix-2 and radix-4 FFT algorithms for fixed-point data.  The
 * radix-2 algorithm supports lengths of [16, 32, 64, ..., 4096].  The radix-4
@@ -614,3 +615,6 @@ void arm_cfft_f32(
   }
 }
 
+/**    
+* @} end of ComplexFFT group    
+*/

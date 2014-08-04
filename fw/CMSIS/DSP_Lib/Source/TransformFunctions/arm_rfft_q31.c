@@ -1,8 +1,8 @@
 /* ----------------------------------------------------------------------    
-* Copyright (C) 2010-2013 ARM Limited. All rights reserved.    
+* Copyright (C) 2010-2014 ARM Limited. All rights reserved.    
 *    
-* $Date:        17. January 2013  
-* $Revision: 	V1.4.1  
+* $Date:        12. March 2014  
+* $Revision: 	V1.4.3  
 *    
 * Project: 	    CMSIS DSP Library    
 * Title:	    arm_rfft_q31.c    
@@ -109,6 +109,7 @@ void arm_rfft_q31(
   q31_t * pDst)
 {
   const arm_cfft_radix4_instance_q31 *S_CFFT = S->pCfft;
+  uint32_t i;
 
   /* Calculation of RIFFT of input */
   if(S->ifftFlagR == 1u)
@@ -126,6 +127,11 @@ void arm_rfft_q31(
     {
       arm_bitreversal_q31(pDst, S_CFFT->fftLen,
                           S_CFFT->bitRevFactor, S_CFFT->pBitRevTable);
+    }
+    
+    for(i=0;i<S->fftLenReal;i++)
+    {
+      pDst[i] = pDst[i] << 1;
     }
   }
   else
@@ -234,12 +240,12 @@ void arm_split_rfft_q31(
       (q31_t) ((((q63_t) outI << 32) + ((q63_t) * pIn2-- * (-CoefA2))) >> 32);
 
     /* write output */
-    *pOut1++ = (outR << 1u);
-    *pOut1++ = (outI << 1u);
+    *pOut1++ = outR;
+    *pOut1++ = outI;
 
     /* write complex conjugate output */
-    *pOut2-- = -(outI << 1u);
-    *pOut2-- = (outR << 1u);
+    *pOut2-- = -outI;
+    *pOut2-- = outR;
 
     /* update coefficient pointer */
     pCoefB = pCoefB + (modifier * 2u);
@@ -249,10 +255,10 @@ void arm_split_rfft_q31(
 
   }
 
-  pDst[2u * fftLen] = pSrc[0] - pSrc[1];
+  pDst[2u * fftLen] = (pSrc[0] - pSrc[1]) >> 1;
   pDst[(2u * fftLen) + 1u] = 0;
 
-  pDst[0] = pSrc[0] + pSrc[1];
+  pDst[0] = (pSrc[0] + pSrc[1]) >> 1;
   pDst[1] = 0;
 
 }
@@ -333,8 +339,8 @@ void arm_split_rifft_q31(
       (q31_t) ((((q63_t) outI << 32) + ((q63_t) * pIn2-- * (CoefA2))) >> 32);
 
     /* write output */
-    *pDst++ = (outR << 1u);
-    *pDst++ = (outI << 1u);
+    *pDst++ = outR;
+    *pDst++ = outI;
 
     /* update coefficient pointer */
     pCoefB = pCoefB + (modifier * 2u);

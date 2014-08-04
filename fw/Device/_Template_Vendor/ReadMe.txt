@@ -1,8 +1,8 @@
 /*****************************************************************************
  * @file     ReadMe.txt
  * @brief    Explanation how to use the Device folder and template files 
- * @version  V3.01
- * @date     06. March 2012
+ * @version  V3.02
+ * @date     11. June 2014
  *****************************************************************************/
 
 Following directory structure and template files are given:
@@ -19,11 +19,9 @@ Following directory structure and template files are given:
                   +- system_<Device>.c                    system source file 
                   |
                   +-- ARM                                 ARM RVCT toolchain
-                  |    +- startup_<Device>.s              startup file for ARMCC
+                  |    +- startup_<Device>.s              ASM startup file for ARMCC
                   |
                   +-- GCC                                 ARM GNU toolchain
-                  |
-                  +-- G++                                 CodeSourcey GNU toolchain
                   |
                   +-- IAR                                 IAR toolchain
 

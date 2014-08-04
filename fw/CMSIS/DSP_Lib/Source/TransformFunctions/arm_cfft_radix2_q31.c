@@ -1,8 +1,8 @@
 /* ----------------------------------------------------------------------   
-* Copyright (C) 2010-2013 ARM Limited. All rights reserved.   
+* Copyright (C) 2010-2014 ARM Limited. All rights reserved.   
 *   
-* $Date:        17. January 2013  
-* $Revision: 	V1.4.1  
+* $Date:        12. March 2014  
+* $Revision: 	V1.4.3  
 *   
 * Project: 	    CMSIS DSP Library   
 * Title:	    arm_cfft_radix2_q31.c   
@@ -126,12 +126,12 @@ uint16_t twidCoefModifier)
       ia = ia + twidCoefModifier;
 
       l = i + n2;
-      xt = (pSrc[2 * i] >> 2u) - (pSrc[2 * l] >> 2u);
-      pSrc[2 * i] = ((pSrc[2 * i] >> 2u) + (pSrc[2 * l] >> 2u)) >> 1u;
+      xt = (pSrc[2 * i] >> 1u) - (pSrc[2 * l] >> 1u);
+      pSrc[2 * i] = ((pSrc[2 * i] >> 1u) + (pSrc[2 * l] >> 1u)) >> 1u;
       
-      yt = (pSrc[2 * i + 1] >> 2u) - (pSrc[2 * l + 1] >> 2u);
+      yt = (pSrc[2 * i + 1] >> 1u) - (pSrc[2 * l + 1] >> 1u);
       pSrc[2 * i + 1] =
-        ((pSrc[2 * l + 1] >> 2u) + (pSrc[2 * i + 1] >> 2u)) >> 1u;
+        ((pSrc[2 * l + 1] >> 1u) + (pSrc[2 * i + 1] >> 1u)) >> 1u;
 
       mult_32x32_keep32_R(p0, xt, cosVal);
       mult_32x32_keep32_R(p1, yt, cosVal);
@@ -254,12 +254,12 @@ uint16_t twidCoefModifier)
       ia = ia + twidCoefModifier;
 
       l = i + n2;
-      xt = (pSrc[2 * i] >> 2u) - (pSrc[2 * l] >> 2u);
-      pSrc[2 * i] = ((pSrc[2 * i] >> 2u) + (pSrc[2 * l] >> 2u)) >> 1u;
+      xt = (pSrc[2 * i] >> 1u) - (pSrc[2 * l] >> 1u);
+      pSrc[2 * i] = ((pSrc[2 * i] >> 1u) + (pSrc[2 * l] >> 1u)) >> 1u;
       
-      yt = (pSrc[2 * i + 1] >> 2u) - (pSrc[2 * l + 1] >> 2u);
+      yt = (pSrc[2 * i + 1] >> 1u) - (pSrc[2 * l + 1] >> 1u);
       pSrc[2 * i + 1] =
-        ((pSrc[2 * l + 1] >> 2u) + (pSrc[2 * i + 1] >> 2u)) >> 1u;
+        ((pSrc[2 * l + 1] >> 1u) + (pSrc[2 * i + 1] >> 1u)) >> 1u;
 
       mult_32x32_keep32_R(p0, xt, cosVal);
       mult_32x32_keep32_R(p1, yt, cosVal);

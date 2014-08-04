@@ -11,7 +11,7 @@ goto end
 :help
 echo   Syntax: getSizeInfo inFile outFile
 echo.
-echo   e.g.: getSizeInfo .\intermediateFiles\libarm_cortexM0l_math.a  arm_cortexM0l_math.txt
+echo   e.g.: getSizeInfo ..\..\..\Lib\GCC\arm_cortexM0l_math.lib  arm_cortexM0l_math.txt
 
 :end
 
