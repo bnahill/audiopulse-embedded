@@ -1,6 +1,6 @@
 /*!
  (C) Copyright 2013 Ben Nahill
- 
+
  This program is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
  the Free Software Foundation, either version 3 of the License, or
@@ -13,7 +13,7 @@
 
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
- 
+
  @file apulse_math.h
  @brief A small library of numerical tools
  @author Ben Nahill <bnahill@gmail.com>
@@ -60,6 +60,7 @@ public:
 template<>
 class IntLength<8>{
 public:
+	static constexpr size_t bits = 8;
 	typedef uint_fast8_t unsigned_fast_t;
 	typedef uint8_t unsigned_t;
 	typedef int_fast8_t signed_fast_t;
@@ -68,6 +69,7 @@ public:
 template<>
 class IntLength<16>{
 public:
+	static constexpr size_t bits = 16;
 	typedef uint_fast16_t unsigned_fast_t;
 	typedef uint16_t unsigned_t;
 	typedef int_fast16_t signed_fast_t;
@@ -76,6 +78,7 @@ public:
 template<>
 class IntLength<32>{
 public:
+	static constexpr size_t bits = 32;
 	typedef uint_fast32_t unsigned_fast_t;
 	typedef uint32_t unsigned_t;
 	typedef int_fast32_t signed_fast_t;
@@ -84,6 +87,7 @@ public:
 template<>
 class IntLength<64>{
 public:
+	static constexpr size_t bits = 64;
 	typedef uint_fast64_t unsigned_fast_t;
 	typedef uint64_t unsigned_t;
 	typedef int_fast64_t signed_fast_t;
@@ -96,6 +100,7 @@ template <size_t i_bits, size_t f_bits>
 class uFractional {
 public:
 	typedef typename IntLength<i_bits + f_bits>::unsigned_t internal_t;
+	static constexpr size_t bits =  IntLength<i_bits + f_bits>::bits;
 	static constexpr size_t bits_i = i_bits;
 	static constexpr size_t bits_f = f_bits;
 
@@ -106,10 +111,10 @@ public:
 		i(val.i){}
 	//constexpr uFractional(const internal_t &val) :
 	//	i(val){}
-	constexpr uFractional(const double &val) :
-		i(val * ((typename IntLength<f_bits + 1>::unsigned_t)1 << f_bits)){}
-	//constexpr uFractional(const float &val) :
-	//	i(val * (1 << f_bits)){}
+	constexpr uFractional(const double val) :
+		i(val * (double)((typename IntLength<f_bits + 1>::unsigned_t)1 << f_bits)){}
+	constexpr uFractional(const float val) :
+		i(val * (float)((typename IntLength<f_bits + 1>::unsigned_t)1 << f_bits)){}
 	constexpr double asDouble() const{
 		return ((double)i) / (double)((1 << f_bits) - 1);
 	}
@@ -149,12 +154,12 @@ public:
 	constexpr uFractional<max(mi_bits, i_bits), max(mf_bits, f_bits)> operator - (uFractional<mi_bits, mf_bits> &m) const {
 		return i - m.i;
 	}
-	
+
 	constexpr uFractional<i_bits, f_bits> operator - (uFractional<i_bits, f_bits> &m) const {
 		return i - m.i;
 	}
-	
-	
+
+
 	static constexpr uFractional<i_bits,f_bits> minval(){return (internal_t)0;}
 	static constexpr uFractional<i_bits,f_bits> maxval(){return (internal_t)(-1);}
 
@@ -172,11 +177,15 @@ template <size_t i_bits, size_t f_bits>
 class sFractional {
 public:
 	typedef typename IntLength<i_bits + f_bits + 1>::signed_t internal_t;
+	static constexpr size_t bits =  IntLength<i_bits + f_bits + 1>::bits;
 	static constexpr size_t bits_i = i_bits;
 	static constexpr size_t bits_f = f_bits;
 
-	constexpr sFractional(const sFractional<i_bits, f_bits> &val) :
+	constexpr inline sFractional(const sFractional<i_bits, f_bits> &val) :
 			 i(val.i){}
+
+	constexpr inline sFractional(int i) :
+			 i(i){}
 
 	constexpr sFractional() {}
 
@@ -184,12 +193,12 @@ public:
 	 * @brief Constructor for arbitrary signed fractionals
 	 */
 	template<size_t mi_bits, size_t mf_bits>
-	constexpr inline sFractional(const sFractional<mi_bits, mf_bits> &val) :
+	constexpr inline sFractional(const sFractional<mi_bits, mf_bits> val) :
 		i(val.normalize<i_bits, f_bits>().i){}
-	static constexpr inline sFractional<i_bits, f_bits> fromInternal(const internal_t &val){
+	static constexpr inline sFractional<i_bits, f_bits> fromInternal(const internal_t val){
 		return *reinterpret_cast< const sFractional<i_bits, f_bits> *>(&val);
 	}
-	constexpr sFractional(const double &val) :
+	constexpr inline sFractional(const double val) :
 		i(val * ( (typename IntLength<i_bits + f_bits + 1>::unsigned_t)1 << f_bits) - 1){}
 	//constexpr sFractional(const float &val) :
 	//	i(val * (1 << f_bits)){}
@@ -205,14 +214,14 @@ public:
 	void setInternal(internal_t internal){
 		i = internal;
 	}
-	
+
 	/*!
 	 * @brief Convert a fractional number to a different format
 	 */
 	template<size_t ni_bits, size_t nf_bits>
 	constexpr inline sFractional<ni_bits, nf_bits> normalize() const {
 		typedef sFractional<ni_bits, nf_bits> n_t;
-		return n_t((typename n_t::internal_t) (i >> (f_bits - nf_bits)));
+		return n_t::fromInternal((typename n_t::internal_t) (i >> (f_bits - nf_bits)));
 	}
 
 	/*!
@@ -221,17 +230,15 @@ public:
 	 * This will not change the value unless it exceeds the final format
 	 */
 	template<size_t ni_bits>
-	constexpr sFractional<ni_bits, f_bits> resize() const {
+	constexpr inline sFractional<ni_bits, f_bits> resize() const {
 		typedef sFractional<ni_bits, f_bits> n_t;
 		return n_t((typename n_t::internal_t) i);
 	}
 
 	template<size_t mi_bits, size_t mf_bits>
-	sFractional<mi_bits + i_bits, mf_bits + f_bits> operator * (sFractional<mi_bits, mf_bits> const &m) const {
+	sFractional<mi_bits + i_bits, mf_bits + f_bits> operator * (sFractional<mi_bits, mf_bits> const m) const {
 		typedef typename IntLength<mi_bits + i_bits + mf_bits + f_bits + 1>::signed_t res_t;
-		sFractional<mi_bits + i_bits, mf_bits + f_bits> out;
-		out.setInternal((res_t)m.i * (res_t)i);
-		return out;
+		return sFractional<mi_bits + i_bits, mf_bits + f_bits>::fromInternal((res_t)m.i * (res_t)i);
 	}
 
 
@@ -243,33 +250,38 @@ public:
 		typedef typename IntLength<2*(i_bits + f_bits) + 1>::signed_t double_len_t;
 		double_len_t shifted = ((double_len_t)a) << (i_bits + f_bits);
 		shifted = (shifted / ((double_len_t)b)) >> (i_bits + 1);
-		return (sFractional<i_bits, f_bits>::internal_t) shifted;
+		return sFractional<i_bits, f_bits>::fromInternal((sFractional<i_bits, f_bits>::internal_t) shifted);
 	}
 
 	template<size_t mi_bits, size_t mf_bits>
-	constexpr sFractional<mi_bits + i_bits, mf_bits + f_bits> operator * (uFractional<mi_bits, mf_bits> const &m) const {
-		typedef typename IntLength<mi_bits + i_bits + mf_bits + f_bits + 1>::signed_t res_t;
-		return (res_t)m.i * i;
+	constexpr inline sFractional<mi_bits + i_bits, mf_bits + f_bits> operator * (uFractional<mi_bits, mf_bits> const m) const {
+		typedef sFractional<mi_bits + i_bits, mf_bits + f_bits> res_t;
+		typedef typename res_t::internal_t res_internal_t;
+		return res_t::fromInternal((res_internal_t)i * m.i);
 	}
 
 	template<size_t mi_bits, size_t mf_bits>
-	constexpr sFractional<max(mi_bits, i_bits), max(mf_bits, f_bits)> operator + (sFractional<mi_bits, mf_bits> const &m) const {
-		return i + m.i;
+	constexpr inline sFractional<max(mi_bits, i_bits), max(mf_bits, f_bits)> operator + (sFractional<mi_bits, mf_bits> const m) const {
+		typedef sFractional<max(mi_bits, i_bits), max(mf_bits, f_bits)> res_t;
+		typedef typename res_t::internal_t res_internal_t;
+		return res_t::fromInternal((res_internal_t)i + m.i);
 	}
 
 	template<size_t mi_bits, size_t mf_bits>
-	constexpr sFractional<max(mi_bits, i_bits), max(mf_bits, f_bits)> operator - (sFractional<mi_bits, mf_bits> const &m) const {
-		return i - m.i;
+	constexpr inline sFractional<max(mi_bits, i_bits), max(mf_bits, f_bits)> operator - (sFractional<mi_bits, mf_bits> const m) const {
+		typedef sFractional<max(mi_bits, i_bits), max(mf_bits, f_bits)> res_t;
+		typedef typename res_t::internal_t res_internal_t;
+		return res_t::fromInternal((res_internal_t)i - m.i);
 	}
 
-	constexpr sFractional<i_bits, f_bits> operator-() const {
+	constexpr inline sFractional<i_bits, f_bits> operator-() const {
 		return sFractional<i_bits, f_bits>::fromInternal(-i);
 	}
-	
-	
+
+
 	static constexpr sFractional<i_bits,f_bits> minval(){return (internal_t)(1 << (f_bits + i_bits));}
 	static constexpr sFractional<i_bits,f_bits> maxval(){return (internal_t)minval().i - 1;}
-	
+
 	internal_t i : i_bits + f_bits + 1;
 } __attribute__((packed));
 
@@ -279,14 +291,14 @@ public:
 template<typename Ts, typename T>
 void vector_mult_scalar(Ts a, T const * B, T * dst, size_t n){
 	while(n >= 8){
-		T b1 = B[0];
-		T b2 = B[1];
-		T b3 = B[2];
-		T b4 = B[3];
-		T b5 = B[4];
-		T b6 = B[5];
-		T b7 = B[6];
-		T b8 = B[7];
+		register T b1 = B[0];
+		register T b2 = B[1];
+		register T b3 = B[2];
+		register T b4 = B[3];
+		register T b5 = B[4];
+		register T b6 = B[5];
+		register T b7 = B[6];
+		register T b8 = B[7];
 
 		B += 8;
 
@@ -326,21 +338,25 @@ void vector_mult_scalar(Ts a, T const * B, T * dst, size_t n){
  */
 template<typename T>
 void weighted_vector_sum(T const a,
-                         T const * X,
-                         T const b,
-                         T const * Y,
-                         T * dst,
-                         size_t n){
+						 T const * X,
+						 T const b,
+						 T const * Y,
+						 T * dst,
+						 size_t n){
+	static_assert(T::bits == 32, "Using weighted_vector_sum for wrong size");
 	while(n >= 4){
-		T x1 = X[0];
-		T x2 = X[1];
-		T x3 = X[2];
-		T x4 = X[3];
+		register T x1 __asm__("r4") = X[0];
+		register T x2 __asm__("r5") = X[1];
+		register T x3 __asm__("r6") = X[2];
+		register T x4 __asm__("r7") = X[3];
 
-		T y1 = Y[0];
-		T y2 = Y[1];
-		T y3 = Y[2];
-		T y4 = Y[3];
+		register T y1 __asm__("r8") = Y[0];
+		register T y2 __asm__("r9") = Y[1];
+		register T y3 __asm__("r10") = Y[2];
+		register T y4 __asm__("r11") = Y[3];
+
+		//__asm__("ldmia %0!,{%1,%2, %3, %4}"
+		//      : "+&r"(X), "=r"(x1), "=r"(x2), "=r"(x3), "=r"(x4));
 
 		X += 4;
 		Y += 4;
@@ -376,10 +392,10 @@ void weighted_vector_sum(T const a,
  */
 template<typename T, typename Ts, typename Tr>
 void vector_mac(Ts const a,
-                T const * X,
-                Tr const * Y,
-                Tr * dst,
-                size_t n){
+				T const * X,
+				Tr const * Y,
+				Tr * dst,
+				size_t n){
 	while(n >= 4){
 		T x1 = X[0];
 		T x2 = X[1];
@@ -431,10 +447,10 @@ void vector_mac(Ts const a,
  */
 template<typename T, typename Ts, typename Tpwr>
 void complex_psd_mac(Ts a,
-                     T const * X,
-                     Tpwr const * Y,
-                     Tpwr * dst,
-                     size_t n){
+					 T const * X,
+					 Tpwr const * Y,
+					 Tpwr * dst,
+					 size_t n){
 // 	// First bin is real X[0]
 // 	*dst++ = (Tpwr)(*X * *X) * a + (Tpwr)(*Y * b);
 // 	X++;
@@ -507,9 +523,9 @@ void complex_psd_mac(Ts a,
  */
 template<typename T, typename Tpwr>
 void complex_psd_acc(T const * X,
-                     Tpwr const * Y,
-                     Tpwr * dst,
-                     size_t n){
+					 Tpwr const * Y,
+					 Tpwr * dst,
+					 size_t n){
 // 	// First bin is real X[0]
 // 	*dst++ = (Tpwr)(*X * *X) * a + (Tpwr)(*Y * b);
 // 	X++;
@@ -574,19 +590,19 @@ void complex_psd_acc(T const * X,
  @param dst A buffer for output -- may be the same as input
   It must be able to hold at least (n/2 + 1) elements
  @param n The number of input elements
- 
+
  Computes (roughly) dst = a * mag(X)^2 + b * Y
  X is formatted a bit funny, hence the "roughly"
- 
+
  @note Y may refer to the same buffer as dst
  */
 template<typename T, typename Tpwr>
 void complex_power_avg_update(Tpwr a,
-                              T const * X,
-                              Tpwr b,
-                              Tpwr const * Y,
-                              Tpwr * dst,
-                              size_t n){
+							  T const * X,
+							  Tpwr b,
+							  Tpwr const * Y,
+							  Tpwr * dst,
+							  size_t n){
 // 	// First bin is real X[0]
 // 	*dst++ = (Tpwr)(*X * *X) * a + (Tpwr)(*Y * b);
 // 	X++;
