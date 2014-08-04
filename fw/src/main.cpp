@@ -1,6 +1,6 @@
 /*!
  (C) Copyright 2013, Ben Nahill
- 
+
  This program is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
  the Free Software Foundation, either version 3 of the License, or
@@ -13,7 +13,7 @@
 
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
- 
+
  @file main.cpp
  @brief Application entry point. Mostly glue logic.
  @author Ben Nahill <bnahill@gmail.com>
@@ -35,7 +35,7 @@ extern "C" {
  */
 void main(){
 	struct pt pt_dsp, pt_controller, pt_wavegen;
-	
+
 	PT_INIT(&pt_dsp);
 	PT_INIT(&pt_controller);
 	PT_INIT(&pt_wavegen);
@@ -44,16 +44,16 @@ void main(){
 	Platform::lateInit();
 
 	USB::hidClassInit();
-	
+
 	// AK4621::start();
 
-	Platform::leds[0].set();
-	
+	//Platform::leds[2].set();
+
 	while(true){
 		Platform::power_en.set();
 		InputDSP::pt_dsp(&pt_dsp);
 		WaveGen::pt_wavegen(&pt_wavegen);
 		APulseController::pt_controller(&pt_controller);
-    }
-} 
+	}
+}
 

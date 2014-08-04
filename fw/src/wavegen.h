@@ -1,6 +1,6 @@
 /*!
  (C) Copyright 2013 Ben Nahill
- 
+
  This program is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
  the Free Software Foundation, either version 3 of the License, or
@@ -13,7 +13,7 @@
 
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
- 
+
  @file
  @brief
  @author Ben Nahill <bnahill@gmail.com>
@@ -25,15 +25,15 @@
 #include <driver/platform.h>
 #include <driver/codec.h>
 #include <arm_math.h>
-#include <core_cm4.h>
+#include <derivative.h>
 #include <apulse_math.h>
 
-	
-	
+
+
 class Generator {
 public:
 	Generator() :
-		type(GEN_OFF), gain(0)
+		type(GEN_OFF), gain(0.0)
 		{}
 	typedef enum {
 		GEN_OFF = 0,
@@ -89,29 +89,29 @@ public:
 	 @brief A callback to get samples
 	 @param dst The destination buffer
 	 @param n Ignored, number of samples requested(size known from \ref AK4621)
-	 
+
 	 @note This should be called from interrupt or locked context
-	 
+
 	 @note Generation will be performed immediately from this context due to
 	 short deadline
-	 
+
 	 @note Inlined because only a single caller
 	 */
 	static inline void get_samplesI(sample_t * dst, size_t n){
 		// Zero the whole damn thing first
 		zero16(dst, buffer_size);
-	
+
 		// Check if muting
 		if(silent){
 			if(state == ST_RUNNING)
 				state = ST_DONE;
 			return;
 		}
-		
+
 		auto t = get_time_ms();
 
 		bool alldone = true;
-		
+
 		for(Generator &generator : generators){
 			switch(generator.type){
 			case Generator::GEN_OFF:
@@ -132,21 +132,22 @@ public:
 
 		if(alldone){
 			mute();
+			Platform::leds[2].clear();
 			state = ST_DONE;
 		}
 	}
-	
+
 	//! @name Tone selection functions
 	//! Use to adjust tones being played. Please mute before using...
 	//! @{
 	static void set_chirp(uint8_t idx, uint8_t ch, uint16_t f1, uint16_t f2,
-	               uint16_t t1, uint16_t t2, sFractional<7,8> gaindb){
+				   uint16_t t1, uint16_t t2, sFractional<7,8> gaindb){
 		// state = ST_READY;
 	}
-	
+
 	static void set_tone(uint8_t idx, uint8_t ch, uint16_t f1,
-	              uint16_t t1, uint16_t t2, sFractional<7,8> gaindb);
-	
+				  uint16_t t1, uint16_t t2, sFractional<7,8> gaindb);
+
 	static inline void set_off(uint8_t idx){
 		if(state == ST_RESET || state == ST_READY){
 			generators[idx].type = Generator::GEN_OFF;
@@ -184,12 +185,13 @@ public:
 			// Enable output if relevant
 			if(state == ST_STARTING){
 				state = ST_RUNNING;
-				if(!silent && !TPA6130A2::is_ready()){
-					TPA6130A2::enable();
-				}
+				Platform::leds[2].set();
+				//if(!silent && !TPA6130A2::is_ready()){
+				//	TPA6130A2::enable();
+				//}
 			}
 			if((state != ST_RUNNING) && TPA6130A2::is_ready()){
-				TPA6130A2::disable();
+				//TPA6130A2::disable();
 			}
 
 			PT_YIELD(pt);
@@ -202,11 +204,11 @@ protected:
 	static constexpr uint32_t wavetable_len = 8192;
 	static const sFractional<0,31> wavetable[wavetable_len];
 	static constexpr uint32_t fs = AK4621::fs;
-	
+
 	static bool silent;
-	
+
 	static Generator generators[num_generators];
-	
+
 	static state_t state;
 
 	//! @name Muting functions
@@ -225,15 +227,14 @@ protected:
 	 @param generator The generator to use
 	 @param dst The start destination
 	 @param t The start time of the frame to fill
-	 
+
 	 This will generate \ref buffer_size / 2 samples and add them to @ref dst
 	 in alternating slots (to apply to a single channel only)
 	 */
 	static void generate_wave(Generator &generator, sample_t * dst, uint16_t t){
-// 		IGNORE THIS CHECK FOR NOW!
-// 		if(t < generator.t1 || t > generator.t2)
-// 			return;
-		
+		if(t < generator.t1 || t > generator.t2)
+			return;
+
 		// Just some temporary storage
 		sample_t s;
 		uint32_t theta = generator.theta;
@@ -243,37 +244,38 @@ protected:
 			// Negate for second half-wave
 			if(theta & wavetable_len)
 				s = -s;
-			
+
 			s = s * gain;//__SSAT((((q63_t) s * gain) >> 32),31);
-			
+
 			// Add this sample to the output
 			*dst = *dst + get_speaker_gain(generator.f1) * s;
 			//*dst += s;
 			dst += 2;
-			
+
 			theta = (theta + generator.w1) & (wavetable_len * 2 - 1);
 		}
 		generator.theta = theta;
 	}
-	
+
 	/*!
 	 @brief Generate a chirp
 	 @param generator The generator to use
 	 @param dst The start destination
 	 @param t The start time of the frame to fill
-	 
+
 	 This will generate \ref buffer_size / 2 samples and add them to @ref dst
 	 in alternating slots (to apply to a single channel only)
 	 */
 	static void generate_chirp(Generator &generator, sample_t * dst, uint16_t t){
-		
+
 	}
-	
+
 	static uint16_t get_time_ms();
 
 	static bool pending_reset;
 
 	static void do_reset(){
+		Platform::leds[2].clear();
 		mute();
 		set_off(0);
 		set_off(1);
@@ -281,7 +283,7 @@ protected:
 		state = ST_RESET;
 		pending_reset = false;
 	}
-	
+
 	static constexpr uint32_t speaker_coeffs_size = 256;
 	// Starts at 100Hz
 	static constexpr uint32_t speaker_coeffs_start = 100;
@@ -294,14 +296,15 @@ protected:
 	 @brief Compute the frequency-independent gain to be applied to a full-range
 	 sine wave to achieve the desired gain.
 	 */
-	static sFractional<0,31> db_to_pp(sFractional<7,8> db){
-		return pow10f(db.asFloat()/20.0) / 31623.0;
+	static uFractional<0,32> db_to_pp(sFractional<7,8> db){
+		return (uFractional<0,32>) (pow10f(db.asFloat()/20.0) / 31623.0);
 		//return pow10f(db.asFloat()/20.0) / 4096;
 	}
 
 	static sFractional<0,31> get_speaker_gain(uint16_t freq){
-		return speaker_coeffs[(freq - speaker_coeffs_start +
-		                      (speaker_coeffs_scaling / 2)) / speaker_coeffs_scaling];
+		return sFractional<0,31>::fromInternal(
+					speaker_coeffs[(freq - speaker_coeffs_start +
+								   (speaker_coeffs_scaling / 2)) / speaker_coeffs_scaling]);
 	}
 
 

@@ -1,6 +1,6 @@
 /*!
  (C) Copyright 2013, Ben Nahill
- 
+
  This program is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
  the Free Software Foundation, either version 3 of the License, or
@@ -13,7 +13,7 @@
 
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
- 
+
  @file controller.cpp
  @brief The main control logic (implementation)
  @author Ben Nahill <bnahill@gmail.com>
@@ -95,7 +95,7 @@ PT_THREAD(APulseController::pt_controller)(struct pt * pt){
 	clear_calibration();
 
 	timer.reset();
-	
+
 	// Run from 32kHz/32 clock
 	//timer.configure(Timer::CLKS_FIXED, Timer::PS_32, 0);
 	//timer.reset_count(0);
@@ -105,19 +105,18 @@ PT_THREAD(APulseController::pt_controller)(struct pt * pt){
 		static constexpr uint32_t bins = 16;
 
 		static_assert(sizeof(coeffs) / sizeof(*coeffs) >= bins,
-		              "Calibration coefficient storage insufficient");
+					  "Calibration coefficient storage insufficient");
 
 		PT_YIELD(pt);
 
 		// Is a test completed?
 		if(InputDSP::get_state() == InputDSP::ST_DONE &&
 		   WaveGen::get_state() == WaveGen::ST_DONE){
+			Platform::leds[1].clear();
 			// Clean up after test
 			teststate = TEST_DONE;
-			// Turn off lights
-			Platform::leds[0].clear();
 			// Disable analog supply
-			Platform::power_en.clear();
+			//Platform::power_en.clear();
 			if(timer.is_running())
 				timer.reset();
 		}
@@ -179,6 +178,8 @@ PT_THREAD(APulseController::pt_controller)(struct pt * pt){
 		if(teststate == TEST_STARTING){
 			// Supply was already enabled
 			// Delay for startup
+			Platform::leds[1].set();
+			//Platform::power_en.set();
 			timer.reset();
 			timer.start();
 			PT_WAIT_UNTIL(pt, timer.get_ms() > 50);
@@ -199,7 +200,6 @@ PT_THREAD(APulseController::pt_controller)(struct pt * pt){
 			InputDSP::runI();
 			timer.start();
 			teststate = TEST_RUNNING;
-			Platform::leds[0].set();
 		}
 	}
 
@@ -211,7 +211,6 @@ void APulseController::handle_eventI ( uint8_t event_type ) {
 	case USB_APP_ENUM_COMPLETE:
 		err_code = 0;
 		timer.reset();
-		Platform::leds[0].set();
 
 		teststate = TEST_RESET;
 		WaveGen::request_resetI();
@@ -271,7 +270,7 @@ uint8_t * APulseController::get_response ( uint16_t& size ) {
 		p.status.controller_state = teststate;
 
 		p.status.err_code = err_code;
-		
+
 		size = sizeof(status_pkt_t);
 		return p.data;
 	}
@@ -301,10 +300,10 @@ void APulseController::handle_dataI ( uint8_t* data, uint8_t size ) {
 		//timer.stop();
 		//timer.reset_count();
 		timer.reset();
-		Platform::leds[0].clear();
 		waveform_dump.reset();
 
 		teststate = TEST_RESET;
+		Platform::leds[1].clear();
 		WaveGen::request_resetI();
 		InputDSP::request_resetI();
 		break;
@@ -319,10 +318,10 @@ void APulseController::handle_dataI ( uint8_t* data, uint8_t size ) {
 		if(teststate == TEST_RESET ||
 		   teststate == TEST_CONFIGURING ||
 		   teststate == TEST_READY){
-			
+
 			if(!AK4621::is_Src(a->capture_config_pkt.source))
 				break;
-			
+
 			InputDSP::configure(
 				a->capture_config_pkt.overlap,
 				a->capture_config_pkt.start_time,

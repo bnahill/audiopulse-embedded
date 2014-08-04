@@ -1,6 +1,6 @@
 /*!
  (C) Copyright 2013 Ben Nahill
- 
+
  This program is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
  the Free Software Foundation, either version 3 of the License, or
@@ -13,7 +13,7 @@
 
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
- 
+
  @file
  @brief
  @author Ben Nahill <bnahill@gmail.com>
@@ -41,13 +41,13 @@ void TPA6130A2::init_hw(){
 	SDA.configure(SDA_mux, true, true);
 
 	I2C->F = I2C_F_MULT(0) |  // / 1 = 48MHz
-	         I2C_F_ICR(0x27); // / 480 = 100kHz
+			 I2C_F_ICR(0x27); // / 480 = 100kHz
 
 	I2C->C1 = I2C_C1_IICEN_MASK;
 }
 
 void TPA6130A2::enable(){
-	if(!enabled && false){
+	if(!enabled){
 		nSD.set();
 		// ENABLE IT
 		write_reg(1, 0xC0);
@@ -68,18 +68,18 @@ void TPA6130A2::write_reg (uint8_t addr, uint8_t val ) {
 	I2C->C1 |= I2C_C1_TX_MASK;
 	I2C->C1 |= I2C_C1_MST_MASK; // Assert start
 	I2C->D = i2c_addr; // Write bus address
-	
-	while((I2C->S & I2C_S_IICIF_MASK) == 0); // Wait for 
+
+	while((I2C->S & I2C_S_IICIF_MASK) == 0); // Wait for
 	I2C->S |= I2C_S_IICIF_MASK; // Clear
 
 	I2C->D = addr; // Write register address
 
-	while((I2C->S & I2C_S_IICIF_MASK) == 0); // Wait for 
+	while((I2C->S & I2C_S_IICIF_MASK) == 0); // Wait for
 	I2C->S |= I2C_S_IICIF_MASK; // Clear
 
 	I2C->D = val; // Write value
 
-	while((I2C->S & I2C_S_IICIF_MASK) == 0); // Wait for 
+	while((I2C->S & I2C_S_IICIF_MASK) == 0); // Wait for
 	I2C->S |= I2C_S_IICIF_MASK; // Clear
 
 	I2C->C1 &= ~I2C_C1_MST_MASK;

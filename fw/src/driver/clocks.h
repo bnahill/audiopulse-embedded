@@ -1,6 +1,6 @@
 /*!
  (C) Copyright 2013 Ben Nahill
- 
+
  This program is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
  the Free Software Foundation, either version 3 of the License, or
@@ -13,7 +13,7 @@
 
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
- 
+
  @file
  @brief
  @author Ben Nahill <bnahill@gmail.com>
@@ -28,7 +28,7 @@
 /*!
  @brief A constant configuration for clocks to make it easy to switch between
  configurations
- 
+
  @TODO Add USB division
  */
 class ClockConfig {
@@ -36,7 +36,7 @@ public:
 	constexpr ClockConfig(
 		uint32_t const mcgoutclk,
 		uint32_t const busclk,
-		
+
 		uint32_t const clk_xtal,
 		uint32_t const clk_pll_div,
 		uint32_t const clk_pll_mul,
@@ -53,7 +53,7 @@ public:
 
 	uint32_t const mcgoutclk;
 	uint32_t const busclk;
-	
+
 	uint32_t const clk_xtal;
 	uint32_t const clk_pll_div;
 	uint32_t const clk_pll_mul;
@@ -89,10 +89,10 @@ public:
 
 	static void set_clkout(clkout_src_t src){
 		if(src == CLKOUT_OFF){
-			clkout.configure(GPIOPin::MUX_ANALOG);
+			//clkout.configure(GPIOPin::MUX_ANALOG);
 		} else {
 			SIM_SOPT2 = (SIM_SOPT2 & ~SIM_SOPT2_CLKOUTSEL_MASK) |
-			            (SIM_SOPT2_CLKOUTSEL(src));
+						(SIM_SOPT2_CLKOUTSEL(src));
 			clkout.configure(GPIOPin::MUX_ALT5);
 		}
 	}
@@ -109,7 +109,7 @@ public:
 		1,        // Flexbus is MCGOUTCLK / 1
 		2         // Flash is MCGOUTCLK / 2
 	};
-	
+
 	static constexpr ClockConfig clk72 = {
 		72000000, // Run OUTCLK at 72MHz
 		36000000, // Bus clock is half that
@@ -121,10 +121,10 @@ public:
 		1,        // Flexbus is MCGOUTCLK / 2 = 36MHz
 		3         // Flash is MCGOUTCLK / 3 = 24MHz
 	};
-	
+
 	//! Select the configuration to use
 	static constexpr ClockConfig config = clk48;
-	
+
 private:
 	static constexpr GPIOPin clkout = {PTC_BASE_PTR, 3};
 };

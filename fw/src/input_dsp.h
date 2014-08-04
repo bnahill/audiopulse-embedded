@@ -1,6 +1,6 @@
 /*!
  (C) Copyright 2013, Ben Nahill
- 
+
  This program is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
  the Free Software Foundation, either version 3 of the License, or
@@ -13,7 +13,7 @@
 
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
- 
+
  @file
  @brief
  @author Ben Nahill <bnahill@gmail.com>
@@ -30,22 +30,22 @@
 class InputDSP {
 public:
 	typedef AK4621::sample_t sample_t;
-	
+
 	/*!
 	 @brief The protothread for performing required DSP operations
 	 */
 	static PT_THREAD(pt_dsp(struct pt * pt));
-	
+
 	static void configure(uint16_t overlap,
-	                      uint16_t start_time_ms,
-	                      uint16_t num_windows,
-	                      AK4621::Src src,
-	                      sFractional<0,31> scale_mic,
-	                      sFractional<0,31> scale_ext);
-		
+						  uint16_t start_time_ms,
+						  uint16_t num_windows,
+						  AK4621::Src src,
+						  sFractional<0,31> scale_mic,
+						  sFractional<0,31> scale_ext);
+
 	/*!
 	 @brief Callback to receive new samples
-	 
+
 	 @note MUST BE CALLED FROM INTERRUPT OR LOCKED CONTEXT
 	 */
 	static void put_samplesI(sample_t * samples, size_t n);
@@ -72,7 +72,7 @@ public:
 // 		       (num_samples == 0) &&
 // 		       (start_time_ms != -1);
 	}
-	
+
 	typedef sFractional<0,31> sampleFractional;
 	typedef sFractional<6,25> powerFractional;
 	typedef sFractional<8,23> transformFractional;
@@ -86,7 +86,7 @@ public:
 	}
 
 	static constexpr uint32_t transform_len = 512;
-	
+
 	typedef enum {
 		ST_RESET     = 0,
 		ST_READY     = 1,
@@ -103,11 +103,11 @@ protected:
 	static state_t state;
 
 	//! A pointer to new samples
-	static sampleFractional const * new_samples;
+	static sampleFractional const * volatile new_samples;
 	//! Number of raw samples provided
-	static uint32_t num_received;
+	static uint32_t volatile num_received;
 	// MUST HAVE PROTECTED ACCESS
-	static uint32_t num_samples;
+	static uint32_t volatile num_samples;
 
 	//! @name Test Configuration
 	//! @{
@@ -119,11 +119,11 @@ protected:
 	static sampleFractional scale_mic;
 	static sampleFractional scale_ext;
 	//! @}
-	
+
 	//! @name Decimation variables and configuration
 	//! @{
 	//! The filter order for FIR decimation
-	static constexpr uint16_t decimate_fir_order = 41;
+	static constexpr uint16_t decimate_fir_order = 17;
 	static sample_t const decimate_coeffs[decimate_fir_order];
 	//! The number of samples processed in each iteration of ARM FIR decimate
 	static constexpr uint16_t decimate_block_size = 48;
@@ -137,7 +137,7 @@ protected:
 	static arm_fir_decimate_instance_q31 decimate;
 	//! Perform the decimation
 	static void do_decimate(sampleFractional const * src,
-	                        sampleFractional * dst,
+							sampleFractional * dst,
 							size_t n_in);
 	//! An iterator for writing to the decimation buffer
 	static uint32_t decimation_write_head;
@@ -151,9 +151,9 @@ protected:
 
 	//! A buffer used internally by the decimation process
 	static sampleFractional decimate_buffer[decimate_block_size +
-	                                        decimate_fir_order - 1];
+											decimate_fir_order - 1];
 	//! @}
-	
+
 	//! @name Windowing and FFT variables and configuration
 	//! @{
 	//! The number of decimated samples available
@@ -169,7 +169,7 @@ protected:
 	static transformFractional complex_transform[transform_len + 2];
 
 	static powerFractional mag_psd[transform_len / 2 + 1];
-	
+
 	//! The average windowed waveform
 	static sampleFractional average_buffer[transform_len];
 
@@ -181,7 +181,7 @@ protected:
 	//! CFFT instance structure
 	static arm_cfft_radix4_instance_q31 cfft;
 	//! @}
-	
+
 	//! Standard reset flags
 	static bool pending_reset, is_reset;
 
@@ -203,8 +203,8 @@ protected:
 	 @brief Reset the whole state of the input DSP block
 	 */
 	static void do_reset();
-	
-	static constexpr bool debug = true;
+
+	static constexpr bool debug = false;
 };
 
 #endif // __APULSE_INPUT_DSP_H_

@@ -1,6 +1,6 @@
 /*!
  (C) Copyright 2013, Ben Nahill
- 
+
  This program is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
  the Free Software Foundation, either version 3 of the License, or
@@ -13,7 +13,7 @@
 
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
- 
+
  @file controller.h
  @brief The main control logic (header)
  @author Ben Nahill <bnahill@gmail.com>
@@ -248,14 +248,14 @@ public:
 	void request_resetI();
 
 	static PT_THREAD(pt_controller(struct pt * pt));
-	
+
 	//! An instance of the timer for synchronization
 	//static constexpr Timer timer = FTM0_BASE_PTR;
 	static constexpr TimerPIT timer = {0};
 
-	static constexpr sFractional<8,23> dbspl_reference = 90.0;
+	static constexpr sFractional<8,23> dbspl_reference = (sFractional<8,23>)90.0;
 	//! dbspl_reference - 24 dB (/ 16)
-	static constexpr sFractional<8,23> calib_tone_level = 66.0;
+	static constexpr sFractional<8,23> calib_tone_level = (sFractional<8,23>)66.0;
 
 	static constexpr bool do_buffer_dumps = false;
 private:

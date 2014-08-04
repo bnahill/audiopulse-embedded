@@ -41,13 +41,13 @@ void AK4621::init_hw() {
 
 	__enable_irq();
 
-	for(auto &i : buffer_in) i = 0xA5A51111;
+	for(auto &i : buffer_in) i = sample_t::fromInternal(0xA5A51111);
 	//for(auto &i : buffer_out) i = 0xFF00FF00;
 	for(uint32_t i = 0; i < out_buffer_size * 2; i++){
 		if(i & 0x10){
-			buffer_out[i] = 0xFF00FF00;
+			buffer_out[i] = sample_t::fromInternal(0xFF00FF00);
 		} else {
-			buffer_out[i] = 0x00FF00FF;
+			buffer_out[i] = sample_t::fromInternal(0x00FF00FF);
 		}
 	}
 
@@ -64,7 +64,7 @@ void AK4621::init(){
 	PDN.set();
 	spi_write_reg(REG_RESET, 0x00); // Reset
 	spi_write_reg(REG_CLK_FORMAT, 0x40); // MCLK = 256fs, fs = 48k
-	//spi_write_reg(REG_DEEM_VOL, 0x02); // 48k de-emph
+	spi_write_reg(REG_DEEM_VOL, 0x02); // 48k de-emph
 
 	//spi_write_reg(REG_POWER_DOWN, 0x07); // These are defaults...
 
@@ -155,7 +155,7 @@ void AK4621::i2s_init(){
 	////////////////
 	/// RECEIVER
 	////////////////
-	
+
 	switch(source){
 		case Src::MIC:
 			I2S->RMR = ~1;
@@ -168,7 +168,7 @@ void AK4621::i2s_init(){
 			break;
 		}
 	//I2S->RMR = ~channels;
-	
+
 	I2S->RCR1 =
 		I2S_RCR1_RFW(0);        // Always request immediately
 
@@ -178,7 +178,7 @@ void AK4621::i2s_init(){
 		I2S_RCR2_MSEL(0) |
 		I2S_RCR2_DIV((mclk_hz / bclk_hz) / 2 - 1) |
 		I2S_RCR2_BCD_MASK;      // Master mode but bit clock internal?
-	
+
 	I2S->RCR3 =                 // Receiver configuration
 		I2S_RCR3_RCE(1) |       // Enable channel
 		I2S_RCR3_WDFL(0);       // Send once each channel has a frame?
@@ -196,7 +196,7 @@ void AK4621::i2s_init(){
 		I2S_RCR5_WNW(word_width - 1) |  // Has to be >= W0W
 		I2S_RCR5_W0W(word_width - 1);   // One 32-bit word
 
-	
+
 	////////////////
 	/// TRANSMITTER
 	////////////////
@@ -248,57 +248,57 @@ void AK4621::i2s_init(){
 void AK4621::i2s_dma_init(){
 	rx_buffer_sel = 0;
 	tx_buffer_sel = 0;
-	
+
 	DMA_CR =
 		DMA_CR_EMLM_MASK |      // Enable minor looping
 		DMA_CR_ERCA_MASK;       // Enable RR arbitration
-	
+
 	if(enable_dma_rx){
 	DMA_TCD1_CSR = 0;
-	
+
 	// First configure receive channel
 	DMAMUX_CHCFG1 = 0;
-	
+
 	NVIC_EnableIRQ(DMA_CH1_IRQn);
-	
+
 	DMA_TCD1_SADDR = (uint32_t)&I2S->RDR[0]; // Receive FIFO
 	DMA_TCD1_DADDR = (uint32_t)&buffer_in[0]; // Receive FIFO
 	DMA_TCD1_SOFF = 0; // Don't increment source
 	DMA_TCD1_DOFF = 4; // Increment destination 32 bits
 	DMA_TCD1_ATTR = DMA_ATTR_SMOD(0) | DMA_ATTR_SSIZE(2) | // 32-bit src
-	                DMA_ATTR_DMOD(0) | DMA_ATTR_DSIZE(2);  // 32-bit dst
+					DMA_ATTR_DMOD(0) | DMA_ATTR_DSIZE(2);  // 32-bit dst
 	DMA_TCD1_NBYTES_MLNO = 4;
 	// CITER and BITER must be the same
 	DMA_TCD1_CITER_ELINKNO = DMA_CITER_ELINKNO_CITER(in_buffer_size * 2);
 	DMA_TCD1_BITER_ELINKNO = DMA_BITER_ELINKNO_BITER(in_buffer_size * 2);
 	DMA_TCD1_SLAST = 0;
-	
+
 	DMA_TCD1_DLASTSGA = -(in_buffer_size * 2 * 4);
-	
+
 	DMA_TCD1_CSR = DMA_CSR_INTMAJOR_MASK | // Major loop IRQ
-	               DMA_CSR_INTHALF_MASK | // Also at half
-                   DMA_CSR_BWC(0); // 0-cycle delay
-	
+				   DMA_CSR_INTHALF_MASK | // Also at half
+				   DMA_CSR_BWC(0); // 0-cycle delay
+
 	DMA_SERQ = DMA_SERQ_SERQ(1); // Enable ch 1 requests
-	
+
 	DMAMUX_CHCFG1 = DMAMUX_CHCFG_SOURCE(I2S_DMAMUX_SOURCE_RX) |
-	                DMAMUX_CHCFG_ENBL_MASK;
-	
+					DMAMUX_CHCFG_ENBL_MASK;
+
 	DMA_TCD1_CSR |= DMA_CSR_ACTIVE_MASK; // Set active
 	}
-	
+
 	// Then output
 	if(enable_dma_tx){
 	DMAMUX_CHCFG0 = 0;
-	
+
 	NVIC_EnableIRQ(DMA_CH0_IRQn);
-	
+
 	DMA_TCD0_DADDR = (uint32_t)&I2S->TDR[0]; // Transmit FIFO
 	DMA_TCD0_SADDR = (uint32_t)&buffer_out[0];
 	DMA_TCD0_SOFF = 4; // Increment source!
 	DMA_TCD0_DOFF = 0; // Don't increment destination!
 	DMA_TCD0_ATTR = DMA_ATTR_SMOD(0) | DMA_ATTR_SSIZE(2) | // 32-bit src
-	                DMA_ATTR_DMOD(0) | DMA_ATTR_DSIZE(2);  // 32-bit dst
+					DMA_ATTR_DMOD(0) | DMA_ATTR_DSIZE(2);  // 32-bit dst
 	DMA_TCD0_NBYTES_MLNO = 4;
 	DMA_TCD0_NBYTES_MLOFFNO = 4;
 	DMA_TCD0_NBYTES_MLOFFYES = 4;
@@ -306,18 +306,18 @@ void AK4621::i2s_dma_init(){
 	DMA_TCD0_CITER_ELINKNO = DMA_CITER_ELINKNO_CITER(out_buffer_size * 2);
 	DMA_TCD0_BITER_ELINKNO = DMA_BITER_ELINKNO_BITER(out_buffer_size * 2);
 	DMA_TCD0_SLAST = -(out_buffer_size * 2 * 4);
-	
+
 	DMA_TCD0_DLASTSGA = 0;
 
 	DMA_TCD0_CSR = DMA_CSR_INTMAJOR_MASK | // Major loop IRQ
-	               DMA_CSR_INTHALF_MASK | // Also at half
-                   DMA_CSR_BWC(0); // 0-cycle delay
-	
+				   DMA_CSR_INTHALF_MASK | // Also at half
+				   DMA_CSR_BWC(0); // 0-cycle delay
+
 	DMA_SERQ = DMA_SERQ_SERQ(0); // Enable ch 0 requests
-	
+
 	DMAMUX_CHCFG0 = DMAMUX_CHCFG_SOURCE(I2S_DMAMUX_SOURCE_TX) |
-	                DMAMUX_CHCFG_ENBL_MASK;
-	
+					DMAMUX_CHCFG_ENBL_MASK;
+
 	DMA_TCD0_CSR |= DMA_CSR_ACTIVE_MASK; // Set actuve
 	}
 }
@@ -327,32 +327,32 @@ void AK4621::start(){
 		cb_out(&buffer_out[0], out_buffer_size);
 	if(cb_out)
 		cb_out(&buffer_out[out_buffer_size], out_buffer_size);
-	
+
 	I2S->RCSR |=
 		I2S_RCSR_FEF_MASK |
 		I2S_RCSR_SEF_MASK |
 		I2S_RCSR_FRF_MASK;
-	
+
 	I2S->TCSR |=
 		I2S_TCSR_FEF_MASK |
 		I2S_TCSR_SEF_MASK |
 		I2S_TCSR_FRF_MASK;
-	
+
 	if(enable_dma_rx){
 	DMA_CERR = DMA_CERR_CERR(1);
 	DMA_CINT = DMA_CINT_CINT(1);
-	
+
 	// Start receive
 	DMA_SSRT = DMA_SSRT_SSRT(1);
 	}
-	
+
 	if(enable_dma_tx){
 	DMA_CERR = DMA_CERR_CERR(0);
 	DMA_CINT = DMA_CINT_CINT(0);
-	
+
 	// Start transmit
 	DMA_SSRT = DMA_SSRT_SSRT(0);
-	}	
+	}
 }
 
 
@@ -363,5 +363,5 @@ void DMA_CH1_ISR() { // Receive
 }
 
 void DMA_CH0_ISR() { // Transmit
-    AK4621::dma_tx_isr();
+	AK4621::dma_tx_isr();
 }

@@ -1,6 +1,6 @@
 /*!
  (C) Copyright 2013 Ben Nahill
- 
+
  This program is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
  the Free Software Foundation, either version 3 of the License, or
@@ -13,7 +13,7 @@
 
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
- 
+
  @file
  @brief
  @author Ben Nahill <bnahill@gmail.com>
@@ -29,6 +29,7 @@
 #include <driver/gpio.h>
 #include <driver/codec.h>
 #include <driver/tpa6130a2.h>
+#include <driver/pwm_gpio.h>
 #include <pt.h>
 
 class Platform {
@@ -49,15 +50,18 @@ public:
 		USB::lateInit();
 
 		AK4621::init_hw();
-		
-		TPA6130A2::init_hw();
-		
-		leds[0].clear();
-	}
-	
 
-	//! The one debug LED
+		TPA6130A2::init_hw();
+
+		leds[0].clear();
+		leds[1].clear();
+		leds[2].clear();
+	}
+
+	static PWMFTM const pwm_ftm;
+
 	static GPIOPin const leds[3];
+	static PWMGPIOPin const pwm[3];
 
 	//! Analog power enable
 	static GPIOPin const power_en;

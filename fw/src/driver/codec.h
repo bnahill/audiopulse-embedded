@@ -1,6 +1,6 @@
 /*!
  (C) Copyright 2013 Ben Nahill
- 
+
  This program is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
  the Free Software Foundation, either version 3 of the License, or
@@ -13,7 +13,7 @@
 
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
- 
+
  @file
  @brief
  @author Ben Nahill <bnahill@gmail.com>
@@ -42,7 +42,7 @@ public:
 		EXT = 1,
 		MIX = 2,
 	};
-	
+
 	static bool is_Src(Src val){
 		return (val == Src::MIC) || (val == Src::EXT) || (val == Src::MIX);
 	}
@@ -57,7 +57,7 @@ public:
 	 @post Ready to call init()
 	 */
 	static void init_hw();
-	
+
 	/*!
 	 @brief Configure the actual device
 	 @pre init_hw() has been called
@@ -66,44 +66,44 @@ public:
 	 @note This must be called after any loss of power on analog circuitry
 	 */
 	static void init();
-	
+
 	/*!
 	 @brief Set callback for new input data
-	 
+
 	 The function provided will be called with a pointer to the new data, which
 	 will be of length \ref in_buffer_size
 	 */
 	static void set_in_cb(audio_cb_t new_cb){cb_in = new_cb;}
-	
+
 	/*!
 	 @brief Set callback for free output buffer
-	 
+
 	 The function provided will be called with a pointer to the free buffer,
 	 which will be of length \ref out_buffer_size
-	 
+
 	 @note If called before starting output, both buffers will be presented for
 	 population before the stream begins
 	 */
 	static void set_out_cb(audio_cb_t new_cb){cb_out= new_cb;}
-	
+
 	/*!
 	 @brief Interrupt service routine for outgoing data buffer empty
-	 
+
 	 @warning Please don't actually call this unless from interrupt context
 	 */
 	static void dma_tx_isr(){
 		if(cb_out){
 			cb_out(&buffer_out[out_buffer_size * tx_buffer_sel],
-			       out_buffer_size);
+				   out_buffer_size);
 			tx_buffer_sel ^= 1;
 		}
 		DMA_CINT = DMA_CINT_CINT(0);
 		NVIC_ClearPendingIRQ(DMA_CH0_IRQn);
 	}
-	
+
 	/*!
 	 @brief Interrupt service routine for new incoming data
-	 
+
 	 @warning Please don't actually call this unless from interrupt context
 	 */
 	static void dma_rx_isr(){
@@ -115,38 +115,39 @@ public:
 					m = buffer[2*i];
 					e = buffer[2*i + 1];
 					m = m * mix_mic + e * mix_ext;
-					buffer[i] = m.i;
-				}
+					buffer[i] = sample_t::fromInternal(m.i);				}
 				cb_in(buffer, in_buffer_size / 2);
 			} else {
 				cb_in(buffer, in_buffer_size);
 			}
 			rx_buffer_sel ^= 1;
 		}
+
+		// Clear the interrupt
 		DMA_CINT = DMA_CINT_CINT(1);
 		NVIC_ClearPendingIRQ(DMA_CH1_IRQn);
 	}
-	
+
 	/*!
 	 @brief Start the audio codec streaming
-	 
+
 	 @note Right now there is no corresponding 'stop'
 	 */
 	static void start();
-	
+
 	/*!
 	 @brief Select which channels are enabled
 	 @param channels The bitwise OR of \ref channels_t to enable
-	 
+
 	 @note This may be set before or after start, but will cause some corruption
 	 in the current DMA frame only if changed while active
-	 
+
 	 @note The channel configuration is initialized to all channels disabled,
 	 allowing for the first assignment to occur after initialization.
 	 */
 	static void set_source(Src new_source,
-	                       sFractional<0,31> new_mix_mic = 0.0,
-	                       sFractional<0,31> new_mix_ext = 0.0){
+						   sFractional<0,31> new_mix_mic = (sFractional<0,31>) 0.0,
+						   sFractional<0,31> new_mix_ext = (sFractional<0,31>) 0.0){
 		AK4621::source = new_source;
 		switch(new_source){
 		case Src::MIC:
@@ -162,17 +163,17 @@ public:
 			break;
 		}
 	}
-	
+
 	/*!
 	 @brief The number of samples in a single incoming buffer (there are two)
 	 */
 	static constexpr uint32_t in_buffer_size = 768;
-	
+
 	/*!
 	 @brief The number of samples in a single outgoing buffer (there are two)
 	 */
 	static constexpr uint32_t out_buffer_size = 256;
-	
+
 	static constexpr uint32_t fs = 48000;
 
 protected:
@@ -196,7 +197,7 @@ protected:
 	static void spi_write_reg(reg_t reg, uint8_t value);
 
 	static void i2s_init();
-	
+
 	static void i2s_dma_init();
 
 	static constexpr SPI_MemMapPtr SPI = SPI0_BASE_PTR;
@@ -228,7 +229,7 @@ protected:
 	static constexpr uint32_t I2S_DMAMUX_SOURCE_TX = 15;
 	static constexpr IRQn_Type DMA_CH0_IRQn = (IRQn_Type)0;
 	static constexpr IRQn_Type DMA_CH1_IRQn = (IRQn_Type)1;
-	
+
 	static constexpr uint32_t word_width = 32;
 	static constexpr uint32_t nwords = 2;
 
@@ -240,14 +241,14 @@ protected:
 	static constexpr uint32_t mclk_gen_div = 125;
 	//static constexpr uint32_t mclk_gen_frac = 1;
 	//static constexpr uint32_t mclk_gen_div = 8;
-	
+
 	static constexpr bool enable_dma_tx = true;
 	static constexpr bool enable_dma_rx = true;
 	static constexpr bool ext_mclk = false;
-	
+
 	static uint_fast8_t rx_buffer_sel;
 	static uint_fast8_t tx_buffer_sel;
-	
+
 	static Src source;
 
 	//! @name DMA Buffers

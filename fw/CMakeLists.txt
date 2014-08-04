@@ -1,6 +1,6 @@
 #
 # (C) Copyright 2013 Ben Nahill
-# 
+#
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
@@ -13,7 +13,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
- 
+
 # @file
 # @brief
 # @author Ben Nahill <bnahill@gmail.com>
@@ -91,7 +91,7 @@ set(BOARD_REVISION "1" CACHE STRING "Which revision is it? BB=1, SF=2")
 # Build Options
 ########################################################
 
-set(OPTIMIZATION "-Os")
+set(OPTIMIZATION "-Og")
 set(LTO )#"-flto")
 
 set(MCU cortex-m4)
@@ -205,7 +205,7 @@ set(DSP_SOURCES
 link_directories(${CMSIS_DIR}/Lib/G++)
 
 add_library(dsp ${DSP_SOURCES})
-SET_TARGET_PROPERTIES(dsp PROPERTIES COMPILE_FLAGS "-O3")
+SET_TARGET_PROPERTIES(dsp PROPERTIES COMPILE_FLAGS "-O2")
 
 
 add_executable(${OUTFILE} ${APP_SOURCES}  ${FREESCALE_SOURCES})
