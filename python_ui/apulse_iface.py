@@ -97,7 +97,7 @@ class APulseStatus(object):
     TEST_CALIB_MIC = 5
 
     str_test = ["Reset", "Configuring", "Ready",
-                "Running", "Done", "Calibrating"]
+                "Running", "Done", "Calibrating", "Starting"]
 
     def __init__(self, data):
         assert len(data) == 5, "Not a status packet... Len:%d" % len(data)

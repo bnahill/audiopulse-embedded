@@ -204,7 +204,7 @@ protected:
 	 */
 	static void do_reset();
 
-	static constexpr bool debug = false;
+	static constexpr bool debug = true;
 };
 
 #endif // __APULSE_INPUT_DSP_H_

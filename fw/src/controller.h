@@ -257,7 +257,7 @@ public:
 	//! dbspl_reference - 24 dB (/ 16)
 	static constexpr sFractional<8,23> calib_tone_level = (sFractional<8,23>)66.0;
 
-	static constexpr bool do_buffer_dumps = false;
+	static constexpr bool do_buffer_dumps = true;
 private:
 	static uint32_t most_recent_t_ms;
 	static teststate_t teststate;

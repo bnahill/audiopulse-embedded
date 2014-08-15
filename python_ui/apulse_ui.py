@@ -303,16 +303,19 @@ class SigCollection(object):
         failures = 0
         while failures < 20:
             time.sleep(0.05)
-            sig = self.iface.receive_waveform()
-            if sig is not None:
-                self.sigs.append(sig)
-            else:
-                time.sleep(0.1)
+            try:
                 sig = self.iface.receive_waveform()
-                if sig is None:
-                    failures += 1
-                else:
+                if sig is not None:
                     self.sigs.append(sig)
+                else:
+                    time.sleep(0.1)
+                    sig = self.iface.receive_waveform()
+                    if sig is None:
+                        failures += 1
+                    else:
+                        self.sigs.append(sig)
+            except:
+                time.sleep(0.1)
 
         print((len(self.sigs)))
         cb(self.sigs)
@@ -474,7 +477,7 @@ class UIWindow(QtGui.QMainWindow):
                         i))
             self.iface.config_tones(tones)
         except Exception as e:
-            self.statusBar().showMessage("Please provide numeric tone values")
+            self.statusBar().showMessage("Please provide numeric tone values: %s" % e)
             print(e)
             return
 
@@ -496,6 +499,7 @@ class UIWindow(QtGui.QMainWindow):
             print((e.message))
             return
         self.iface.start()
+        time.sleep(0.1)
         self.getstat()
 
         self.sigcol.start_collection(self.add_waveform_set)

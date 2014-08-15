@@ -280,8 +280,11 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 				}
 
 				num_decimated -= (transform_len - overlap);
-				decimation_read_head = ( decimation_read_head + (transform_len - overlap)) &
-						(decimated_frame_buffer_size - 1);
+				//decimation_read_head = ( decimation_read_head + (transform_len - overlap)) &
+				//		(decimated_frame_buffer_size - 1);
+
+				decimation_read_head = ( decimation_read_head + (transform_len - overlap)) %
+						decimated_frame_buffer_size;
 
 				PT_YIELD(pt);
 
@@ -339,6 +342,7 @@ void InputDSP::do_reset(){
 	new_samples = nullptr;
 	num_samples = 0;
 	num_received = 0;
+	num_decimated = 0;
 	decimation_write_head = 0;
 	decimation_read_head = 0;
 	start_time_ms = -1;
