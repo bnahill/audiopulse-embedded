@@ -52,7 +52,7 @@ class PSDSeries(DataSeries):
 class LogPSDSeries(DataSeries):
     def __init__(self, label, data, f1=None, f2=None):
         xvals = np.linspace(0, 8000, 257)
-        data = 10.0 * np.log10(0.7071 * data / np.float128(0x7FFFFFFF >> 10))
+        data = 10.0 * np.log10(0.7071 * data)
         super(LogPSDSeries, self).__init__(label, data, "Frequency (Hz)",
                                            "Power (dB SPL)", xvals)
 
@@ -449,7 +449,7 @@ class UIWindow(QtGui.QMainWindow):
         for s in sigs:
             fft += np.abs(np.fft.rfft(s) ** 2)
         fft /= len(sigs)
-        fft >>= 6  # Compensate for scaling applied in fixed FFT
+        fft /= 2 ** 6  # Compensate for scaling applied in fixed FFT
 
         print(fft)
         #pylab.plot(fft)
@@ -477,7 +477,8 @@ class UIWindow(QtGui.QMainWindow):
                         i))
             self.iface.config_tones(tones)
         except Exception as e:
-            self.statusBar().showMessage("Please provide numeric tone values: %s" % e)
+            self.statusBar().showMessage("Please provide numeric tone values: "
+                                         "%s" % e)
             print(e)
             return
 

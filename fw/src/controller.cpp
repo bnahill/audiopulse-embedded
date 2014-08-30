@@ -271,6 +271,8 @@ uint8_t * APulseController::get_response ( uint16_t& size ) {
 
 		p.status.err_code = err_code;
 
+		p.status.psd_frac_bits = InputDSP::powerFractional::bits_f;
+
 		size = sizeof(status_pkt_t);
 		return p.data;
 	}
@@ -289,7 +291,7 @@ void APulseController::handle_dataI ( uint8_t* data, uint8_t size ) {
 					"tone_config_t wrong size");
 	static_assert(sizeof(tone_setup_pkt_t) == 3*sizeof(tone_config_t) + 1,
 					"tone_setup_pkt_t wrong size");
-	static_assert(sizeof(status_pkt_t) == 5,
+	static_assert(sizeof(status_pkt_t) == 6,
 					"status_pkt_t wrong size");
 	static_assert(sizeof(capture_config_pkt_t) == 16,
 					"capture_config_pkt wrong size");

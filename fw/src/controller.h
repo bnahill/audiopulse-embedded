@@ -172,6 +172,7 @@ class APulseController {
 		uint8_t wavegen_state;
 		uint8_t controller_state;
 		uint8_t err_code;
+		uint8_t psd_frac_bits;
 	} status_pkt_t;
 
 	typedef union {

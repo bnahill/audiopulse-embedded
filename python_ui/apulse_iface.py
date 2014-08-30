@@ -100,18 +100,20 @@ class APulseStatus(object):
                 "Running", "Done", "Calibrating", "Starting"]
 
     def __init__(self, data):
-        assert len(data) == 5, "Not a status packet... Len:%d" % len(data)
+        assert len(data) == 6, "Not a status packet... Len:%d" % len(data)
         (self.version, self.input_state, self.wavegen_state,
-         self.controller_state, self.err_code) = struct.unpack("B" * 5, data)
+         self.controller_state, self.err_code,
+         self.psd_frac_bits) = struct.unpack("B" * len(data), data)
+        self.psd_int_bits = 31 - self.psd_frac_bits
 
     def __str__(self):
         input_state = self.str_instate[self.input_state]
         wavegen_state = self.str_wgstate[self.wavegen_state]
         control_state = self.str_test[self.controller_state]
-        s = "Version:{}, Input:{}, WaveGen:{}, Control:{}, Err:{}".format(
-            self.version, input_state, wavegen_state,
-            control_state, self.err_code
-        )
+        s = "Version:{}, Input:{}, WaveGen:{}, Control:{}, Err:{}, " \
+            "PSD format:Q{}.{}".format(
+            self.version, input_state, wavegen_state, control_state,
+            self.err_code, self.psd_int_bits, self.psd_frac_bits)
         return s
 
     def is_done(self):
@@ -200,8 +202,9 @@ class APulseIface(object):
 
     def get_status(self):
         with self.lock:
-            data = self._read(5)
+            data = self._read(6)
             r = APulseStatus(data)
+            self.last_status = r
         return r
 
     def receive_waveform(self):
@@ -285,6 +288,7 @@ class APulseIface(object):
                 data = self._read(64)
                 psd[i * 16:(i + 1) * 16] = struct.unpack("<" + "i" * 16, data)
             (psd[256],) = struct.unpack("<i", self._read(4))
+            psd /= np.float128(2 ** self.last_status.psd_frac_bits)
 
             for i in range(32):
                 data = self._read(64)
