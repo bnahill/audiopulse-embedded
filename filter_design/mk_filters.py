@@ -32,7 +32,9 @@ pylab.close('all')
 fs0 = 48000.0
 fs1 = 16000.0
 
-frac_bits = 29
+frac_bits = 20
+# Options are "infinity" or "2"
+normalization = "infinity"
 
 # Stopband frequencies
 fstop = np.array([100, 8000], dtype=float)
@@ -48,6 +50,8 @@ print(wpass)
 
 (z, p, k) = signal.iirdesign(wp=wpass, ws=wstop, gpass=1.0, gstop=40.0,
                             ftype='ellip', analog=False, output='zpk')
+
+(original_z, original_p, original_k) = z, p, k
 
 zeros = list()
 poles = list()
@@ -92,14 +96,22 @@ for (color, p) in zip(colors[:len(poles)], poles):
     pole = np.complex128([p, np.conj(p)])
     zero = np.complex128([nearest_zero, np.conj(nearest_zero)])
 
-    (b, a) = signal.zpk2tf(zero, pole, 1.0 if zeros else k)
+    assert normalization in ("infinity", "first"), \
+        "'infinity' and 'first' are the only supported distribution methods"
+    if normalization == "first":
+        # Put all scaling into first stage
+        (b, a) = signal.zpk2tf(zero, pole, 1.0 if pairs else k)
+    elif normalization == "infinity":
+        # Distribute across all stages
+        (b, a) = signal.zpk2tf(zero, pole, k ** (1.0 / len(poles)))
 
 
     qa = np.int32(a * 2**frac_bits)
     qb = np.int32(b * 2**frac_bits)
+    fqa = qa.astype(np.float_) / 2**frac_bits
+    fqb = qb.astype(np.float_) / 2**frac_bits
 
-    (fqz, fqp, fqk) = signal.tf2zpk(b.astype(np.float_) / 2**frac_bits,
-                              a.astype(np.float_) / 2**frac_bits)
+    (fqz, fqp, fqk) = signal.tf2zpk(fqa, fqb)
 
     pairs.append((pole, zero))
     qpairs.append((qb, qa))
@@ -124,10 +136,27 @@ def draw_pz(title, pzpairs):
     pylab.ylabel("Imag")
     pylab.title(title)
 
+    # Grid lines!
+    pylab.minorticks_on()
+    pylab.grid(b=True, which='major', color='b')
+    pylab.grid(b=True, which='minor')
+
+ax1 = pylab.subplot2grid((2,2), (0,0))
 draw_pz("Unquantized Pairs", pairs)
-pylab.figure()
+pylab.subplot2grid((2,2), (0,1), sharex=ax1, sharey=ax1)
 draw_pz("Quantized Pairs", fqpairs)
-pylab.show()
+
+
+pylab.subplot2grid((2,2), (1,0), colspan=2)
+pylab.title("Frequency response")
+pylab.xlabel("Gain (dB)")
+pylab.ylabel("Frequency (Hz)")
+(b, a) = signal.zpk2tf(original_z, original_p, original_k)
+(w, h) = signal.freqz(b, a)
+pylab.plot(w * fs0 / (2*np.pi), 20*np.log10(h))
+(qw, qh) = signal.freqz(np.int32(b * 2**frac_bits).astype(np.float_) / 2**frac_bits,
+ np.int32(a * 2**frac_bits).astype(np.float_) / 2**frac_bits)
+pylab.plot(qw * fs0 / (2*np.pi), 20*np.log10(qh))
 
 print("")
 print("***********************************************************************")
@@ -155,3 +184,5 @@ for (i, (qb, qa)) in zip(range(len(qpairs)), qpairs):
     a = map(lambda x: "{:0.12f}".format(np.float128(x)/2**frac_bits), qa)
     print("\tB: " + ", ".join(b))
     print("\tA: " + ", ".join(a))
+
+pylab.show()
