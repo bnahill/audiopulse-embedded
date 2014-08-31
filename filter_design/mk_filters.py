@@ -191,8 +191,11 @@ for (i, (qb, qa)) in zip(range(len(qpairs)), qpairs):
 
 pylab.subplot2grid((2,2), (1,0), colspan=2)
 pylab.title("Frequency response")
-pylab.xlabel("Gain (dB)")
-pylab.ylabel("Frequency (Hz)")
+pylab.ylabel("Gain (dB)")
+pylab.xlabel("Frequency (Hz)")
+pylab.minorticks_on()
+pylab.grid(b=True, which='major', color='b')
+pylab.grid(b=True, which='minor')
 
 (b, a) = signal.zpk2tf(original_z, original_p, original_k)
 (w, h) = signal.freqz(b, a)
