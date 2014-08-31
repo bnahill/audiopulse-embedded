@@ -75,6 +75,23 @@ AK4621::Src InputDSP::src;
 InputDSP::sampleFractional InputDSP::scale_mic;
 InputDSP::sampleFractional InputDSP::scale_ext;
 
+InputDSP::coeffFractional InputDSP::biquad_coeffs[] = {
+    0.367872029542922974, -0.728465951979160309, 0.367872029542922974,
+    -1.936777468770742416, 0.974919583648443222,
+
+    0.367872029542922974, -0.366630703210830688, 0.367872029542922974,
+    -1.354706160724163055, 0.912358392030000687,
+
+    0.367872029542922974, -0.733889594674110413, 0.367872029542922974,
+    -1.795600030571222305, 0.865613438189029694,
+
+    0.367872029542922974, 0.101201929152011871, 0.367872029542922974,
+    -1.468207765370607376, 0.748139429837465286
+};
+
+decltype(InputDSP::biquad_cascade) InputDSP::biquad_cascade;
+decltype(InputDSP::biquad_state) InputDSP::biquad_state;
+
 /**
  * Generated coefficients from http://t-filter.appspot.com/fir/index.html
  * Passband 0-6kHz -0.5dB with 1dB ripple (max 0dB)
@@ -356,20 +373,37 @@ void InputDSP::do_reset(){
 	for(auto &a : mag_psd) a.setInternal(0);
 	for(auto &a : average_buffer) a.setInternal(0);
 
-	auto result =
-	arm_fir_decimate_init_q31(&decimate, decimate_fir_order, 3,
-							 (q31_t*)decimate_coeffs,
-							 (q31_t*)decimate_buffer,
-							 decimate_block_size);
+//	auto result =
+//	arm_fir_decimate_init_q31(&decimate, decimate_fir_order, 3,
+//							 (q31_t*)decimate_coeffs,
+//							 (q31_t*)decimate_buffer,
+//							 decimate_block_size);
+\
+	arm_biquad_cascade_df1_init_q31(&biquad_cascade, biquad_stages,
+	                                (q31_t *)biquad_coeffs, biquad_state,
+	                                biquad_shift);
 
-	if(result != ARM_MATH_SUCCESS){
-		while(true);
-	}
+//	if(result != ARM_MATH_SUCCESS){
+//		while(true);
+//	}
 
 	is_reset = true;
 	pending_reset = false;
 
 	state = ST_RESET;
+}
+
+
+template <size_t n_out, size_t factor>
+static void biquad_cascade_q31_decimate(arm_biquad_casd_df1_inst_q31 &inst,
+                                        q31_t * in, q31_t * out){
+	static q31_t tmp[n_out * factor];
+	auto tmpiter = tmp;
+	arm_biquad_cascade_df1_q31(&inst, in, tmp, n_out * factor);
+	for(auto i = n_out; i; i--){
+		*(out++) = *tmpiter;
+		tmpiter += factor;
+	}
 }
 
 
@@ -380,8 +414,10 @@ void InputDSP::do_decimate(sampleFractional const * src,
 	iter_in = src;
 	for(auto i = 0; i < (n_in / decimate_block_size); i++){
 		arm_shift_q31((q31_t*)iter_in, -6, (q31_t*)iter_in, decimate_block_size);
-		arm_fir_decimate_q31(&decimate, (q31_t*)iter_in,
-							 (q31_t*)dst, decimate_block_size);
+		biquad_cascade_q31_decimate<decimate_block_size / 3, 3>(
+		            biquad_cascade, (q31_t *)iter_in, (q31_t *)dst);
+//		arm_fir_decimate_q31(&decimate, (q31_t*)iter_in,
+//							 (q31_t*)dst, decimate_block_size);
 		iter_in += decimate_block_size;
 		dst += decimate_block_size / 3;
 	}

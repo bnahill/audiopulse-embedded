@@ -725,4 +725,80 @@ void zero16(T * dst, uint32_t n){
 	}
 }
 
+//template<typename Tdat, typename Tcoeff, typename Tout, size_t Nblock>
+//class BiQuad {
+//public:
+//	typedef union {
+//		Tout out[Nblock];
+//		Tout a;
+//	} out_t;
+//	typedef Tdat const in_t[Nblock];
+//	BiQuad(Tcoeff a1, Tcoeff a2, Tcoeff b0, Tcoeff b1, Tcoeff b2) :
+//	    a1(a1), a2(a2), b0(b0), b1(b1), b2(b2),
+//	    z_a0(0), z_a1(1), z_b0(0), z_b1(0)
+//	{}
+
+//	void push(in_t samples, Tout dst[]){
+//		Tdat out;
+//		for(auto& x : samples){
+//			out = (b0 * x) + (b1 * z_b0) + (b2 * z_b1) +
+//			      (a1 * z_a0) + (a2 * z_a1);
+//			z_a1 = z_a0;
+//			z_a0 = out;
+
+//			z_b1 = z_b0;
+//			z_b0 = x;
+//			dst++ = out;
+//		}
+//	}
+
+//private:
+//	Tcoeff const a1, a2, b0, b1, b2;
+//	Tdat z_a0, z_a1;
+//	Tout z_b0, z_b1;
+//};
+
+//template<typename Tin, typename Tcoeff, typename Tout>
+//class BiQuad {
+//	BiQuad(Tcoeff a1, Tcoeff a2, Tcoeff b0, Tcoeff b1, Tcoeff b2) :
+//	    a1(a1), a2(a2), b0(b0), b1(b1), b2(b2),
+//	    z_a0(0), z_a1(1), z_b0(0), z_b1(0){}
+
+//	Tout push(Tin const x[], Tout dst[], size_t n){
+//		Tout out;
+//		while(n--){
+//			out = (b0 * x) + (b1 * z_b0) + (b2 * z_b1) +
+//				  (a1 * z_a0) + (a2 * z_a1);
+//			z_a1 = z_a0;
+//			z_a0 = out;
+
+//			z_b1 = z_b0;
+//			z_b0 = x++;
+//			*(dst++) = out;
+//		}
+//	}
+
+//private:
+//	Tcoeff const a1, a2, b0, b1, b2;
+//	Tin z_a0, z_a1;
+//	Tout z_b0, z_b1;
+//};
+
+//template<typename... Tbiquads>
+//class BiQuadCascade {
+//public:
+//	BiQuadCascade(BiQuad<Tin, Tcoeff, Tinter> &first,
+//	              BiQuad<Tinter, Tcoeff, Tinter> * others)
+//	{}
+
+//	void push(Tin const * samples, Tout dst[]){
+
+//	}
+
+//private:
+//	Tcoeff const a1, a2, b0, b1, b2;
+//	Tdat z_a0, z_a1;
+//	Tout z_b0, z_b1;
+//};
+
 #endif // __APULSE_MATH_H_

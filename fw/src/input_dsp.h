@@ -74,6 +74,10 @@ public:
 	}
 
 	typedef sFractional<0,31> sampleFractional;
+	//! Biquad filter coefficients
+	typedef sFractional<2,29> coeffFractional;
+	//! Biquad output type
+	typedef sFractional<4,27> interstageFractional;
 	typedef sFractional<6,25> powerFractional;
 	typedef sFractional<8,23> transformFractional;
 
@@ -205,6 +209,13 @@ protected:
 	static void do_reset();
 
 	static constexpr bool debug = true;
+
+	static constexpr size_t biquad_stages = 4;
+	static constexpr size_t biquad_shift = coeffFractional::bits_i;
+	static arm_biquad_casd_df1_inst_q31 biquad_cascade;
+	static q31_t biquad_state[4 * biquad_stages];
+	static coeffFractional biquad_coeffs[5 * biquad_stages];
+
 };
 
 #endif // __APULSE_INPUT_DSP_H_
