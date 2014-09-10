@@ -104,6 +104,7 @@ public:
 	static constexpr size_t bits_i = i_bits;
 	static constexpr size_t bits_f = f_bits;
 
+	constexpr uFractional() {}
 	template<size_t mi_bits, size_t mf_bits>
 	constexpr uFractional(const uFractional<mi_bits, mf_bits> &val) :
 		i(val.normalize<i_bits, f_bits>().i){}
@@ -117,6 +118,9 @@ public:
 		i(val * (float)((typename IntLength<f_bits + 1>::unsigned_t)1 << f_bits)){}
 	constexpr double asDouble() const{
 		return ((double)i) / (double)((1 << f_bits) - 1);
+	}
+	constexpr float asFloat() const {
+		return ((float)i) / (float)(((unsigned)1) << (f_bits));
 	}
 
 	/*!
@@ -451,14 +455,7 @@ void complex_psd_mac(Ts a,
 					 Tpwr const * Y,
 					 Tpwr * dst,
 					 size_t n){
-// 	// First bin is real X[0]
-// 	*dst++ = (Tpwr)(*X * *X) * a + (Tpwr)(*Y * b);
-// 	X++;
-// 	// Second bin is real X[N/2]
-// 	dst[n/2] = (Tpwr)(*X * *X) * a + (Tpwr)(Y[n/2] * b);
-// 	Y++;
-// 	X++;
-// 	n -= 2;
+
 	while(n >= 8){
 		T x1 = X[0];
 		T x2 = X[1];
@@ -509,14 +506,13 @@ void complex_psd_mac(Ts a,
 /*!
  @brief Compute the real power of a complex transform output from ARM libraries
    and add it to the previous average
- @param a A scalar to multiply with power output
  @param X The input array of complex values, as returned from CMSIS-DSP
  @param Y The old PSD to which the new transform will be added
  @param dst A buffer for output -- may be the same as input
   It must be able to hold at least (n/2 + 1) elements
  @param n The number of input elements
 
- Computes (roughly) dst = a * mag(X)^2 + Y
+ Computes (roughly) dst = mag(X)^2 + Y
  X is formatted a bit funny, hence the "roughly"
 
  @note Y may refer to the same buffer as dst
@@ -526,14 +522,7 @@ void complex_psd_acc(T const * X,
 					 Tpwr const * Y,
 					 Tpwr * dst,
 					 size_t n){
-// 	// First bin is real X[0]
-// 	*dst++ = (Tpwr)(*X * *X) * a + (Tpwr)(*Y * b);
-// 	X++;
-// 	// Second bin is real X[N/2]
-// 	dst[n/2] = (Tpwr)(*X * *X) * a + (Tpwr)(Y[n/2] * b);
-// 	Y++;
-// 	X++;
-// 	n -= 2;
+
 	while(n >= 8){
 		T x1 = X[0];
 		T x2 = X[1];

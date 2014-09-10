@@ -103,6 +103,8 @@ public:
 	static inline const state_t& get_state(){return state;}
 
 protected:
+	static int32_t max, min, in_min, in_max;
+
 	//! The current state in the test state machine
 	static state_t state;
 
@@ -208,8 +210,15 @@ protected:
 	 */
 	static void do_reset();
 
+	//! Ensure that no buffers have overflown
 	static constexpr bool debug = true;
-
+	
+	//! Apply calibration coefficients to input spectrum
+	static constexpr bool calibrate_mic = false;
+	
+	//! Use the IIR decimation routines instead of FIR
+	static constexpr bool use_iir = false;
+	
 	static constexpr size_t biquad_stages = 4;
 	static constexpr size_t biquad_shift = coeffFractional::bits_i;
 	static arm_biquad_casd_df1_inst_q31 biquad_cascade;

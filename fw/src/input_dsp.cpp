@@ -71,6 +71,8 @@ decltype(InputDSP::overlap) InputDSP::overlap;
 
 decltype(InputDSP::state) InputDSP::state = ST_UNKNOWN;
 
+decltype(InputDSP::max) InputDSP::max, InputDSP::min, InputDSP::in_min, InputDSP::in_max;
+
 AK4621::Src InputDSP::src;
 InputDSP::sampleFractional InputDSP::scale_mic;
 InputDSP::sampleFractional InputDSP::scale_ext;
@@ -123,6 +125,23 @@ InputDSP::sample_t const InputDSP::decimate_coeffs[decimate_fir_order] = {
 	-0.018316535246320275,
 	0.04300687444857404
 };
+
+// Bandpass ws0 = [0,200Hz]*-20dB, wp0 = [
+// InputDSP::sample_t const InputDSP::decimate_coeffs[decimate_fir_order] = {
+// 	-0.02435313838961002, -0.0220241968035626, -0.028160178296642625,
+// 	-0.033992432830340244, -0.03934061821690012, -0.04166000024215076,
+// 	-0.03654262539112184, -0.02191921866926793, -0.0025725540727438248,
+// 	0.009584734164944177, 0.002000557692349713, -0.027870634434669937,
+// 	-0.06561824539362501, -0.08373659608090302, -0.05655917114251735,
+// 	0.02181442068737953, 0.12876507320258662, 0.2212737435328349,
+// 	0.2578064564607543, 0.2212737435328349, 0.12876507320258662,
+// 	0.02181442068737953, -0.05655917114251735, -0.08373659608090302,
+// 	-0.06561824539362501, -0.027870634434669937, 0.002000557692349713,
+// 	0.009584734164944177, -0.0025725540727438248, -0.02191921866926793,
+// 	-0.03654262539112184, -0.04166000024215076, -0.03934061821690012,
+// 	-0.033992432830340244, -0.028160178296642625, -0.0220241968035626,
+// 	-0.02435313838961002
+// };
 
 // 41
 //InputDSP::sample_t const InputDSP::decimate_coeffs[decimate_fir_order] = {
@@ -208,7 +227,7 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 		PT_WAIT_UNTIL(pt, new_samples);
 		new_samples = nullptr;
 
-		static sampleFractional window_scale = 1.0 / (float)num_windows;
+		static sampleFractional window_scale = 1.0;// / (float)num_windows;
 
 		while(state == ST_CAPTURING){
 			PT_WAIT_UNTIL(pt, new_samples || pending_reset);
@@ -292,16 +311,23 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 					);
 				}
 
+				for(uint32_t i = 0; i < transform_len; i++){
+					if(transform_buffer[i].i > in_max)
+						in_max = transform_buffer[i].i;
+					if(transform_buffer[i].i < in_min)
+						in_min = transform_buffer[i].i;
+				}
+
 				if(APulseController::do_buffer_dumps){
 					APulseController::waveform_dump.copy_data((uint8_t const *)transform_buffer);
 				}
 
 				num_decimated -= (transform_len - overlap);
-				//decimation_read_head = ( decimation_read_head + (transform_len - overlap)) &
-				//		(decimated_frame_buffer_size - 1);
 
-				decimation_read_head = ( decimation_read_head + (transform_len - overlap)) %
-						decimated_frame_buffer_size;
+				// Advance decimation read pointer
+				decimation_read_head += transform_len - overlap;
+				if(decimation_read_head >= decimated_frame_buffer_size)
+					decimation_read_head -= decimated_frame_buffer_size;
 
 				PT_YIELD(pt);
 
@@ -310,20 +336,27 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 
 				PT_YIELD(pt);
 
-				complex_psd_acc(
+				for(uint32_t i = 0; i < transform_len; i++){
+					if(complex_transform[i].i > max)
+						max = complex_transform[i].i;
+					if(complex_transform[i].i < min)
+						min = complex_transform[i].i;
+				}
+
+//				complex_psd_acc(
+//					complex_transform,
+//					mag_psd,
+//					mag_psd,
+//					transform_len + 2
+//				);
+
+				complex_psd_mac(
+					window_scale,
 					complex_transform,
 					mag_psd,
 					mag_psd,
 					transform_len + 2
 				);
-
-// 				complex_psd_mac(
-// 					window_scale,
-// 					complex_transform,
-// 					mag_psd,
-// 					mag_psd,
-// 					transform_len + 2
-// 				);
 // 				complex_power_avg_update(
 // 					(powerFractional)constants.one_over,
 // 					complex_transform,
@@ -335,11 +368,13 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 
 				// Check if we've processed enough windows to shut down
 				if(++window_count >= num_windows){
-					for(uint32_t i = 0; i < transform_len / 2; i++){
-						mag_psd[i] = mag_psd[i] * APulseController::coeffs[i / 16];
+					if(calibrate_mic){
+						for(uint32_t i = 0; i < transform_len / 2; i++){
+							mag_psd[i] = mag_psd[i] * APulseController::coeffs[i / 16];
+						}
+						mag_psd[transform_len / 2] = mag_psd[transform_len / 2] * APulseController::coeffs[15];
 					}
-					vector_mult_scalar(window_scale, mag_psd, mag_psd, transform_len/2 + 1);
-					mag_psd[transform_len / 2] = mag_psd[transform_len / 2] * APulseController::coeffs[15];
+//					vector_mult_scalar(window_scale, mag_psd, mag_psd, transform_len/2 + 1);
 					state = ST_DONE;
 					Platform::leds[0].clear();
 					break;
@@ -364,6 +399,9 @@ void InputDSP::do_reset(){
 	decimation_read_head = 0;
 	start_time_ms = -1;
 	window_count = 0;
+
+	max = 0;
+	min = 0;
 	Platform::leds[0].clear();
 
 	// Decimated frame buffer really doesn't need to be zero'd...
@@ -373,19 +411,22 @@ void InputDSP::do_reset(){
 	for(auto &a : mag_psd) a.setInternal(0);
 	for(auto &a : average_buffer) a.setInternal(0);
 
-//	auto result =
-//	arm_fir_decimate_init_q31(&decimate, decimate_fir_order, 3,
-//							 (q31_t*)decimate_coeffs,
-//							 (q31_t*)decimate_buffer,
-//							 decimate_block_size);
-\
-	arm_biquad_cascade_df1_init_q31(&biquad_cascade, biquad_stages,
-	                                (q31_t *)biquad_coeffs, biquad_state,
-	                                biquad_shift);
-
-//	if(result != ARM_MATH_SUCCESS){
-//		while(true);
-//	}
+	if(use_iir) {
+		arm_biquad_cascade_df1_init_q31(&biquad_cascade, biquad_stages,
+		                                (q31_t *)biquad_coeffs, biquad_state,
+		                                biquad_shift);
+	} else {
+		auto result =
+		arm_fir_decimate_init_q31(&decimate, decimate_fir_order, 3,
+		                          (q31_t*)decimate_coeffs,
+		                          (q31_t*)decimate_buffer,
+		                          decimate_block_size);
+		
+		if(result != ARM_MATH_SUCCESS){
+			while(true);
+		}
+	}
+	
 
 	is_reset = true;
 	pending_reset = false;
@@ -401,8 +442,8 @@ static void biquad_cascade_q31_decimate(arm_biquad_casd_df1_inst_q31 &inst,
 	auto tmpiter = tmp;
 	arm_biquad_cascade_df1_q31(&inst, in, tmp, n_out * factor);
 	for(auto i = n_out; i; i--){
-		*(out++) = *tmpiter;
-		tmpiter += factor;
+ 		*(out++) = *tmpiter;
+ 		tmpiter += factor;
 	}
 }
 
@@ -414,10 +455,13 @@ void InputDSP::do_decimate(sampleFractional const * src,
 	iter_in = src;
 	for(auto i = 0; i < (n_in / decimate_block_size); i++){
 		arm_shift_q31((q31_t*)iter_in, -6, (q31_t*)iter_in, decimate_block_size);
-		biquad_cascade_q31_decimate<decimate_block_size / 3, 3>(
-		            biquad_cascade, (q31_t *)iter_in, (q31_t *)dst);
-//		arm_fir_decimate_q31(&decimate, (q31_t*)iter_in,
-//							 (q31_t*)dst, decimate_block_size);
+		if(use_iir) {
+			biquad_cascade_q31_decimate<decimate_block_size / 3, 3>(
+			            biquad_cascade, (q31_t *)iter_in, (q31_t *)dst);
+		} else {
+			arm_fir_decimate_q31(&decimate, (q31_t*)iter_in,
+			            (q31_t*)dst, decimate_block_size);
+		}
 		iter_in += decimate_block_size;
 		dst += decimate_block_size / 3;
 	}

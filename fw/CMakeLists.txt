@@ -185,8 +185,8 @@ set_property(SOURCE src/startup.s PROPERTY LANGUAGE C)
 
 # Add required CMSIS-DSP sources as needed
 set(DSP_SOURCES
-	#${DSP_SRC}/FilteringFunctions/arm_fir_decimate_init_q31.c
-	#${DSP_SRC}/FilteringFunctions/arm_fir_decimate_q31.c
+	${DSP_SRC}/FilteringFunctions/arm_fir_decimate_init_q31.c
+	${DSP_SRC}/FilteringFunctions/arm_fir_decimate_q31.c
 	${DSP_SRC}/FilteringFunctions/arm_biquad_cascade_df1_q31.c
 	${DSP_SRC}/FilteringFunctions/arm_biquad_cascade_df1_init_q31.c
 	${DSP_SRC}/BasicMathFunctions/arm_shift_q31.c
