@@ -205,11 +205,16 @@ protected:
 		return {one_over, ((sampleFractional)1.0) - one_over};
 	}
 
+	static RangeChecker<powerFractional> range_psd;
+	
 	/*!
 	 @brief Reset the whole state of the input DSP block
 	 */
 	static void do_reset();
 
+	//! @name Settings
+	//! @{
+	
 	//! Ensure that no buffers have overflown
 	static constexpr bool debug = true;
 	
@@ -218,6 +223,7 @@ protected:
 	
 	//! Use the IIR decimation routines instead of FIR
 	static constexpr bool use_iir = false;
+	//! @}
 	
 	static constexpr size_t biquad_stages = 4;
 	static constexpr size_t biquad_shift = coeffFractional::bits_i;
@@ -228,3 +234,4 @@ protected:
 };
 
 #endif // __APULSE_INPUT_DSP_H_
+

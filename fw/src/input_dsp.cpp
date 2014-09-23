@@ -73,6 +73,8 @@ decltype(InputDSP::state) InputDSP::state = ST_UNKNOWN;
 
 decltype(InputDSP::max) InputDSP::max, InputDSP::min, InputDSP::in_min, InputDSP::in_max;
 
+decltype(InputDSP::range_psd) InputDSP::range_psd;
+
 AK4621::Src InputDSP::src;
 InputDSP::sampleFractional InputDSP::scale_mic;
 InputDSP::sampleFractional InputDSP::scale_ext;
@@ -254,6 +256,8 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 			new_samples = nullptr;
 
 			num_decimated += num_received / 3;
+			
+			range_psd.reset();
 
 			PT_YIELD(pt);
 
@@ -337,10 +341,7 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 				PT_YIELD(pt);
 
 				for(uint32_t i = 0; i < transform_len; i++){
-					if(complex_transform[i].i > max)
-						max = complex_transform[i].i;
-					if(complex_transform[i].i < min)
-						min = complex_transform[i].i;
+					range_psd.check(complex_transform[i]);
 				}
 
 //				complex_psd_acc(

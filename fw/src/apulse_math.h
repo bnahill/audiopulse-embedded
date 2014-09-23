@@ -222,10 +222,12 @@ public:
 	/*!
 	 * @brief Convert a fractional number to a different format
 	 */
-	template<size_t ni_bits, size_t nf_bits>
+	template<int ni_bits, int nf_bits>
 	constexpr inline sFractional<ni_bits, nf_bits> normalize() const {
 		typedef sFractional<ni_bits, nf_bits> n_t;
-		return n_t::fromInternal((typename n_t::internal_t) (i >> (f_bits - nf_bits)));
+		return (nf_bits < f_bits) ? 
+			n_t::fromInternal((typename n_t::internal_t) (i >> (f_bits - nf_bits))) :
+			n_t::fromInternal((typename n_t::internal_t) (i << (nf_bits - f_bits)));
 	}
 
 	/*!
@@ -570,6 +572,21 @@ void complex_psd_acc(T const * X,
 	}
 }
 
+template<typename T>
+class RangeChecker {
+public:
+	RangeChecker() :
+	  min(0), max(0){}
+	  
+	void check(T val){
+		if(val.i > max.i){max = val;}
+		if(val.i < min.i){min = val;}
+	}
+	
+	void reset(){min = 0; max = 0;}
+	
+	T min, max;
+};
 
 /*!
  @brief Compute the real power of a complex transform output from ARM libraries
@@ -791,3 +808,4 @@ void zero16(T * dst, uint32_t n){
 //};
 
 #endif // __APULSE_MATH_H_
+
