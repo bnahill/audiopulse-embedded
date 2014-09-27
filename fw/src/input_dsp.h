@@ -78,8 +78,8 @@ public:
 	typedef sFractional<2,29> coeffFractional;
 	//! Biquad output type
 	typedef sFractional<4,27> interstageFractional;
-	typedef sFractional<6,25> powerFractional;
-	typedef sFractional<8,23> transformFractional;
+	typedef sFractional<8,23> powerFractional;
+	typedef sFractional<5,26> transformFractional;
 
 	static constexpr powerFractional const * get_psd() {
 		return mag_psd;
@@ -206,6 +206,8 @@ protected:
 	}
 
 	static RangeChecker<powerFractional> range_psd;
+	static RangeChecker<sampleFractional> range_in;
+	static RangeChecker<sampleFractional> range_decimated;
 	
 	/*!
 	 @brief Reset the whole state of the input DSP block

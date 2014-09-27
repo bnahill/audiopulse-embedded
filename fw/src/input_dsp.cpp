@@ -74,6 +74,8 @@ decltype(InputDSP::state) InputDSP::state = ST_UNKNOWN;
 decltype(InputDSP::max) InputDSP::max, InputDSP::min, InputDSP::in_min, InputDSP::in_max;
 
 decltype(InputDSP::range_psd) InputDSP::range_psd;
+decltype(InputDSP::range_in) InputDSP::range_in;
+decltype(InputDSP::range_decimated) InputDSP::range_decimated;
 
 AK4621::Src InputDSP::src;
 InputDSP::sampleFractional InputDSP::scale_mic;
@@ -223,6 +225,10 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 		state = ST_CAPTURING;
 		Platform::leds[0].set();
 
+		range_psd.reset();
+		range_decimated.reset();
+		range_in.reset();
+
 		// Wait for new samples and then discard them. This is easier than
 		// resetting DMA but...
 		// TODO: Make setting source reset DMA (but this is still safe
@@ -256,8 +262,6 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 			new_samples = nullptr;
 
 			num_decimated += num_received / 3;
-			
-			range_psd.reset();
 
 			PT_YIELD(pt);
 
@@ -332,6 +336,12 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 				decimation_read_head += transform_len - overlap;
 				if(decimation_read_head >= decimated_frame_buffer_size)
 					decimation_read_head -= decimated_frame_buffer_size;
+
+				arm_shift_q31((q31_t *)transform_buffer, 6, (q31_t *)transform_buffer, transform_len);
+
+				for(uint32_t i = 0; i < transform_len; i++){
+					range_decimated.check(transform_buffer[i]);
+				}
 
 				PT_YIELD(pt);
 
@@ -472,6 +482,9 @@ void InputDSP::put_samplesI(sample_t * samples, size_t n){
 	if(state == ST_CAPTURING){
 		new_samples = reinterpret_cast<sampleFractional *>(samples);
 		num_received = n;
+		for(uint32_t i = 0; i < n; i++){
+			range_in.check(new_samples[i]);
+		}
 	}
 }
 
