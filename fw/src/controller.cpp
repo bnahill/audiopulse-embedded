@@ -169,7 +169,7 @@ PT_THREAD(APulseController::pt_controller)(struct pt * pt){
 				coeffs[i] = (1.0 / bins_f) / InputDSP::get_psd()[bin].asFloat();
 			}
 
-			Platform::power_en.clear();
+			Platform::power_off();
 			// TODO: Is this the correct transition?
 			teststate = TEST_DONE;
 		}
@@ -368,7 +368,7 @@ void APulseController::handle_dataI ( uint8_t* data, uint8_t size ) {
 		break;
 	case CMD_CALIBRATE_MIC:
 		if(teststate == TEST_RESET)
-			Platform::power_en.set();
+			Platform::power_on();
 			teststate = TEST_CALIB_MIC;
 		break;
 	case CMD_RESET_CALIB:
@@ -388,7 +388,7 @@ void APulseController::handle_dataI ( uint8_t* data, uint8_t size ) {
 		}
 		if(err_code)
 			break;
-		Platform::power_en.set();
+		Platform::power_on();
 		teststate = TEST_STARTING;
 		break;
 	case CMD_PULLWAVEFORM:

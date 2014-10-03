@@ -63,11 +63,15 @@ public:
 	static GPIOPin const leds[3];
 	static PWMGPIOPin const pwm[3];
 
-	//! Analog power enable
-	static GPIOPin const power_en;
+	static void power_on(){power_en.set();}
+	static void power_off(){power_en.clear();}
 
 	//! The external 12.288MHz oscillator
 	static GPIOPin const xtal_ex;
+
+private:
+	//! Analog power enable
+	static GPIOPin const power_en;
 };
 
 #endif // __cplusplus

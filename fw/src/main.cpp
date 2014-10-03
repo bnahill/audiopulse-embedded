@@ -50,7 +50,7 @@ void main(){
 	//Platform::leds[2].set();
 
 	while(true){
-		Platform::power_en.set();
+		Platform::power_on();
 		InputDSP::pt_dsp(&pt_dsp);
 		WaveGen::pt_wavegen(&pt_wavegen);
 		APulseController::pt_controller(&pt_controller);
