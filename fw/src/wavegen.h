@@ -97,9 +97,9 @@ public:
 
 	 @note Inlined because only a single caller
 	 */
-	static inline void get_samplesI(sample_t * dst, size_t n){
+	static inline void get_samplesI(sample_t * dst, size_t n, uint32_t increment=2){
 		// Zero the whole damn thing first
-		zero16(dst, buffer_size);
+		zero16(dst, increment * (buffer_size / 2));
 
 		// Check if muting
 		if(silent){
@@ -119,10 +119,10 @@ public:
 				continue;
 			case Generator::GEN_FIXED:
 				// Go add a fixed wave to the appropriate channels
-				generate_wave(generator, dst + generator.ch, t);
+				generate_wave(generator, dst + generator.ch * (increment / 2), t, increment);
 				break;
 			case Generator::GEN_CHIRP:
-				generate_chirp(generator, dst + generator.ch, t);
+				generate_chirp(generator, dst + generator.ch * (increment / 2), t, increment);
 				break;
 			// Add other signal generation handlers here if anything else req'd
 			}
@@ -228,12 +228,13 @@ protected:
 	 @param dst The start destination
 	 @param t The start time of the frame to fill
 
-	 This will generate \ref buffer_size / 2 samples and add them to @ref dst
+	 This will generate \ref buffer_size / increment samples and add them to @ref dst
 	 in alternating slots (to apply to a single channel only)
 	 */
-	static void generate_wave(Generator &generator, sample_t * dst, uint16_t t){
-		if(t < generator.t1 || t > generator.t2)
+	static void generate_wave(Generator &generator, sample_t * dst, uint16_t t, uint32_t increment=2){
+		if(t < generator.t1 || t > generator.t2){
 			return;
+		}
 
 		// Just some temporary storage
 		sample_t s;
@@ -250,7 +251,7 @@ protected:
 			// Add this sample to the output
 			*dst = *dst + get_speaker_gain(generator.f1) * s;
 			//*dst += s;
-			dst += 2;
+			dst += increment;
 
 			theta = (theta + generator.w1) & (wavetable_len * 2 - 1);
 		}
@@ -266,7 +267,7 @@ protected:
 	 This will generate \ref buffer_size / 2 samples and add them to @ref dst
 	 in alternating slots (to apply to a single channel only)
 	 */
-	static void generate_chirp(Generator &generator, sample_t * dst, uint16_t t){
+	static void generate_chirp(Generator &generator, sample_t * dst, uint16_t t, uint32_t increment=2){
 
 	}
 
