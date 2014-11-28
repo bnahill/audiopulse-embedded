@@ -7,9 +7,14 @@ T=8;       %Recording time in seconds
 F1=2000;   %First stimulus
 F2=2400;   %Second stimulus
 A=65;      %Stimulus amplitude in dBu
-L=512*50;%384;%Fs*T/1000;   %Averaging windowLength L <= Fs*T, total windows ~ Fs*T/L
+L=512;%384;%Fs*T/1000;   %Averaging windowLength L <= Fs*T, total windows ~ Fs*T/L
 step=L/2;  %Amount of over in samples, (step=L/2 -> 50%, step=L -> 0%)
 aproxFreq=true;  %If this is set to true, will approximate F1 and F2 such that FFT leakage due to choice of L is minimized (see below).
+
+%Decimation parameters
+decFs=16000;      %Final frequency
+b=fir1(28, 6/24); % Filter parameters for low pass to be applied before decimation
+
 %End of simulation parameters %
 
 %Note: In order to avoid leakage due to the number of samples in the FFT,
@@ -41,7 +46,18 @@ tone1=tone1.*gain;
 tone2=tone2.*gain;
 x=tone1+tone2;
 
-N=length(tm);
+
+%Filter and decimate the signal
+if(~isempty(decFs))
+    K=Fs/decFs;
+    x=filter(b,1,x);
+    x=x(1:K:end);
+    Fs=decFs;
+    tm=[0:1/Fs:T]; 
+end
+
+
+N=length(x);
 M=floor(N/step);
 if(M*step > L)
     M=M-1;
