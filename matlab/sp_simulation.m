@@ -4,13 +4,22 @@ clear all;clc;close
 
 Fs=48000;  %Original sampling frequency
 T=8;       %Recording time in seconds
-F1=1000;   %First stimulus
-F2=2000;   %Second stimulus
+F1=2000;   %First stimulus
+F2=2400;   %Second stimulus
 A=65;      %Stimulus amplitude in dBu
-L=24*10;%384;%Fs*T/1000;   %Averaging windowLength L <= Fs*T, total windows ~ Fs*T/L
+L=512*50;%384;%Fs*T/1000;   %Averaging windowLength L <= Fs*T, total windows ~ Fs*T/L
 step=L/2;  %Amount of over in samples, (step=L/2 -> 50%, step=L -> 0%)
-magicOffset=0;
+aproxFreq=true;  %If this is set to true, will approximate F1 and F2 such that FFT leakage due to choice of L is minimized (see below).
 %End of simulation parameters %
+
+%Note: In order to avoid leakage due to the number of samples in the FFT,
+%the frequency should be a multiple of 2*pi/L (See See Hayes 1999 pg 239
+%for details). 
+if(aproxFreq) 
+     Fstep=Fs/L;
+     F1=round(F1/Fstep)*Fstep;
+     F2=round(F2/Fstep)*Fstep;
+end
 
 
 tm=[0:1/Fs:T];
@@ -47,7 +56,7 @@ for m=1:M
 end
 
 %Convert to dB
-X=10*log10(X)-magicOffset;
+X=10*log10(X);
 %Get Frequency axis
 freq = 0:Fs/length(X):Fs;
 freq(end)=[];
@@ -64,4 +73,5 @@ xlabel('Frequency (Hz)')
 ylabel('Power/Frequency (dB/Hz)')
 xlim([0 4000])
 
- 
+
+
