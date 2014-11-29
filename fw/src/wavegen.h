@@ -237,6 +237,7 @@ protected:
 		}
 
 		// Just some temporary storage
+		//*dst = *dst + (s * get_speaker_gain(generator.f1));
 		sample_t s;
 		uint32_t theta = generator.theta;
 		uFractional<0,32> gain = generator.gain;
@@ -247,10 +248,11 @@ protected:
 				s = -s;
 
 			s = s * gain;//__SSAT((((q63_t) s * gain) >> 32),31);
+			s = s * get_speaker_gain(generator.f1);
 
 			// Add this sample to the output
-			*dst = *dst + get_speaker_gain(generator.f1) * s;
-			//*dst += s;
+			*dst = *dst + s;
+
 			dst += increment;
 
 			theta = (theta + generator.w1) & (wavetable_len * 2 - 1);

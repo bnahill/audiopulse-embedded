@@ -98,7 +98,7 @@ public:
 
 			} else {
 				cb_out(&buffer_out[out_buffer_size * tx_buffer_sel],
-				       0, 2);
+					   0, 2);
 			}
 			tx_buffer_sel ^= 1;
 		}
