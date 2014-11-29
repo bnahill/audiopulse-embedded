@@ -36,6 +36,7 @@ public:
 	typedef sFractional<0,31> sample_t;
 	//! A callback for handling either unused or full data buffers
 	typedef void (*audio_cb_t)(sample_t *, size_t);
+	typedef void (*audio_out_cb_t)(sample_t *, size_t, uint32_t);
 
 	enum class Src : uint8_t {
 		MIC = 0,
@@ -84,7 +85,7 @@ public:
 	 @note If called before starting output, both buffers will be presented for
 	 population before the stream begins
 	 */
-	static void set_out_cb(audio_cb_t new_cb){cb_out= new_cb;}
+	static void set_out_cb(audio_out_cb_t new_cb){cb_out= new_cb;}
 
 	/*!
 	 @brief Interrupt service routine for outgoing data buffer empty
@@ -93,8 +94,12 @@ public:
 	 */
 	static void dma_tx_isr(){
 		if(cb_out){
-			cb_out(&buffer_out[out_buffer_size * tx_buffer_sel],
-				   out_buffer_size);
+			if(enable_loopback){
+
+			} else {
+				cb_out(&buffer_out[out_buffer_size * tx_buffer_sel],
+					   0, 2);
+			}
 			tx_buffer_sel ^= 1;
 		}
 		DMA_CINT = DMA_CINT_CINT(0);
@@ -109,13 +114,22 @@ public:
 	static void dma_rx_isr(){
 		if(cb_in){
 			sample_t * buffer =  &buffer_in[in_buffer_size * rx_buffer_sel];
-			if(source == Src::MIX){
+			if(enable_loopback){
+				// Overwrite input data with output data
+				if(cb_out){
+					for(uint32_t i = 0; i < in_buffer_size / (out_buffer_size / 2); i++){
+						cb_out(buffer + (i * out_buffer_size / 2), 0, 1);
+					}
+					cb_in(buffer, in_buffer_size);
+				}
+			} else if(source == Src::MIX){
 				for(uint32_t i = 0; i < (in_buffer_size / 2); i++){
 					sFractional<0,31> m, e;
 					m = buffer[2*i];
 					e = buffer[2*i + 1];
 					m = m * mix_mic + e * mix_ext;
-					buffer[i] = sample_t::fromInternal(m.i);				}
+					buffer[i] = sample_t::fromInternal(m.i);
+				}
 				cb_in(buffer, in_buffer_size / 2);
 			} else {
 				cb_in(buffer, in_buffer_size);
@@ -245,6 +259,7 @@ protected:
 	static constexpr bool enable_dma_tx = true;
 	static constexpr bool enable_dma_rx = true;
 	static constexpr bool ext_mclk = false;
+	static constexpr bool enable_loopback = false;
 
 	static uint_fast8_t rx_buffer_sel;
 	static uint_fast8_t tx_buffer_sel;
@@ -258,7 +273,7 @@ protected:
 	//! @}
 
 	static void (*cb_in)(sample_t *, size_t);
-	static void (*cb_out)(sample_t *, size_t);
+	static void (*cb_out)(sample_t *, size_t, uint32_t);
 };
 
 extern "C" {

@@ -78,8 +78,8 @@ public:
 	typedef sFractional<2,29> coeffFractional;
 	//! Biquad output type
 	typedef sFractional<4,27> interstageFractional;
-	typedef sFractional<6,25> powerFractional;
-	typedef sFractional<8,23> transformFractional;
+	typedef sFractional<8,23> powerFractional;
+	typedef sFractional<5,26> transformFractional;
 
 	static constexpr powerFractional const * get_psd() {
 		return mag_psd;
@@ -168,6 +168,7 @@ protected:
 	static uint16_t overlap;
 	//! The constant 512 sample Q31 Hamming window
 	static sample_t const hamming512[512];
+	static constexpr bool use_rectangular = false;
 	static uint32_t num_before_end;
 	static sampleFractional transform_buffer[transform_len];
 
@@ -205,11 +206,18 @@ protected:
 		return {one_over, ((sampleFractional)1.0) - one_over};
 	}
 
+	static RangeChecker<powerFractional> range_psd;
+	static RangeChecker<sampleFractional> range_in;
+	static RangeChecker<sampleFractional> range_decimated;
+	
 	/*!
 	 @brief Reset the whole state of the input DSP block
 	 */
 	static void do_reset();
 
+	//! @name Settings
+	//! @{
+	
 	//! Ensure that no buffers have overflown
 	static constexpr bool debug = true;
 	
@@ -218,6 +226,7 @@ protected:
 	
 	//! Use the IIR decimation routines instead of FIR
 	static constexpr bool use_iir = false;
+	//! @}
 	
 	static constexpr size_t biquad_stages = 4;
 	static constexpr size_t biquad_shift = coeffFractional::bits_i;
@@ -228,3 +237,4 @@ protected:
 };
 
 #endif // __APULSE_INPUT_DSP_H_
+
