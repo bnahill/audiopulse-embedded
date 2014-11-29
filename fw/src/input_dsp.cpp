@@ -277,13 +277,22 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 				num_before_end = decimated_frame_buffer_size - decimation_read_head;
 				if(num_before_end < transform_len){
 					// Split in two
-					arm_mult_q31((q31_t*)&decimated_frame_buffer[decimation_read_head],
-								 (q31_t*)hamming512, (q31_t*)transform_buffer,
-								 num_before_end);
-					arm_mult_q31((q31_t*)&decimated_frame_buffer,
-								 (q31_t*)&hamming512[num_before_end],
-								 (q31_t*)&transform_buffer[num_before_end],
-								 transform_len - num_before_end);
+					if(use_rectangular){
+						arm_copy_q31((q31_t*)&decimated_frame_buffer[decimation_read_head],
+						             (q31_t*)transform_buffer,
+						             num_before_end);
+						arm_copy_q31((q31_t*)&decimated_frame_buffer,
+									 (q31_t*)&transform_buffer[num_before_end],
+									 transform_len - num_before_end);
+					} else {
+						arm_mult_q31((q31_t*)&decimated_frame_buffer[decimation_read_head],
+									 (q31_t*)hamming512, (q31_t*)transform_buffer,
+									 num_before_end);
+						arm_mult_q31((q31_t*)&decimated_frame_buffer,
+									 (q31_t*)&hamming512[num_before_end],
+									 (q31_t*)&transform_buffer[num_before_end],
+									 transform_len - num_before_end);
+					}
 
 					weighted_vector_sum(
 						constants.one_over,
@@ -305,12 +314,20 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 
 				} else {
 					// All in one shot
-					arm_mult_q31(
-						(q31_t*)&decimated_frame_buffer[decimation_read_head],
-						(q31_t*)hamming512,
-						(q31_t*)transform_buffer,
-						transform_len
-					);
+					if(use_rectangular){
+						arm_copy_q31(
+							(q31_t*)&decimated_frame_buffer[decimation_read_head],
+							(q31_t*)transform_buffer,
+							transform_len
+						);
+					} else {
+						arm_mult_q31(
+							(q31_t*)&decimated_frame_buffer[decimation_read_head],
+							(q31_t*)hamming512,
+							(q31_t*)transform_buffer,
+							transform_len
+						);
+					}
 
 					weighted_vector_sum(
 						constants.one_over,

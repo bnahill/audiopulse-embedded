@@ -168,6 +168,7 @@ protected:
 	static uint16_t overlap;
 	//! The constant 512 sample Q31 Hamming window
 	static sample_t const hamming512[512];
+	static constexpr bool use_rectangular = false;
 	static uint32_t num_before_end;
 	static sampleFractional transform_buffer[transform_len];
 
