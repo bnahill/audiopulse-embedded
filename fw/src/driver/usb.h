@@ -56,8 +56,8 @@ public:
 		// Configure enable USB regulator for device
 		// SIM_SOPT1 |= SIM_SOPT1_USBREGEN_MASK;
 
-		NVICICPR2 = (1 << 9);	// Clear any pending interrupts on USB
-		NVICISER2 = (1 << 9);	// Enable interrupts from USB module
+		NVIC->ICPR[2] = (1 << 9);	// Clear any pending interrupts on USB
+		NVIC->ISER[2] = (1 << 9);	// Enable interrupts from USB module
 	}
 
 	static void hidClassInit();

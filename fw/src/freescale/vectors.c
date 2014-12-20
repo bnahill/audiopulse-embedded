@@ -38,7 +38,7 @@ extern void USBHS_ISR();
 #endif
 
 #ifdef USED_PIT0
-	extern void  Timer_ISR(void);
+	//extern void  Timer_ISR(void);
 #endif
 #ifdef USED_PIT1
 	extern void  pit1_isr(void);
@@ -48,8 +48,9 @@ extern void USBHS_ISR();
 void PIT_ISR(void)
 {
 #ifdef USED_PIT0
-	if(PIT_TFLG0 & PIT_TFLG_TIF_MASK)
-		Timer_ISR();
+	if(PIT_TFLG0 & PIT_TFLG_TIF_MASK){
+		//Timer_ISR();
+	}
 #endif
 #ifdef USED_PIT1
 	if(PIT_TFLG1 & PIT_TFLG_TIF_MASK)
@@ -230,7 +231,7 @@ const tVectorTable __vector_table __attribute__ ((section(".vectortable"))) = {
 			(tIsrFunc)Cpu_Interrupt,				/* 0x51  0x00000144   -   ivINT_CMT                      unused by PE */
 			(tIsrFunc)Cpu_Interrupt,				/* 0x52  0x00000148   -   ivINT_RTC                      unused by PE */
 			(tIsrFunc)Cpu_Interrupt,				/* 0x53  0x0000014C   -   ivINT_Reserved83               unused by PE */
-			(tIsrFunc)Timer_ISR,					/* 0x54  0x00000150   -   ivINT_PIT0                     unused by PE */
+			(tIsrFunc)Cpu_Interrupt,//Timer_ISR,					/* 0x54  0x00000150   -   ivINT_PIT0                     unused by PE */
 			(tIsrFunc)Cpu_Interrupt,				/* 0x55  0x00000154   -   ivINT_PIT1                     unused by PE */
 			(tIsrFunc)Cpu_Interrupt,				/* 0x56  0x00000158   -   ivINT_PIT2                     unused by PE */
 			(tIsrFunc)Cpu_Interrupt,				/* 0x57  0x0000015C   -   ivINT_PIT3                     unused by PE */

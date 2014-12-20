@@ -34,7 +34,7 @@ InputDSP::sampleFractional InputDSP::decimated_frame_buffer[decimated_frame_buff
 
 uint16_t InputDSP::num_decimated;
 
-arm_fir_decimate_instance_q31 InputDSP::decimate;
+arm_fir_decimate_instance_f32 InputDSP::decimate;
 
 decltype(InputDSP::start_time_ms) InputDSP::start_time_ms = -1;
 decltype(InputDSP::num_windows) InputDSP::num_windows;
@@ -45,9 +45,7 @@ uint32_t InputDSP::decimation_read_head = 0;
 uint32_t InputDSP::decimation_write_head = 0;
 uint32_t InputDSP::num_before_end = 0;
 
-
-arm_rfft_instance_q31 InputDSP::rfft;
-arm_cfft_radix4_instance_q31 InputDSP::cfft;
+arm_rfft_fast_instance_f32 InputDSP::rfft;
 
 __attribute__((section(".m_data2")))
 InputDSP::sampleFractional InputDSP::transform_buffer[transform_len];
@@ -167,8 +165,8 @@ void InputDSP::configure(uint16_t overlap,
 						 uint16_t start_time_ms,
 						 uint16_t num_windows,
 						 AK4621::Src src,
-						 sFractional<0,31> scale_mic,
-						 sFractional<0,31> scale_ext){
+						 sampleFractional scale_mic,
+						 sampleFractional scale_ext){
 	if(state == ST_RESET || state == ST_READY){
 		is_reset = false;
 		InputDSP::overlap = overlap;
@@ -210,7 +208,7 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 	// Prepare FFT
 	////////////////////////////
 
-	arm_rfft_init_q31(&rfft, &cfft, transform_len, 0, 1);
+	arm_rfft_fast_init_f32(&rfft, transform_len);
 
 	while(true){
 		// Just wait until we are supposed ot be waiting for the right time
@@ -251,7 +249,7 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 						&decimated_frame_buffer[decimation_write_head],
 						num_received);
 			decimation_write_head += num_received / 3;
-			static_assert(decimated_frame_buffer_size == 768, "Decimation size has changed");
+			static_assert(decimated_frame_buffer_size == 1536, "Decimation size has changed");
 			if(decimation_write_head >= decimated_frame_buffer_size)
 				decimation_write_head -= decimated_frame_buffer_size;
 			num_samples += num_received;
@@ -278,19 +276,19 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 				if(num_before_end < transform_len){
 					// Split in two
 					if(use_rectangular){
-						arm_copy_q31((q31_t*)&decimated_frame_buffer[decimation_read_head],
-						             (q31_t*)transform_buffer,
+						arm_copy_f32((float32_t*)&decimated_frame_buffer[decimation_read_head],
+						             (float32_t*)transform_buffer,
 						             num_before_end);
-						arm_copy_q31((q31_t*)&decimated_frame_buffer,
-									 (q31_t*)&transform_buffer[num_before_end],
+						arm_copy_f32((float32_t*)&decimated_frame_buffer,
+									 (float32_t*)&transform_buffer[num_before_end],
 									 transform_len - num_before_end);
 					} else {
-						arm_mult_q31((q31_t*)&decimated_frame_buffer[decimation_read_head],
-									 (q31_t*)hamming512, (q31_t*)transform_buffer,
+						arm_mult_f32((float32_t*)&decimated_frame_buffer[decimation_read_head],
+									 (float32_t*)hamming512, (float32_t*)transform_buffer,
 									 num_before_end);
-						arm_mult_q31((q31_t*)&decimated_frame_buffer,
-									 (q31_t*)&hamming512[num_before_end],
-									 (q31_t*)&transform_buffer[num_before_end],
+						arm_mult_f32((float32_t*)&decimated_frame_buffer,
+									 (float32_t*)&hamming512[num_before_end],
+									 (float32_t*)&transform_buffer[num_before_end],
 									 transform_len - num_before_end);
 					}
 
@@ -315,16 +313,16 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 				} else {
 					// All in one shot
 					if(use_rectangular){
-						arm_copy_q31(
-							(q31_t*)&decimated_frame_buffer[decimation_read_head],
-							(q31_t*)transform_buffer,
+						arm_copy_f32(
+							(float32_t*)&decimated_frame_buffer[decimation_read_head],
+							(float32_t*)transform_buffer,
 							transform_len
 						);
 					} else {
-						arm_mult_q31(
-							(q31_t*)&decimated_frame_buffer[decimation_read_head],
-							(q31_t*)hamming512,
-							(q31_t*)transform_buffer,
+						arm_mult_f32(
+							(float32_t*)&decimated_frame_buffer[decimation_read_head],
+							(float32_t*)hamming512,
+							(float32_t*)transform_buffer,
 							transform_len
 						);
 					}
@@ -340,10 +338,10 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 				}
 
 				for(uint32_t i = 0; i < transform_len; i++){
-					if(transform_buffer[i].i > in_max)
-						in_max = transform_buffer[i].i;
-					if(transform_buffer[i].i < in_min)
-						in_min = transform_buffer[i].i;
+					if(transform_buffer[i] > in_max)
+						in_max = transform_buffer[i];
+					if(transform_buffer[i] < in_min)
+						in_min = transform_buffer[i];
 				}
 
 				if(APulseController::do_buffer_dumps){
@@ -365,8 +363,8 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 
 				PT_YIELD(pt);
 
-				arm_rfft_q31(&rfft, (q31_t*)transform_buffer,
-							 (q31_t*)complex_transform);
+				arm_rfft_fast_f32(&rfft, (float32_t*)transform_buffer,
+							      (float32_t*)complex_transform, 0);
 
 				PT_YIELD(pt);
 
@@ -436,21 +434,20 @@ void InputDSP::do_reset(){
 	Platform::leds[0].clear();
 
 	// Decimated frame buffer really doesn't need to be zero'd...
-	for(auto &a : decimated_frame_buffer) a.setInternal(0);
+	for(auto &a : decimated_frame_buffer) a = 0;
 
 	// These ones are important though...
-	for(auto &a : mag_psd) a.setInternal(0);
-	for(auto &a : average_buffer) a.setInternal(0);
+	for(auto &a : mag_psd) a = 0;
+	for(auto &a : average_buffer) a = 0;
 
 	if(use_iir) {
-		arm_biquad_cascade_df1_init_q31(&biquad_cascade, biquad_stages,
-		                                (q31_t *)biquad_coeffs, biquad_state,
-		                                biquad_shift);
+		arm_biquad_cascade_df1_init_f32(&biquad_cascade, biquad_stages,
+		                                (float32_t *)biquad_coeffs, biquad_state);
 	} else {
 		auto result =
-		arm_fir_decimate_init_q31(&decimate, decimate_fir_order, 3,
-		                          (q31_t*)decimate_coeffs,
-		                          (q31_t*)decimate_buffer,
+		arm_fir_decimate_init_f32(&decimate, decimate_fir_order, 3,
+		                          (float32_t*)decimate_coeffs,
+		                          (float32_t*)decimate_buffer,
 		                          decimate_block_size);
 		
 		if(result != ARM_MATH_SUCCESS){
@@ -467,11 +464,11 @@ void InputDSP::do_reset(){
 
 
 template <size_t n_out, size_t factor>
-static void biquad_cascade_q31_decimate(arm_biquad_casd_df1_inst_q31 &inst,
-                                        q31_t * in, q31_t * out){
-	static q31_t tmp[n_out * factor];
+static void biquad_cascade_f32_decimate(arm_biquad_casd_df1_inst_f32 &inst,
+                                        float32_t * in, float32_t * out){
+	static float32_t tmp[n_out * factor];
 	auto tmpiter = tmp;
-	arm_biquad_cascade_df1_q31(&inst, in, tmp, n_out * factor);
+	arm_biquad_cascade_df1_f32(&inst, in, tmp, n_out * factor);
 	for(auto i = n_out; i; i--){
  		*(out++) = *tmpiter;
  		tmpiter += factor;
@@ -487,11 +484,11 @@ void InputDSP::do_decimate(sampleFractional const * src,
 	for(auto i = 0; i < (n_in / decimate_block_size); i++){
 		arm_shift_q31((q31_t*)iter_in, -6, (q31_t*)iter_in, decimate_block_size);
 		if(use_iir) {
-			biquad_cascade_q31_decimate<decimate_block_size / 3, 3>(
-			            biquad_cascade, (q31_t *)iter_in, (q31_t *)dst);
+			biquad_cascade_f32_decimate<decimate_block_size / 3, 3>(
+			            biquad_cascade, (float32_t *)iter_in, (float32_t *)dst);
 		} else {
-			arm_fir_decimate_q31(&decimate, (q31_t*)iter_in,
-			            (q31_t*)dst, decimate_block_size);
+			arm_fir_decimate_f32(&decimate, (float32_t*)iter_in,
+			            (float32_t*)dst, decimate_block_size);
 		}
 		iter_in += decimate_block_size;
 		dst += decimate_block_size / 3;
@@ -616,7 +613,7 @@ void InputDSP::put_samplesI(sample_t * samples, size_t n){
 //};
 
 // Nuttall
-InputDSP::sample_t const InputDSP::hamming512[512] = {
+InputDSP::sample_t const InputDSP::hamming512[InputDSP::transform_len] = {
         0.0003628 ,  0.0003657 ,  0.00037442,  0.00038899,  0.00040945,
 0.00043586,  0.00046832,  0.00050693,  0.0005518 ,  0.00060309,
 0.00066096,  0.00072557,  0.00079714,  0.00087587,  0.00096201,

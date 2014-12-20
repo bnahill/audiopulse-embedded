@@ -78,13 +78,66 @@ set(CMSIS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/CMSIS)
 set(DSP_SRC ${CMSIS_DIR}/DSP_Lib/Source)
 set(USB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/FreescaleUSBv4.1.1)
 set(PT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/pt-1.4)
-
+set(SPIRAL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/rfft_scalar)
 
 
 option(DEBUG_USE_SVD "Use pycmdebug and an SVD file for debugging" OFF)
 set(BOARD_REVISION "1" CACHE STRING "Which revision is it? BB=1, SF=2")
 
 
+option(TARGET_K22 "Target the 120MHz K22 chip with floating point" OFF)
+option(ENABLE_LOOPBACK "Enable a loopback connection from output to input" OFF)
+option(ENABLE_INPUT_DEBUG "Check for errors in input timing" ON)
+option(ENABLE_INPUT_IIR "Use an IIR filter instead of FIR for decimation" OFF)
+option(ENABLE_INPUT_CALIBRATION "Apply per-frequency calibration to input" OFF)
+
+if(${TARGET_K22})
+	add_definitions(-DCFG_TARGET_K22=true)
+	add_definitions(-DCFG_TARGET_K20=false)
+	add_definitions(-DCPU_MK22FN512VLH12)
+	message("Building for Kinetis K22")
+	set(JLINK_DEVICE "MK22FN512xxx12")
+	set(CLK "120000000")
+else()
+	add_definitions(-DCFG_TARGET_K22=false)
+	add_definitions(-DCFG_TARGET_K20=true)
+	add_definitions(-DCPU_MK20DX256VLH7)
+	message("Building for Kinetis K20")
+	set(JLINK_DEVICE "MK20DX256xxx7")
+	set(CLK "48000000")
+endif()
+
+if(${ENABLE_LOOPBACK})
+	add_definitions(-DCFG_ENABLE_LOOPBACK=true)
+	message("Building with output loopback")
+else()
+	add_definitions(-DCFG_ENABLE_LOOPBACK=false)
+	message("Building without output loopback")
+endif()
+
+if(${ENABLE_INPUT_DEBUG})
+	add_definitions(-DCFG_ENABLE_INPUT_DEBUG=true)
+	message("Building with input debugging")
+else()
+	add_definitions(-DCFG_ENABLE_INPUT_DEBUG=false)
+	message("Building without input debugging")
+endif()
+
+if(${ENABLE_INPUT_IIR})
+	add_definitions(-DCFG_ENABLE_INPUT_IIR=true)
+	message("Building with IIR input filtering")
+else()
+	add_definitions(-DCFG_ENABLE_INPUT_IIR=false)
+	message("Building with FIR input filtering")
+endif()
+
+if(${ENABLE_INPUT_CALIBRATION})
+	add_definitions(-DCFG_ENABLE_INPUT_CALIBRATION=true)
+	message("Building with input calibration")
+else()
+	add_definitions(-DCFG_ENABLE_INPUT_CALIBRATION=false)
+	message("Building without input calibration")
+endif()
 
 
 ########################################################
@@ -100,15 +153,24 @@ set(MCFLAGS "-mcpu=${MCU} -g3 -mthumb -fomit-frame-pointer -D__NEWLIB__ -fno-mat
 
 
 
+if(${TARGET_K22})
+	set(MCFLAGS "${MCFLAGS} -mfloat-abi=hard -mfpu=fpv4-sp-d16")
+	add_definitions(-DCORTEX_USE_FPU=1 )
+	add_definitions(${MCFLAGS})
+	add_definitions(-DARM_MATH_CM4 -DMCU_MK22FN512VLH7 -D__FPU_PRESENT=1 -DLITTLE_ENDIAN)
+	set(SRAM_BANK_SIZE "64k")
+	set(FLASH_SIZE "512k")
+else()
+	set(MCFLAGS "${MCFLAGS} -mfloat-abi=soft")
+	add_definitions(-DCORTEX_USE_FPU=0)
+	add_definitions(${MCFLAGS})
+	add_definitions(-DARM_MATH_CM4 -DMCU_MK20DX128VLH7 -DLITTLE_ENDIAN)
+	set(SRAM_BANK_SIZE "16k")
+	set(FLASH_SIZE "256k")
+endif()
 
-set(MCFLAGS "${MCFLAGS} -mfloat-abi=soft")
-add_definitions(-DCORTEX_USE_FPU=0)
 
-add_definitions(${MCFLAGS})
-add_definitions(-DARM_MATH_CM4 -DMCU_MK20DX128VLH7 -D__MPU_PRESENT=1 -D__FPU_PRESENT=0 -DLITTLE_ENDIAN)
-
-
-set(LINKER_SCRIPT ${CMAKE_CURRENT_SOURCE_DIR}/K20.ld)
+set(LINKER_SCRIPT ${CMAKE_CURRENT_BINARY_DIR}/kinetis.ld)
 
 ###################################################
 # Compiler Flags
@@ -135,6 +197,7 @@ include_directories(
 	src
 	src/freescale
 	${CMSIS_DIR}/Include
+	${CMSIS_DIR}/Include/device/MK22F51212
 	Device/ARM/ARMCM4/Include
 	${USB_DIR}/Source/Device/source/driver
 	${USB_DIR}/Source/Device/source/driver/kinetis
@@ -143,6 +206,7 @@ include_directories(
 	${USB_DIR}/Source/Device/app/common
 	${USB_DIR}/Source/Device/app/common/kinetis
 	${PT_DIR}
+	${SPIRAL_DIR}
 )
 
 
@@ -151,8 +215,9 @@ include_directories(
 ########################################################
 
 set(FREESCALE_SOURCES
-	src/freescale/kinetis_sysinit.c
+	#src/freescale/kinetis_sysinit.c
 	src/freescale/vectors.c
+	src/freescale/system_MK22F51212.c
 	src/usb_descriptor.c
 	#src/audio_generator.c
 	#src/audio_data.c
@@ -161,8 +226,8 @@ set(FREESCALE_SOURCES
 	${USB_DIR}/Source/Device/source/driver/kinetis/usb_dci_kinetis.c
 	${USB_DIR}/Source/Device/source/driver/usb_driver.c
 	${USB_DIR}/Source/Device/source/common/usb_framework.c
-	${USB_DIR}/Source/Device/app/common/kinetis/wdt_kinetis.c
-	${USB_DIR}/Source/Device/app/common/kinetis/RealTimerCounter_kinetis.c
+	#${USB_DIR}/Source/Device/app/common/kinetis/wdt_kinetis.c
+	#${USB_DIR}/Source/Device/app/common/kinetis/RealTimerCounter_kinetis.c
 
 	#${USB_DIR}/Source/Device/source/class/usb_audio.c
 	${USB_DIR}/Source/Device/source/class/usb_hid.c
@@ -185,20 +250,24 @@ set_property(SOURCE src/startup.s PROPERTY LANGUAGE C)
 
 # Add required CMSIS-DSP sources as needed
 set(DSP_SOURCES
-	${DSP_SRC}/FilteringFunctions/arm_fir_decimate_init_q31.c
-	${DSP_SRC}/FilteringFunctions/arm_fir_decimate_q31.c
-	${DSP_SRC}/FilteringFunctions/arm_biquad_cascade_df1_q31.c
-	${DSP_SRC}/FilteringFunctions/arm_biquad_cascade_df1_init_q31.c
+	${DSP_SRC}/FilteringFunctions/arm_fir_decimate_init_f32.c
+	${DSP_SRC}/FilteringFunctions/arm_fir_decimate_f32.c
+	${DSP_SRC}/FilteringFunctions/arm_biquad_cascade_df1_f32.c
+	${DSP_SRC}/FilteringFunctions/arm_biquad_cascade_df1_init_f32.c
 	${DSP_SRC}/BasicMathFunctions/arm_shift_q31.c
-	${DSP_SRC}/BasicMathFunctions/arm_mult_q31.c
-	${DSP_SRC}/TransformFunctions/arm_rfft_init_q31.c
-	${DSP_SRC}/TransformFunctions/arm_cfft_radix4_init_q31.c
+	${DSP_SRC}/BasicMathFunctions/arm_mult_f32.c
+	${DSP_SRC}/TransformFunctions/arm_rfft_fast_init_f32.c
+	${DSP_SRC}/TransformFunctions/arm_rfft_fast_f32.c
 	${DSP_SRC}/TransformFunctions/arm_cfft_radix4_q31.c
-	${DSP_SRC}/TransformFunctions/arm_rfft_q31.c
+ 	${DSP_SRC}/TransformFunctions/arm_cfft_f32.c
+ 	${DSP_SRC}/TransformFunctions/arm_cfft_radix8_f32.c
+ 	${DSP_SRC}/TransformFunctions/arm_bitreversal.c
+ 	${DSP_SRC}/TransformFunctions/arm_bitreversal2.S
 	${DSP_SRC}/TransformFunctions/arm_bitreversal.c
 	${DSP_SRC}/SupportFunctions/arm_copy_q31.c
 	${DSP_SRC}/CommonTables/arm_common_tables.c
 )
+set_property(SOURCE ${DSP_SRC}/TransformFunctions/arm_bitreversal2.S PROPERTY LANGUAGE C)
 
 ##############################################################
 # Executable and library targets
@@ -262,6 +331,9 @@ add_custom_target(assembly_output ALL DEPENDS ${TARGET}.lst)
 #"source ${CMAKE_SOURCE_DIR}/svd/gdb.py
 #svd_load ${CMAKE_SOURCE_DIR}/svd/STM32F40x.svd")
 #endif(${DEBUG_USE_SVD})
+
+configure_file(${CMAKE_SOURCE_DIR}/kinetis.ld.in ${CMAKE_CURRENT_BINARY_DIR}/kinetis.ld)
+
 
 configure_file(${CMAKE_SOURCE_DIR}/start.gdb.in ${CMAKE_CURRENT_BINARY_DIR}/start.gdb)
 set(GDB_ARGS -x start.gdb)

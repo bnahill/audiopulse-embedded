@@ -1,4 +1,4 @@
-shell JLinkGDBServer -select USB -device MK20DX256xxx7 -if SWD -speed 5000 > /dev/null &
+shell JLinkGDBServer -select USB -device ${JLINK_DEVICE} -if SWD -speed 5000 > /dev/null &
 
 define r
 	mon reset
@@ -18,6 +18,6 @@ file @OUTFILE@
 target remote :2331
 
 source ${CMAKE_SOURCE_DIR}/cmdebug/gdb.py
-dwt configclk 48000000
+dwt configclk ${CLK}
 dwt cyccnt reset
 dwt cyccnt enable

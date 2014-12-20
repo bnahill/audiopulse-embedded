@@ -166,7 +166,7 @@ PT_THREAD(APulseController::pt_controller)(struct pt * pt){
 				PT_WAIT_UNTIL(pt, InputDSP::get_state() == InputDSP::ST_DONE);
 
 				// And this should be the only actualy floating-point math
-				coeffs[i] = (1.0 / bins_f) / InputDSP::get_psd()[bin].asFloat();
+				coeffs[i] = (float)((1.0 / bins_f) / InputDSP::get_psd()[bin]);
 			}
 
 			Platform::power_off();
@@ -271,7 +271,11 @@ uint8_t * APulseController::get_response ( uint16_t& size ) {
 
 		p.status.err_code = err_code;
 
+#if TARGET_K20
 		p.status.psd_frac_bits = InputDSP::powerFractional::bits_f;
+#elif TARGET_K22
+		p.status.psd_frac_bits = 0;
+#endif
 
 		size = sizeof(status_pkt_t);
 		return p.data;

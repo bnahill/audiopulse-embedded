@@ -151,8 +151,8 @@ class APulseController {
 		uint16_t num_windows;
 		//! The time in ms to start capturing
 		uint16_t start_time;
-		sFractional<0,31> scale_mic;
-		sFractional<0,31> scale_ext;
+		InputDSP::sampleFractional scale_mic;
+		InputDSP::sampleFractional scale_ext;
 	} __attribute__((packed)) capture_config_pkt_t;
 
 	typedef union {

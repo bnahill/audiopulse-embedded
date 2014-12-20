@@ -2,8 +2,8 @@
  * @file     ARMSC300.h
  * @brief    CMSIS Core Peripheral Access Layer Header File for
  *           ARMSC300 Device Series
- * @version  V2.00
- * @date     17. Februar 2014
+ * @version  V2.02
+ * @date     10. September 2014
  *
  * @note
  *
@@ -90,13 +90,13 @@ typedef enum IRQn
 /* ================      Processor and Core Peripheral Section     ================ */
 /* ================================================================================ */
 
-/* --------  Configuration of the Cortex-M4 Processor and Core Peripherals  ------- */
+/* --------  Configuration of the SC300 Processor and Core Peripherals  ----------- */
 #define __SC300_REV               0x0000    /*!< Core revision r0p0                              */
 #define __MPU_PRESENT             1         /*!< MPU present or not                              */
 #define __NVIC_PRIO_BITS          3         /*!< Number of Bits used for Priority Levels         */
 #define __Vendor_SysTickConfig    0         /*!< Set to 1 if different SysTick Config is used    */
 
-#include <core_SC300.h>                     /* Processor and core peripherals                    */
+#include "core_SC300.h"                     /* Processor and core peripherals                    */
 #include "system_ARMSC300.h"                /* System Header                                     */
 
 
@@ -105,19 +105,19 @@ typedef enum IRQn
 /* ================================================================================ */
 
 /* -------------------  Start of section using anonymous unions  ------------------ */
-#if defined(__CC_ARM)
+#if   defined (__CC_ARM)
   #pragma push
   #pragma anon_unions
-#elif defined(__ICCARM__)
+#elif defined (__ICCARM__)
   #pragma language=extended
-#elif defined(__GNUC__)
+#elif defined (__GNUC__)
   /* anonymous unions are enabled by default */
-#elif defined(__TMS470__)
-/* anonymous unions are enabled by default */
-#elif defined(__TASKING__)
+#elif defined (__TMS470__)
+  /* anonymous unions are enabled by default */
+#elif defined (__TASKING__)
   #pragma warning 586
-#elif defined ( __CSMC__ )		/* Cosmic */
-/* anonymous unions are enabled by default */
+#elif defined (__CSMC__)
+  /* anonymous unions are enabled by default */
 #else
   #warning Not supported compiler type
 #endif
@@ -211,18 +211,18 @@ typedef struct
 
 
 /* --------------------  End of section using anonymous unions  ------------------- */
-#if defined(__CC_ARM)
+#if   defined (__CC_ARM)
   #pragma pop
-#elif defined(__ICCARM__)
+#elif defined (__ICCARM__)
   /* leave anonymous unions enabled */
-#elif defined(__GNUC__)
+#elif defined (__GNUC__)
   /* anonymous unions are enabled by default */
-#elif defined(__TMS470__)
+#elif defined (__TMS470__)
   /* anonymous unions are enabled by default */
-#elif defined(__TASKING__)
+#elif defined (__TASKING__)
   #pragma warning restore
-#elif defined ( __CSMC__ )		/* Cosmic */
-/* anonymous unions are enabled by default */
+#elif defined (__CSMC__)
+  /* anonymous unions are enabled by default */
 #else
   #warning Not supported compiler type
 #endif

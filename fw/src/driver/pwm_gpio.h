@@ -15,7 +15,7 @@ public:
 		} else if(ftm == FTM1_BASE_PTR){
 			SIM_SCGC6 |= SIM_SCGC6_FTM1_MASK;
 		} else if(ftm == FTM2_BASE_PTR){
-			SIM_SCGC3 |= SIM_SCGC3_FTM2_MASK;
+			SIM_SCGC6 |= SIM_SCGC6_FTM2_MASK;
 		}
 	}
 

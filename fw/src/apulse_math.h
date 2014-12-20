@@ -349,7 +349,7 @@ void weighted_vector_sum(T const a,
 						 T const * Y,
 						 T * dst,
 						 size_t n){
-	static_assert(T::bits == 32, "Using weighted_vector_sum for wrong size");
+	//static_assert(T::bits == 32, "Using weighted_vector_sum for wrong size");
 	while(n >= 4){
 		register T x1 __asm__("r4") = X[0];
 		register T x2 __asm__("r5") = X[1];
@@ -577,10 +577,10 @@ class RangeChecker {
 public:
 	RangeChecker() :
 	  min(0), max(0){}
-	  
+
 	void check(T val){
-		if(val.i > max.i){max = val;}
-		if(val.i < min.i){min = val;}
+		if(val > max){max = val;}
+		if(val < min){min = val;}
 	}
 	
 	void reset(){min = 0; max = 0;}

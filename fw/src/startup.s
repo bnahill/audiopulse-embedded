@@ -93,7 +93,7 @@ LoopFillZerobss:
   bcc FillZerobss
   bl  Construct
 /* Call the clock system intitialization function: */
-  bl  __init_hardware
+  bl  SystemInit
 /* Call the application's entry point: */
   bl main
   bx lr

@@ -4,12 +4,12 @@
  */
 
 /* Include the derivative-specific header file */
-#include <ARMCM4.h>
+//#include <ARMCM4.h>
 //#include <core_cm4.h>
 //#include <core_cm4_simd.h>
 #include <stdint.h>
 
-#include <MK20D7.h>
+#include <MK22F51212.h>
 
 #define __MK_xxx_H__
 #define USED_PIT0

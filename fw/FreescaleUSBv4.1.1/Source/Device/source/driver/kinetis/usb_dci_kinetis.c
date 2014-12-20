@@ -1445,7 +1445,7 @@ void USB_DCI_Assert_Resume (
     do
     {
        delay_count--;
-       Watchdog_Reset();    /* Reset the COP */
+       //Watchdog_Reset();    /* Reset the COP */
     }while(delay_count);
 
     USB0_CTL &= ~USB_CTL_RESUME_MASK;          /* Stop RESUME signalling */

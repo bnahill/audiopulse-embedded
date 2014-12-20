@@ -259,7 +259,7 @@ protected:
 	static constexpr bool enable_dma_tx = true;
 	static constexpr bool enable_dma_rx = true;
 	static constexpr bool ext_mclk = false;
-	static constexpr bool enable_loopback = false;
+	static constexpr bool enable_loopback = CFG_ENABLE_LOOPBACK;
 
 	static uint_fast8_t rx_buffer_sel;
 	static uint_fast8_t tx_buffer_sel;

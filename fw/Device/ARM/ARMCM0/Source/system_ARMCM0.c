@@ -2,13 +2,13 @@
  * @file     system_ARMCM0.c
  * @brief    CMSIS Device System Source File for
  *           ARMCM0 Device Series
- * @version  V1.08
- * @date     23. November 2012
+ * @version  V1.09
+ * @date     27. August 2014
  *
  * @note
  *
  ******************************************************************************/
-/* Copyright (c) 2011 - 2012 ARM LIMITED
+/* Copyright (c) 2011 - 2014 ARM LIMITED
 
    All rights reserved.
    Redistribution and use in source and binary forms, with or without
@@ -48,15 +48,21 @@
 
 
 /*----------------------------------------------------------------------------
-  Clock Variable definitions
+  System Core Clock Variable
  *----------------------------------------------------------------------------*/
-uint32_t SystemCoreClock = __SYSTEM_CLOCK;/*!< System Clock Frequency (Core Clock)*/
+uint32_t SystemCoreClock = __SYSTEM_CLOCK;/* System Core Clock Frequency      */
 
 
-/*----------------------------------------------------------------------------
-  Clock functions
- *----------------------------------------------------------------------------*/
-void SystemCoreClockUpdate (void)            /* Get Core Clock Frequency      */
+/**
+ * Update SystemCoreClock variable
+ *
+ * @param  none
+ * @return none
+ *
+ * @brief  Updates the SystemCoreClock with current core Clock
+ *         retrieved from cpu registers.
+ */
+void SystemCoreClockUpdate (void)
 {
 
   SystemCoreClock = __SYSTEM_CLOCK;

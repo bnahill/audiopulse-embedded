@@ -180,7 +180,7 @@ void AK4621::i2s_init(){
 		I2S_RCR2_BCD_MASK;      // Master mode but bit clock internal?
 
 	I2S->RCR3 =                 // Receiver configuration
-		I2S_RCR3_RCE(1) |       // Enable channel
+		I2S_RCR3_RCE_MASK |       // Enable channel
 		I2S_RCR3_WDFL(0);       // Send once each channel has a frame?
 
 	I2S->RCR4 =                 // Receiver configuration
@@ -215,7 +215,7 @@ void AK4621::i2s_init(){
 		I2S_TCR2_DIV((mclk_hz / bclk_hz) / 2 - 1);
 
 	I2S->TCR3 =                 // Transmit configuration
-		I2S_TCR3_TCE(1) |       // Enable both channels?
+		I2S_TCR3_TCE_MASK |       // Enable both channels?
 		I2S_TCR3_WDFL(0);       // NO IDEA, but some examples do this
 
 	I2S->TCR4 =                 // Transmit configuration

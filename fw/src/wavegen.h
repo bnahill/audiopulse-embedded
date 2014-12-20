@@ -248,7 +248,7 @@ protected:
 				s = -s;
 
 			s = s * gain;//__SSAT((((q63_t) s * gain) >> 32),31);
-			s = s * get_speaker_gain(generator.f1);
+			//s = s * get_speaker_gain(generator.f1);
 
 			// Add this sample to the output
 			*dst = *dst + s;

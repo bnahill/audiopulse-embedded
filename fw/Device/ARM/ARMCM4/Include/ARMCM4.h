@@ -2,10 +2,10 @@
  * @file     ARMCM4.h
  * @brief    CMSIS Core Peripheral Access Layer Header File for
  *           ARMCM4 Device Series
- * @version  V2.00
- * @date     17. Februar 2014
+ * @version  V2.02
+ * @date     10. September 2014
  *
- * @note
+ * @note     configured for CM4 without FPU
  *
  ******************************************************************************/
 /* Copyright (c) 2011 - 2014 ARM LIMITED
@@ -14,13 +14,13 @@
    Redistribution and use in source and binary forms, with or without
    modification, are permitted provided that the following conditions are met:
    - Redistributions of source code must retain the above copyright
-	 notice, this list of conditions and the following disclaimer.
+     notice, this list of conditions and the following disclaimer.
    - Redistributions in binary form must reproduce the above copyright
-	 notice, this list of conditions and the following disclaimer in the
-	 documentation and/or other materials provided with the distribution.
+     notice, this list of conditions and the following disclaimer in the
+     documentation and/or other materials provided with the distribution.
    - Neither the name of ARM nor the names of its contributors may be used
-	 to endorse or promote products derived from this software without
-	 specific prior written permission.
+     to endorse or promote products derived from this software without
+     specific prior written permission.
    *
    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
    AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -95,9 +95,9 @@ typedef enum IRQn
 #define __MPU_PRESENT             1         /*!< MPU present or not                              */
 #define __NVIC_PRIO_BITS          3         /*!< Number of Bits used for Priority Levels         */
 #define __Vendor_SysTickConfig    0         /*!< Set to 1 if different SysTick Config is used    */
-#define __FPU_PRESENT             0         /*!< FPU present or not                              */
+#define __FPU_PRESENT             0         /*!< no FPU present                                  */
 
-#include <core_cm4.h>                       /* Processor and core peripherals                    */
+#include "core_cm4.h"                       /* Processor and core peripherals                    */
 #include "system_ARMCM4.h"                  /* System Header                                     */
 
 
@@ -106,19 +106,19 @@ typedef enum IRQn
 /* ================================================================================ */
 
 /* -------------------  Start of section using anonymous unions  ------------------ */
-#if defined(__CC_ARM)
+#if   defined (__CC_ARM)
   #pragma push
   #pragma anon_unions
-#elif defined(__ICCARM__)
+#elif defined (__ICCARM__)
   #pragma language=extended
-#elif defined(__GNUC__)
+#elif defined (__GNUC__)
   /* anonymous unions are enabled by default */
-#elif defined(__TMS470__)
-/* anonymous unions are enabled by default */
-#elif defined(__TASKING__)
+#elif defined (__TMS470__)
+  /* anonymous unions are enabled by default */
+#elif defined (__TASKING__)
   #pragma warning 586
-#elif defined ( __CSMC__ )		/* Cosmic */
-/* anonymous unions are enabled by default */
+#elif defined (__CSMC__)
+  /* anonymous unions are enabled by default */
 #else
   #warning Not supported compiler type
 #endif
@@ -136,11 +136,11 @@ typedef struct
   __IO uint32_t LED;              /* Offset: 0x00C (R/W)  LED Output States */
   __I  uint32_t TS;               /* Offset: 0x010 (R/ )  Touchscreen Register */
   __IO uint32_t CTRL1;            /* Offset: 0x014 (R/W)  Misc Control Functions */
-	   uint32_t RESERVED0[2];
+       uint32_t RESERVED0[2];
   __IO uint32_t CLKCFG;           /* Offset: 0x020 (R/W)  System Clock Configuration */
   __IO uint32_t WSCFG;            /* Offset: 0x024 (R/W)  Flash Waitstate Configuration */
   __IO uint32_t CPUCFG;           /* Offset: 0x028 (R/W)  Processor Configuration */
-	   uint32_t RESERVED1[3];
+       uint32_t RESERVED1[3];
   __IO uint32_t BASE;             /* Offset: 0x038 (R/W)  ROM Table base Address */
   __IO uint32_t ID2;              /* Offset: 0x03C (R/W)  Secondary Identification Register */
 } ARM_CPU_SYS_TypeDef;
@@ -173,7 +173,7 @@ typedef struct
   __I  uint32_t Timer1RIS;        /* Offset: 0x010 (R/ )  Timer 1 Raw Interrupt Status */
   __I  uint32_t Timer1MIS;        /* Offset: 0x014 (R/ )  Timer 1 Masked Interrupt Status */
   __IO uint32_t Timer1BGLoad;     /* Offset: 0x018 (R/W)  Background Load Register */
-	   uint32_t RESERVED0[1];
+       uint32_t RESERVED0[1];
   __IO uint32_t Timer2Load;       /* Offset: 0x020 (R/W)  Timer 2 Load */
   __I  uint32_t Timer2Value;      /* Offset: 0x024 (R/ )  Timer 2 Counter Current Value */
   __IO uint32_t Timer2Control;    /* Offset: 0x028 (R/W)  Timer 2 Control */
@@ -194,9 +194,9 @@ typedef struct
   __I  uint32_t RSR;              /* Offset: 0x000 (R/ )  Receive Status */
   __O  uint32_t ECR;              /* Offset: 0x000 ( /W)  Error Clear */
   };
-	   uint32_t RESERVED0[4];
+       uint32_t RESERVED0[4];
   __IO uint32_t FR;               /* Offset: 0x018 (R/W)  Flags */
-	   uint32_t RESERVED1[1];
+       uint32_t RESERVED1[1];
   __IO uint32_t ILPR;             /* Offset: 0x020 (R/W)  IrDA Low-power Counter */
   __IO uint32_t IBRD;             /* Offset: 0x024 (R/W)  Interger Baud Rate */
   __IO uint32_t FBRD;             /* Offset: 0x028 (R/W)  Fractional Baud Rate */
@@ -212,18 +212,18 @@ typedef struct
 
 
 /* --------------------  End of section using anonymous unions  ------------------- */
-#if defined(__CC_ARM)
+#if   defined (__CC_ARM)
   #pragma pop
-#elif defined(__ICCARM__)
+#elif defined (__ICCARM__)
   /* leave anonymous unions enabled */
-#elif defined(__GNUC__)
+#elif defined (__GNUC__)
   /* anonymous unions are enabled by default */
-#elif defined(__TMS470__)
+#elif defined (__TMS470__)
   /* anonymous unions are enabled by default */
-#elif defined(__TASKING__)
+#elif defined (__TASKING__)
   #pragma warning restore
-#elif defined ( __CSMC__ )		/* Cosmic */
-/* anonymous unions are enabled by default */
+#elif defined (__CSMC__)
+  /* anonymous unions are enabled by default */
 #else
   #warning Not supported compiler type
 #endif

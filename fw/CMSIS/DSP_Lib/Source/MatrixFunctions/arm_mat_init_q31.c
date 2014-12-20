@@ -1,8 +1,8 @@
 /* ----------------------------------------------------------------------    
 * Copyright (C) 2010-2014 ARM Limited. All rights reserved.    
 *    
-* $Date:        12. March 2014 
-* $Revision: 	V1.4.3
+* $Date:        31. July 2014
+* $Revision: 	V1.4.4
 *    
 * Project: 	    CMSIS DSP Library    
 * Title:        arm_mat_init_q31.c    

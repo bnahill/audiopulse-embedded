@@ -30,6 +30,24 @@
 class InputDSP {
 public:
 	typedef AK4621::sample_t sample_t;
+#if CFG_TARGET_K20
+	typedef sFractional<0,31> sampleFractional;
+	//! Biquad filter coefficients
+	typedef sFractional<2,29> coeffFractional;
+	//! Biquad output type
+	typedef sFractional<4,27> interstageFractional;
+	typedef sFractional<8,23> powerFractional;
+	typedef sFractional<5,26> transformFractional;
+#elif CFG_TARGET_K22
+	typedef float sampleFractional;
+	//! Biquad filter coefficients
+	typedef float coeffFractional;
+	//! Biquad output type
+	typedef float interstageFractional;
+	typedef float powerFractional;
+	typedef float transformFractional;
+#endif
+
 
 	/*!
 	 @brief The protothread for performing required DSP operations
@@ -40,8 +58,8 @@ public:
 						  uint16_t start_time_ms,
 						  uint16_t num_windows,
 						  AK4621::Src src,
-						  sFractional<0,31> scale_mic,
-						  sFractional<0,31> scale_ext);
+						  sampleFractional scale_mic,
+						  sampleFractional scale_ext);
 
 	/*!
 	 @brief Callback to receive new samples
@@ -73,13 +91,6 @@ public:
 // 		       (start_time_ms != -1);
 	}
 
-	typedef sFractional<0,31> sampleFractional;
-	//! Biquad filter coefficients
-	typedef sFractional<2,29> coeffFractional;
-	//! Biquad output type
-	typedef sFractional<4,27> interstageFractional;
-	typedef sFractional<8,23> powerFractional;
-	typedef sFractional<5,26> transformFractional;
 
 	static constexpr powerFractional const * get_psd() {
 		return mag_psd;
@@ -89,7 +100,7 @@ public:
 		return average_buffer;
 	}
 
-	static constexpr uint32_t transform_len = 512;
+	static constexpr uint32_t transform_len = 1024;
 
 	typedef enum {
 		ST_RESET     = 0,
@@ -134,13 +145,13 @@ protected:
 	//! The number of samples processed in each iteration of ARM FIR decimate
 	static constexpr uint16_t decimate_block_size = 48;
 	//! The number of output samples generated at a time
-	static constexpr uint16_t decimate_output_size = 256;
+	static constexpr uint16_t decimate_output_size = 512;
 	//! The size of the buffer containing decimated samples
 	static constexpr uint32_t decimated_frame_buffer_size = 3 * transform_len / 2;
 	//! The buffer containing decimated samples
 	static sampleFractional decimated_frame_buffer[decimated_frame_buffer_size];
 	//! The decimate state
-	static arm_fir_decimate_instance_q31 decimate;
+	static arm_fir_decimate_instance_f32 decimate;
 	//! Perform the decimation
 	static void do_decimate(sampleFractional const * src,
 							sampleFractional * dst,
@@ -167,7 +178,7 @@ protected:
 	//! The current window overlap setting (M)
 	static uint16_t overlap;
 	//! The constant 512 sample Q31 Hamming window
-	static sample_t const hamming512[512];
+	static sample_t const hamming512[transform_len];
 	static constexpr bool use_rectangular = false;
 	static uint32_t num_before_end;
 	static sampleFractional transform_buffer[transform_len];
@@ -184,9 +195,7 @@ protected:
 	static uint32_t window_count;
 
 	//! RFFT instance structure
-	static arm_rfft_instance_q31 rfft;
-	//! CFFT instance structure
-	static arm_cfft_radix4_instance_q31 cfft;
+	static arm_rfft_fast_instance_f32 rfft;
 	//! @}
 
 	//! Standard reset flags
@@ -202,7 +211,11 @@ protected:
 	 */
 	static AverageConstants mk_multipliers(){
 		//if(!window_count) return {1.0,0.0};
+#if CFG_TARGET_K20
 		sampleFractional one_over = sampleFractional::mk_frac(1, window_count + 1);
+#elif CFG_TARGET_K22
+		sampleFractional one_over = 1.0 / (window_count + 1);
+#endif
 		return {one_over, ((sampleFractional)1.0) - one_over};
 	}
 
@@ -219,7 +232,7 @@ protected:
 	//! @{
 	
 	//! Ensure that no buffers have overflown
-	static constexpr bool debug = true;
+	static constexpr bool debug = CFG_ENABLE_INPUT_DEBUG;
 	
 	//! Apply calibration coefficients to input spectrum
 	static constexpr bool calibrate_mic = false;
@@ -229,9 +242,11 @@ protected:
 	//! @}
 	
 	static constexpr size_t biquad_stages = 4;
+#if CFG_TARGET_K20
 	static constexpr size_t biquad_shift = coeffFractional::bits_i;
-	static arm_biquad_casd_df1_inst_q31 biquad_cascade;
-	static q31_t biquad_state[4 * biquad_stages];
+#endif
+	static arm_biquad_casd_df1_inst_f32 biquad_cascade;
+	static float32_t biquad_state[4 * biquad_stages];
 	static coeffFractional biquad_coeffs[5 * biquad_stages];
 
 };
