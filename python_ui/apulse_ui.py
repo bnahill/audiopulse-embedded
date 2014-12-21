@@ -381,8 +381,12 @@ class UIWindow(QtGui.QMainWindow):
         plotpanel.setFrameStyle(QtCore.Qt.SolidLine)
         plotpanel.setSizePolicy(QtGui.QSizePolicy.Expanding,
                                 QtGui.QSizePolicy.Expanding)
+        mbfont = QtGui.QFont("Monospace", 10)
+        mbfont.setStyleHint(mbfont.TypeWriter)
         messagebox = QtGui.QTextEdit(rframe)
         messagebox.setFixedHeight(200)
+        messagebox.setCurrentFont(mbfont)
+
         rightlayout.addWidget(plotpanel)
         rightlayout.addWidget(messagebox)
 

@@ -104,16 +104,35 @@ class APulseStatus(object):
         (self.version, self.input_state, self.wavegen_state,
          self.controller_state, self.err_code,
          self.psd_frac_bits) = struct.unpack("B" * len(data), data)
-        self.psd_int_bits = 31 - self.psd_frac_bits
+        if self.psd_frac_bits == 255:
+            def decode_bytes_float(data):
+                a = struct.unpack("<" + "f" * (len(data) / 4), data)
+                return np.array(a, dtype=np.float128)
+            self.decode_bytes = decode_bytes_float
+            self.decoder_string = "float32"
+        else:
+            def decode_bytes_int(data):
+                a = struct.unpack("<" + "i" * (len(data) / 4), data)
+                a = np.array(a, dtype=np.float128)
+                return a / np.float128(2 ** self.last_status.psd_frac_bits)
+            self.decode_bytes = decode_bytes_int
+            self.psd_int_bits = 31 - self.psd_frac_bits
+            self.decoder_string = "Q{}.{}".format(self.psd_int_bits,
+                                                  self.psd_frac_bits)
 
     def __str__(self):
         input_state = self.str_instate[self.input_state]
         wavegen_state = self.str_wgstate[self.wavegen_state]
         control_state = self.str_test[self.controller_state]
-        s = "Version:{}, Input:{}, WaveGen:{}, Control:{}, Err:{}, " \
-            "PSD format:Q{}.{}".format(
+        s = "Status:\n" \
+            "\tVersion:    {},\n" \
+            "\tInput:      {},\n" \
+            "\tWaveGen:    {},\n" \
+            "\tControl:    {},\n" \
+            "\tErr:        {},\n" \
+            "\tPSD format: {}".format(
             self.version, input_state, wavegen_state, control_state,
-            self.err_code, self.psd_int_bits, self.psd_frac_bits)
+            self.err_code, self.decoder_string)
         return s
 
     def is_done(self):
@@ -286,13 +305,16 @@ class APulseIface(object):
             self._write(struct.pack("B", Constants.CMD_GETDATA))
             for i in range(16):
                 data = self._read(64)
-                psd[i * 16:(i + 1) * 16] = struct.unpack("<" + "i" * 16, data)
-            (psd[256],) = struct.unpack("<i", self._read(4))
-            psd /= np.float128(2 ** self.last_status.psd_frac_bits)
+                psd[i * 16:(i + 1) * 16] = self.last_status.decode_bytes(data)
+                # struct.unpack("<" + "i" * 16, data)
+            (psd[256],) = self.last_status.decode_bytes(self._read(4))
+            #struct.unpack("<i", self._read(4))
+            #psd /= np.float128(2 ** self.last_status.psd_frac_bits)
 
             for i in range(32):
                 data = self._read(64)
-                avg[i * 16:(i + 1) * 16] = struct.unpack("<" + "i" * 16, data)
+                avg[i * 16:(i + 1) * 16] = self.last_status.decode_bytes(data)
+                #struct.unpack("<" + "i" * 16, data)
 
         # Normalize around 90dB
         #psd /= np.float128(0x7FFFFFFF)
