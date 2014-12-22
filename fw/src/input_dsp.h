@@ -177,8 +177,8 @@ protected:
 	static uint16_t num_decimated;
 	//! The current window overlap setting (M)
 	static uint16_t overlap;
-	//! The constant 512 sample Q31 Hamming window
-	static sample_t const hamming512[transform_len];
+	//! The constant Q31 Hamming window
+	static sampleFractional const hamming_window[transform_len];
 	static constexpr bool use_rectangular = false;
 	static uint32_t num_before_end;
 	static sampleFractional transform_buffer[transform_len];

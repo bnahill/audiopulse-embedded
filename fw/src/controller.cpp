@@ -271,10 +271,10 @@ uint8_t * APulseController::get_response ( uint16_t& size ) {
 
 		p.status.err_code = err_code;
 
-#if TARGET_K20
+#if CFG_TARGET_K20
 		p.status.psd_frac_bits = InputDSP::powerFractional::bits_f;
-#elif TARGET_K22
-		p.status.psd_frac_bits = 0;
+#elif CFG_TARGET_K22
+		p.status.psd_frac_bits = ~0;
 #endif
 
 		size = sizeof(status_pkt_t);

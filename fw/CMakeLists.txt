@@ -335,6 +335,19 @@ add_custom_target(assembly_output ALL DEPENDS ${TARGET}.lst)
 configure_file(${CMAKE_SOURCE_DIR}/kinetis.ld.in ${CMAKE_CURRENT_BINARY_DIR}/kinetis.ld)
 
 
+if(${DEBUG_USE_SVD})
+  set(USING_SVD_RESET_CMD 
+"\tdwt reset counters
+\tdwt cyccnt enable"
+  )
+  set(USING_SVD_INIT_CMD
+"source ${CMAKE_SOURCE_DIR}/cmdebug/gdb.py
+dwt configclk ${CLK}
+dwt cyccnt reset
+dwt cyccnt enable"
+  )
+endif()
+
 configure_file(${CMAKE_SOURCE_DIR}/start.gdb.in ${CMAKE_CURRENT_BINARY_DIR}/start.gdb)
 set(GDB_ARGS -x start.gdb)
 
@@ -354,9 +367,9 @@ set(GDBTUI ${TC_PREFIX}gdb -tui -ex \"layout split\" -ex \"focus CMD\")
 
 add_custom_target(gdb COMMAND ${GDB} ${GDB_ARGS})
 add_custom_target(gdbtui COMMAND ${GDBTUI} ${GDB_ARGS})
-#add_custom_target(ddd COMMAND ddd --gdb --debugger \"${GDB} ${GDB_ARGS}\" > /dev/null 2>&1 &
-	#COMMENT "Launching DDD"
-#)
+add_custom_target(ddd COMMAND ddd --gdb --debugger \"${GDB} ${GDB_ARGS}\" > /dev/null 2>&1 &
+	COMMENT "Launching DDD"
+)
 
 #add_dependencies(gdb gdb_script)
 #add_dependencies(gdbtui gdb_script)

@@ -1,9 +1,11 @@
-shell JLinkGDBServer -select USB -device ${JLINK_DEVICE} -if SWD -speed 5000 > /dev/null &
+shell JLinkGDBServer -select USB -device ${JLINK_DEVICE} -if SWD -speed 6000 > /dev/null &
 
 define r
 	mon reset
-	dwt reset counters
-	dwt cyccnt enable
+${USING_SVD_RESET_CMD}
+	b main
+	cont
+	monitor SWO EnableTarget 6000000 0 1 0
 end
 
 define l
@@ -17,7 +19,5 @@ file @OUTFILE@
 
 target remote :2331
 
-source ${CMAKE_SOURCE_DIR}/cmdebug/gdb.py
-dwt configclk ${CLK}
-dwt cyccnt reset
-dwt cyccnt enable
+
+${USING_SVD_INIT_CMD}

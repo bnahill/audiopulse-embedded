@@ -214,7 +214,7 @@ class APulseController {
 public:
 	static BufferDump waveform_dump;
 
-	static constexpr uint8_t protocol_version = 3;
+	static constexpr uint8_t protocol_version = 4;
 
 	static InputDSP::powerFractional coeffs[16];
 

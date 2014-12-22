@@ -132,6 +132,9 @@ void AK4621::i2s_init(){
 	////////////////
 	/// MCLK
 	////////////////
+	
+	static_assert(mclk_gen_frac() and (mclk_gen_frac() < 256), "Couldn't get MCLK fractional value");
+	static_assert(mclk_gen_div() and (mclk_gen_frac() < 2048), "Couldn't get MCLK divider value");
 
 	if(ext_mclk){
 		// Just disable MCLK generation...
@@ -141,8 +144,8 @@ void AK4621::i2s_init(){
 		XTAL_12288.set();
 	} else {
 		I2S->MDR =
-				I2S_MDR_FRACT(mclk_gen_frac - 1) |
-				I2S_MDR_DIVIDE(mclk_gen_div - 1);
+				I2S_MDR_FRACT(mclk_gen_frac() - 1) |
+				I2S_MDR_DIVIDE(mclk_gen_div() - 1);
 
 		I2S->MCR =
 				I2S_MCR_MOE_MASK | // Enable MCLK output
@@ -323,10 +326,10 @@ void AK4621::i2s_dma_init(){
 }
 
 void AK4621::start(){
-	if(cb_out)
+	if(cb_out){
 		cb_out(&buffer_out[0], out_buffer_size, 2);
-	if(cb_out)
 		cb_out(&buffer_out[out_buffer_size], out_buffer_size, 2);
+	}
 
 	I2S->RCSR |=
 		I2S_RCSR_FEF_MASK |
@@ -339,19 +342,19 @@ void AK4621::start(){
 		I2S_TCSR_FRF_MASK;
 
 	if(enable_dma_rx){
-	DMA_CERR = DMA_CERR_CERR(1);
-	DMA_CINT = DMA_CINT_CINT(1);
+		DMA_CERR = DMA_CERR_CERR(1);
+		DMA_CINT = DMA_CINT_CINT(1);
 
-	// Start receive
-	DMA_SSRT = DMA_SSRT_SSRT(1);
+		// Start receive
+		DMA_SSRT = DMA_SSRT_SSRT(1);
 	}
 
 	if(enable_dma_tx){
-	DMA_CERR = DMA_CERR_CERR(0);
-	DMA_CINT = DMA_CINT_CINT(0);
+		DMA_CERR = DMA_CERR_CERR(0);
+		DMA_CINT = DMA_CINT_CINT(0);
 
-	// Start transmit
-	DMA_SSRT = DMA_SSRT_SSRT(0);
+		// Start transmit
+		DMA_SSRT = DMA_SSRT_SSRT(0);
 	}
 }
 

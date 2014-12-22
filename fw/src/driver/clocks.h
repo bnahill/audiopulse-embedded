@@ -121,9 +121,21 @@ public:
 		1,        // Flexbus is MCGOUTCLK / 2 = 36MHz
 		3         // Flash is MCGOUTCLK / 3 = 24MHz
 	};
+	
+	static constexpr ClockConfig clk120 = {
+		120000000, // Run OUTCLK at 120MHz
+		60000000, // Bus clock is half that
+		8000000,  // xtal is 8MHz
+		2,        // PLL input is 8MHz / 2
+		30,       // Multiply that by 30 = 120MHz
+		1,        // Core is MCGOUTCLK / 1
+		2,        // Bus is MCGOUTCLK / 2
+		4,        // Flexbus is MCGOUTCLK / 4 = 30MHz
+		5         // Flash is MCGOUTCLK / 5 = 24MHz
+	};
 
 	//! Select the configuration to use
-	static constexpr ClockConfig config = clk48;
+	static constexpr ClockConfig config = clk120;
 
 private:
 	static constexpr GPIOPin clkout = {PTC_BASE_PTR, 3};

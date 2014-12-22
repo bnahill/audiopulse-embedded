@@ -28,6 +28,7 @@
 
 #include <stdint.h>
 #include <driver/gpio.h>
+#include "clocks.h"
 #include <apulse_math.h>
 
 class AK4621 {
@@ -181,7 +182,7 @@ public:
 	/*!
 	 @brief The number of samples in a single incoming buffer (there are two)
 	 */
-	static constexpr uint32_t in_buffer_size = 768;
+	static constexpr uint32_t in_buffer_size = 768*2;
 
 	/*!
 	 @brief The number of samples in a single outgoing buffer (there are two)
@@ -239,8 +240,13 @@ protected:
 	static constexpr GPIOPin PDN  = {PTB_BASE_PTR, 3};
 
 	static constexpr I2S_MemMapPtr I2S = I2S0_BASE_PTR;
+#if CFG_TARGET_K20
 	static constexpr uint32_t I2S_DMAMUX_SOURCE_RX = 14; // p77 of RM
 	static constexpr uint32_t I2S_DMAMUX_SOURCE_TX = 15;
+#elif CFG_TARGET_K22
+	static constexpr uint32_t I2S_DMAMUX_SOURCE_RX = 12; // p78 of RM
+	static constexpr uint32_t I2S_DMAMUX_SOURCE_TX = 13;
+#endif
 	static constexpr IRQn_Type DMA_CH0_IRQn = (IRQn_Type)0;
 	static constexpr IRQn_Type DMA_CH1_IRQn = (IRQn_Type)1;
 
@@ -251,8 +257,14 @@ protected:
 	static constexpr uint32_t lrck_hz = 48000;
 	static constexpr uint32_t bclk_hz = word_width * nwords * lrck_hz;
 
-	static constexpr uint32_t mclk_gen_frac = 32;
-	static constexpr uint32_t mclk_gen_div = 125;
+	static constexpr uint32_t mclk_gen_frac(){
+		return (Clock::config.mcgoutclk == 120000000) ? 192 :
+		       ((Clock::config.mcgoutclk == 48000000) ? 32 : 0);
+	}
+	static constexpr uint32_t mclk_gen_div(){
+		return (Clock::config.mcgoutclk == 120000000) ? 1875 :
+		       ((Clock::config.mcgoutclk == 48000000) ? 125 : 0);
+	}
 	//static constexpr uint32_t mclk_gen_frac = 1;
 	//static constexpr uint32_t mclk_gen_div = 8;
 

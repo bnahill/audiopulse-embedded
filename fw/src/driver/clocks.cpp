@@ -22,6 +22,8 @@
 #include <driver/platform.h>
 
 void Clock::setupClocks(){
+	static_assert(config.clk_pll_mul - 24 < 32, "PLL multiplier is out of range!");
+	
 	SIM_CLKDIV1 = SIM_CLKDIV1_OUTDIV1(config.clk_core_div - 1) |
 				  SIM_CLKDIV1_OUTDIV2(config.clk_bus_div - 1) |
 				  SIM_CLKDIV1_OUTDIV3(config.clk_flexbus_div - 1) |

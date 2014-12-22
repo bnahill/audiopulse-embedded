@@ -30,7 +30,8 @@ class USB {
 public:
 	static void lateInit(){
 		static_assert(Clock::config.mcgoutclk == 48000000 or
-					  Clock::config.mcgoutclk == 72000000, "Invalid busclk value");
+		              Clock::config.mcgoutclk == 72000000 or
+		              Clock::config.mcgoutclk == 120000000, "Invalid busclk value");
 		switch(Clock::config.mcgoutclk){
 		case 48000000:
 			// Divide 48MHz by 1 for USB 48MHz
@@ -40,15 +41,22 @@ public:
 			// Multiply 72MHz by 2 and then divide by 3
 			SIM_CLKDIV2 = SIM_CLKDIV2_USBDIV(2) | SIM_CLKDIV2_USBFRAC_MASK;
 			break;
+		case 120000000:
+			// Multiply 120MHz by 2 and then divide by 5
+			SIM_CLKDIV2 = SIM_CLKDIV2_USBDIV(4) | SIM_CLKDIV2_USBFRAC_MASK;
+			break;
 		default:
 			break;
 		}
 
-		// Configure USB to be clocked from PLL
-		SIM_SOPT2 |= SIM_SOPT2_USBSRC_MASK | SIM_SOPT2_PLLFLLSEL_MASK;
-
 		// Enable USB-OTG IP clocking
 		SIM_SCGC4 |= SIM_SCGC4_USBOTG_MASK;
+		
+		// Configure USB to be clocked from PLL
+		SIM_SOPT2 |= SIM_SOPT2_USBSRC_MASK | SIM_SOPT2_PLLFLLSEL(1);
+		
+		USB0_CLK_RECOVER_IRC_EN = 0;
+		
 
 		// old documentation writes setting this bit is mandatory
 		USB0_USBTRC0 = 0x40;
@@ -56,8 +64,9 @@ public:
 		// Configure enable USB regulator for device
 		// SIM_SOPT1 |= SIM_SOPT1_USBREGEN_MASK;
 
-		NVIC->ICPR[2] = (1 << 9);	// Clear any pending interrupts on USB
-		NVIC->ISER[2] = (1 << 9);	// Enable interrupts from USB module
+		// ICPR[2] & (1 << 9) for K20
+		NVIC->ICPR[1] = (1 << 21);	// Clear any pending interrupts on USB
+		NVIC->ISER[1] = (1 << 21);	// Enable interrupts from USB module
 	}
 
 	static void hidClassInit();

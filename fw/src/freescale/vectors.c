@@ -216,7 +216,7 @@ const tVectorTable __vector_table __attribute__ ((section(".vectortable"))) = {
 			(tIsrFunc)Cpu_Interrupt,				/* 0x43  0x0000010C   -   ivINT_UART3_RX_TX              unused by PE */
 			(tIsrFunc)Cpu_Interrupt,				/* 0x44  0x00000110   -   ivINT_UART3_ERR                unused by PE */
 		#endif      
-			(tIsrFunc)Cpu_Interrupt,				/* 0x45  0x00000114   -   ivINT_UART4_RX_TX              unused by PE */
+			(tIsrFunc)USB_ISR,						/* 0x45  0x00000114   -   ivINT_USB0                     unused by PE */
 			(tIsrFunc)Cpu_Interrupt,				/* 0x46  0x00000118   -   ivINT_UART4_ERR                unused by PE */
 			(tIsrFunc)Cpu_Interrupt,				/* 0x47  0x0000011C   -   ivINT_UART5_RX_TX              unused by PE */
 			(tIsrFunc)Cpu_Interrupt,				/* 0x48  0x00000120   -   ivINT_UART5_ERR                unused by PE */
@@ -231,12 +231,12 @@ const tVectorTable __vector_table __attribute__ ((section(".vectortable"))) = {
 			(tIsrFunc)Cpu_Interrupt,				/* 0x51  0x00000144   -   ivINT_CMT                      unused by PE */
 			(tIsrFunc)Cpu_Interrupt,				/* 0x52  0x00000148   -   ivINT_RTC                      unused by PE */
 			(tIsrFunc)Cpu_Interrupt,				/* 0x53  0x0000014C   -   ivINT_Reserved83               unused by PE */
-			(tIsrFunc)Cpu_Interrupt,//Timer_ISR,					/* 0x54  0x00000150   -   ivINT_PIT0                     unused by PE */
+			(tIsrFunc)Cpu_Interrupt,				/* 0x54  0x00000150   -   ivINT_PIT0                     unused by PE */
 			(tIsrFunc)Cpu_Interrupt,				/* 0x55  0x00000154   -   ivINT_PIT1                     unused by PE */
 			(tIsrFunc)Cpu_Interrupt,				/* 0x56  0x00000158   -   ivINT_PIT2                     unused by PE */
 			(tIsrFunc)Cpu_Interrupt,				/* 0x57  0x0000015C   -   ivINT_PIT3                     unused by PE */
 			(tIsrFunc)Cpu_Interrupt,				/* 0x58  0x00000160   -   ivINT_PDB0                     unused by PE */
-			(tIsrFunc)USB_ISR,						/* 0x59  0x00000164   -   ivINT_USB0                     unused by PE */
+			(tIsrFunc)Cpu_Interrupt,				/* 0x59  0x00000164   -   ivINT_USB0                     unused by PE */
 			(tIsrFunc)Cpu_Interrupt,				/* 0x5A  0x00000168   -   ivINT_USBDCD                   unused by PE */   
 			(tIsrFunc)Cpu_Interrupt,				/* 0x5B  0x0000016C   -   ivINT_Reserved91               unused by PE */
 			(tIsrFunc)Cpu_Interrupt,				/* 0x5C  0x00000170   -   ivINT_Reserved92               unused by PE */

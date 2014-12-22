@@ -1,3 +1,4 @@
+// vim: noai:ts=4:sw=4
 /*!
  (C) Copyright 2013 Ben Nahill
 
@@ -34,9 +35,36 @@ PWMGPIOPin const Platform::pwm[] = {
 };
 
 void earlyInitC(){
-	WDOG_UNLOCK = 0xC520;
-	WDOG_UNLOCK = 0xD928;
-	WDOG_STCTRLH = 0x4010;
+#if ((__FPU_PRESENT == 1) && (__FPU_USED == 1))
+	SCB->CPACR |= ((3UL << 10*2) | (3UL << 11*2));    /* set CP10, CP11 Full Access */
+#endif /* ((__FPU_PRESENT == 1) && (__FPU_USED == 1)) */
+
+if((RCM->SRS0 & RCM_SRS0_WAKEUP_MASK) != 0x00U){
+	if((PMC->REGSC & PMC_REGSC_ACKISO_MASK) != 0x00U)
+	{
+		PMC->REGSC |= PMC_REGSC_ACKISO_MASK; /* Release hold with ACKISO:  Only has an effect if recovering from VLLSx.*/
+	}
+}
+
+#ifdef SYSTEM_SMC_PMPROT_VALUE
+	SMC->PMPROT = SYSTEM_SMC_PMPROT_VALUE;
+#endif
+	
+#if (((SYSTEM_SMC_PMCTRL_VALUE) & SMC_PMCTRL_RUNM_MASK) == (0x03U << SMC_PMCTRL_RUNM_SHIFT))
+	SMC->PMCTRL = (uint8_t)((SYSTEM_SMC_PMCTRL_VALUE) & (SMC_PMCTRL_RUNM_MASK)); /* Enable HSRUN mode */
+	while(SMC->PMSTAT != 0x80U) {}
+#endif
+
+	// WDOG->UNLOCK: WDOGUNLOCK=0xC520
+	WDOG->UNLOCK = WDOG_UNLOCK_WDOGUNLOCK(0xC520); /* Key 1 */
+	// WDOG->UNLOCK: WDOGUNLOCK=0xD928
+	WDOG->UNLOCK = WDOG_UNLOCK_WDOGUNLOCK(0xD928); /* Key 2 */
+	WDOG->STCTRLH = WDOG_STCTRLH_BYTESEL(0x00) |
+	                WDOG_STCTRLH_WAITEN_MASK |
+	                WDOG_STCTRLH_STOPEN_MASK |
+	                WDOG_STCTRLH_ALLOWUPDATE_MASK |
+	                WDOG_STCTRLH_CLKSRC_MASK |
+	                0x0100U;
 	Platform::earlyInit();
 }
 
