@@ -13,11 +13,10 @@ matplotlib.rcParams['backend.qt4'] = 'PySide'
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 
-import pylab
-
 from PySide import QtGui, QtCore
 
 import threading
+
 
 class DataSeries(object):
     def __init__(self, label, data, xunits, yunits, xvalues):
@@ -36,13 +35,13 @@ class DataSeries(object):
 
 class PSDSeries(DataSeries):
     def __init__(self, label, data, f1=None, f2=None):
-        xvals = np.linspace(0, 8000, 257)
+        xvals = np.linspace(0, 8000, 513)
         super(PSDSeries, self).__init__(label, data, "Frequency (Hz)",
                                         "Power (SPL)", xvals)
         self.f1 = f1
         self.f2 = f2
 
-        assert len(data) == 257, "Wrong PSD length"
+        assert len(data) == 513, "Wrong PSD length"
 
     def plotExtras(self):
         # Draw 2*f2-f1 region
@@ -51,7 +50,7 @@ class PSDSeries(DataSeries):
 
 class LogPSDSeries(DataSeries):
     def __init__(self, label, data, f1=None, f2=None):
-        xvals = np.linspace(0, 8000, 257)
+        xvals = np.linspace(0, 8000, 513)
         data = 10.0 * np.log10(0.7071 * data)
         super(LogPSDSeries, self).__init__(label, data, "Frequency (Hz)",
                                            "Power (dB SPL)", xvals)
@@ -59,7 +58,7 @@ class LogPSDSeries(DataSeries):
         self.f1 = f1
         self.f2 = f2
 
-        assert len(data) == 257, "Wrong PSD length"
+        assert len(data) == 513, "Wrong PSD length"
 
     def plotExtras(self):
         # Draw 2*f2-f1 region
@@ -69,10 +68,10 @@ class LogPSDSeries(DataSeries):
 
 class TimeSeries(DataSeries):
     def __init__(self, label, data):
-        xvals = np.linspace(0, 512.0 / 16000.0, 512)
+        xvals = np.linspace(0, 512.0 / 16000.0, 1024)
         super(TimeSeries, self).__init__(label, data, "t (ms)",
                                          "Amplitude", xvals)
-        assert len(data) == 512, "Wrong Average length"
+        assert len(data) == 1024, "Wrong Average length"
 
 
 class PlotFigure(object):
@@ -507,7 +506,8 @@ class UIWindow(QtGui.QMainWindow):
         time.sleep(0.1)
         self.getstat()
 
-        self.sigcol.start_collection(self.add_waveform_set)
+        # ENABLE TO COLLECT RAW WAVEFORMS
+        # self.sigcol.start_collection(self.add_waveform_set)
 
     def get_data(self):
         if not self.iface.get_status().is_done():

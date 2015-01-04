@@ -272,9 +272,10 @@ class APulseIface(object):
         assert abs(mix_ext) <= 1.0
         mix_mic = int(float(mix_mic) * 0x7FFFFFFF)
         mix_ext = int(float(mix_ext) * 0x7FFFFFFF)
-        epochs = int(np.ceil((t2 - t1) * (16.0 / 256) - 1))
+        # Not doing this anymorea
+        #epochs = int(np.ceil(((t2 - t1)/1000.0) * (16000.0 / 256) - 1))
         buff = struct.pack("<BHBHHii", Constants.CMD_SETUPCAPTURE,
-            overlap, src, epochs, t1, mix_mic, mix_ext)
+            overlap, src, t2, t1, mix_mic, mix_ext)
         with self.lock:
             self._write(buff)
 
@@ -294,8 +295,8 @@ class APulseIface(object):
             self._write(struct.pack("B", Constants.CMD_RESET_CALIB))
 
     def get_data(self):
-        psd = np.zeros(257, dtype=np.float128)
-        avg = np.zeros(512, dtype=np.float128)
+        psd = np.zeros(513, dtype=np.float128)
+        avg = np.zeros(1024, dtype=np.float128)
 
         with self.lock:
             if not self.get_status().is_done():
@@ -303,15 +304,15 @@ class APulseIface(object):
                 return (psd, avg)
 
             self._write(struct.pack("B", Constants.CMD_GETDATA))
-            for i in range(16):
+            for i in range(32):
                 data = self._read(64)
                 psd[i * 16:(i + 1) * 16] = self.last_status.decode_bytes(data)
                 # struct.unpack("<" + "i" * 16, data)
-            (psd[256],) = self.last_status.decode_bytes(self._read(4))
+            (psd[512],) = self.last_status.decode_bytes(self._read(4))
             #struct.unpack("<i", self._read(4))
             #psd /= np.float128(2 ** self.last_status.psd_frac_bits)
 
-            for i in range(32):
+            for i in range(64):
                 data = self._read(64)
                 avg[i * 16:(i + 1) * 16] = self.last_status.decode_bytes(data)
                 #struct.unpack("<" + "i" * 16, data)
