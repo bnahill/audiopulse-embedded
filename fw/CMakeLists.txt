@@ -20,20 +20,7 @@
 #
 
 
-# CMakeLists for STM32F4 using the Sourcery toolchain and OpenOCD with both
-# C and C++ sources
-#
-# To adapt this for any other STM32 chip should be trivial
-# To adapt to any other ARM controller shouldn't be much worse
-#
-# A few convenience targets are provided for OpenOCD, GDB, and Ctags
-#
-# The structure is as follows
-#  /CMSIS
-#  /STM32F4xx_StdPeriph...
-#  /src (application code)
-#  /src/system (application code - low-level configuration)
-#  /stm32_flash.ld (linker script for !!!STM32F4 only!!! from Atollic TrueStudio)
+# CMakeLists for Kinetis K20/22 and asm/C/C++ sources
 #
 # Author: Ben Nahill <bnahill@gmail.com>
 #
@@ -78,12 +65,8 @@ set(CMSIS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/CMSIS)
 set(DSP_SRC ${CMSIS_DIR}/DSP_Lib/Source)
 set(USB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/FreescaleUSBv4.1.1)
 set(PT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/pt-1.4)
-set(SPIRAL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/rfft_scalar)
-
 
 option(DEBUG_USE_SVD "Use pycmdebug and an SVD file for debugging" OFF)
-set(BOARD_REVISION "1" CACHE STRING "Which revision is it? BB=1, SF=2")
-
 
 option(TARGET_K22 "Target the 120MHz K22 chip with floating point" OFF)
 option(ENABLE_LOOPBACK "Enable a loopback connection from output to input" OFF)
@@ -265,6 +248,7 @@ set(DSP_SOURCES
  	${DSP_SRC}/TransformFunctions/arm_bitreversal2.S
 	${DSP_SRC}/TransformFunctions/arm_bitreversal.c
 	${DSP_SRC}/SupportFunctions/arm_copy_q31.c
+	${DSP_SRC}/SupportFunctions/arm_copy_f32.c
 	${DSP_SRC}/CommonTables/arm_common_tables.c
 )
 set_property(SOURCE ${DSP_SRC}/TransformFunctions/arm_bitreversal2.S PROPERTY LANGUAGE C)

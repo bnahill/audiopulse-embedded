@@ -3,9 +3,6 @@ shell JLinkGDBServer -select USB -device ${JLINK_DEVICE} -if SWD -speed 6000 > /
 define r
 	mon reset
 ${USING_SVD_RESET_CMD}
-	b main
-	cont
-	monitor SWO EnableTarget 6000000 0 1 0
 end
 
 define l
@@ -21,3 +18,5 @@ target remote :2331
 
 
 ${USING_SVD_INIT_CMD}
+
+source ${CMAKE_SOURCE_DIR}/cmdebug/gdb_plot.py

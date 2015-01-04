@@ -358,6 +358,21 @@ void AK4621::start(){
 	}
 }
 
+void AK4621::stop(){
+	if(enable_dma_rx){
+		DMA_EARS = DMA_EARS_EDREQ_1_MASK;
+	}
+	if(enable_dma_tx){
+		DMA_EARS = DMA_EARS_EDREQ_0_MASK;
+	}
+	if(enable_dma_rx){
+		while(DMA_TCD1_CSR & DMA_CSR_DREQ_MASK);
+	}
+	if(enable_dma_tx){
+		while(DMA_TCD0_CSR & DMA_CSR_DREQ_MASK);
+	}
+}
+
 
 void DMA_CH1_ISR() { // Receive
 	static uint32_t count = 0;

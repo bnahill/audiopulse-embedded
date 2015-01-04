@@ -37,7 +37,7 @@ uint16_t InputDSP::num_decimated;
 arm_fir_decimate_instance_f32 InputDSP::decimate;
 
 decltype(InputDSP::start_time_ms) InputDSP::start_time_ms = -1;
-decltype(InputDSP::num_windows) InputDSP::num_windows;
+decltype(InputDSP::end_time_ms) InputDSP::end_time_ms = -1;
 
 bool InputDSP::is_reset, InputDSP::pending_reset;
 
@@ -111,7 +111,7 @@ decltype(InputDSP::biquad_state) InputDSP::biquad_state;
 //InputDSP::sample_t const InputDSP::decimate_coeffs[decimate_fir_order] = {1.0};
 
 
-InputDSP::sample_t const InputDSP::decimate_coeffs[decimate_fir_order] = {
+InputDSP::sampleFractional const InputDSP::decimate_coeffs[decimate_fir_order] = {
 	0.04300687444857404,
 	-0.018316535246320275,
 	-0.04279097712851117,
@@ -163,7 +163,7 @@ InputDSP::sample_t const InputDSP::decimate_coeffs[decimate_fir_order] = {
 
 void InputDSP::configure(uint16_t overlap,
 						 uint16_t start_time_ms,
-						 uint16_t num_windows,
+						 uint16_t end_time_ms,
 						 AK4621::Src src,
 						 sampleFractional scale_mic,
 						 sampleFractional scale_ext){
@@ -171,7 +171,7 @@ void InputDSP::configure(uint16_t overlap,
 		is_reset = false;
 		InputDSP::overlap = overlap;
 		InputDSP::start_time_ms = start_time_ms;
-		InputDSP::num_windows = num_windows;
+		InputDSP::end_time_ms = end_time_ms;
 		InputDSP::src = src;
 		InputDSP::scale_mic = scale_mic;
 		InputDSP::scale_ext = scale_ext;
@@ -207,8 +207,11 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 	////////////////////////////
 	// Prepare FFT
 	////////////////////////////
-
-	arm_rfft_fast_init_f32(&rfft, transform_len);
+	{
+		// Contain the scope of status
+		auto status = arm_rfft_fast_init_f32(&rfft, transform_len);
+		while(status != ARM_MATH_SUCCESS);
+	}
 
 	while(true){
 		// Just wait until we are supposed ot be waiting for the right time
@@ -356,8 +359,6 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 				if(decimation_read_head >= decimated_frame_buffer_size)
 					decimation_read_head -= decimated_frame_buffer_size;
 
-				arm_shift_q31((q31_t *)transform_buffer, 6, (q31_t *)transform_buffer, transform_len);
-
 				for(uint32_t i = 0; i < transform_len; i++){
 					range_decimated.check(transform_buffer[i]);
 				}
@@ -397,13 +398,17 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 // 				);
 
 				// Check if we've processed enough windows to shut down
-				if(++window_count >= num_windows){
+				window_count += 1;
+				if(APulseController::get_time_ms() > end_time_ms){
+				//if(++window_count >= num_windows){
 					if(calibrate_mic){
 						for(uint32_t i = 0; i < transform_len / 2; i++){
 							mag_psd[i] = mag_psd[i] * APulseController::coeffs[i / 16];
 						}
 						mag_psd[transform_len / 2] = mag_psd[transform_len / 2] * APulseController::coeffs[15];
 					}
+					vector_mult_scalar<powerFractional>(1.0 / window_count, mag_psd, mag_psd,
+					                                    transform_len / 2 + 1);
 //					vector_mult_scalar(window_scale, mag_psd, mag_psd, transform_len/2 + 1);
 					state = ST_DONE;
 					Platform::leds[0].clear();
@@ -451,9 +456,7 @@ void InputDSP::do_reset(){
 		                          (float32_t*)decimate_buffer,
 		                          decimate_block_size);
 		
-		if(result != ARM_MATH_SUCCESS){
-			while(true);
-		}
+		while(result != ARM_MATH_SUCCESS);
 	}
 	
 
@@ -483,7 +486,7 @@ void InputDSP::do_decimate(sampleFractional const * src,
 	static sampleFractional const * iter_in;
 	iter_in = src;
 	for(auto i = 0; i < (n_in / decimate_block_size); i++){
-		arm_shift_q31((q31_t*)iter_in, -6, (q31_t*)iter_in, decimate_block_size);
+		//arm_shift_q31((q31_t*)iter_in, -6, (q31_t*)iter_in, decimate_block_size);
 		if(use_iir) {
 			biquad_cascade_f32_decimate<decimate_block_size / 3, 3>(
 			            biquad_cascade, (float32_t *)iter_in, (float32_t *)dst);

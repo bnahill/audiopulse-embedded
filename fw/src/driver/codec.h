@@ -133,7 +133,9 @@ public:
 				}
 				cb_in(buffer, in_buffer_size / 2);
 			} else {
-				cb_in(buffer, in_buffer_size);
+				for(int i = 0; i < in_buffer_size; i++){
+					cb_in(buffer, in_buffer_size);
+				}
 			}
 			rx_buffer_sel ^= 1;
 		}
@@ -149,6 +151,8 @@ public:
 	 @note Right now there is no corresponding 'stop'
 	 */
 	static void start();
+	
+	static void stop();
 
 	/*!
 	 @brief Select which channels are enabled

@@ -56,7 +56,7 @@ public:
 
 	static void configure(uint16_t overlap,
 						  uint16_t start_time_ms,
-						  uint16_t num_windows,
+						  uint16_t end_time_ms,
 						  AK4621::Src src,
 						  sampleFractional scale_mic,
 						  sampleFractional scale_ext);
@@ -130,8 +130,8 @@ protected:
 	//! @{
 	//! Start time
 	static uint32_t start_time_ms;
-	//! The number of windows to use
-	static uint16_t num_windows;
+	static uint32_t end_time_ms;
+	
 	static AK4621::Src src;
 	static sampleFractional scale_mic;
 	static sampleFractional scale_ext;
@@ -141,7 +141,7 @@ protected:
 	//! @{
 	//! The filter order for FIR decimation
 	static constexpr uint16_t decimate_fir_order = 17;
-	static sample_t const decimate_coeffs[decimate_fir_order];
+	static sampleFractional const decimate_coeffs[decimate_fir_order];
 	//! The number of samples processed in each iteration of ARM FIR decimate
 	static constexpr uint16_t decimate_block_size = 48;
 	//! The number of output samples generated at a time

@@ -112,6 +112,9 @@ PT_THREAD(APulseController::pt_controller)(struct pt * pt){
 		// Is a test completed?
 		if(InputDSP::get_state() == InputDSP::ST_DONE &&
 		   WaveGen::get_state() == WaveGen::ST_DONE){
+			if(teststate == TEST_RUNNING){
+				AK4621::stop();
+			}
 			Platform::leds[1].clear();
 			// Clean up after test
 			teststate = TEST_DONE;
@@ -228,7 +231,7 @@ uint8_t * APulseController::get_response ( uint16_t& size ) {
 
 	switch(state){
 	case ST_GETPSD:
-		if(cmd_idx == 16){
+		if(cmd_idx == 32){
 			// Just one more value!
 			((InputDSP::powerFractional *)&p)[0] = InputDSP::get_psd()[InputDSP::transform_len / 2];
 			state = ST_GETAVG;
@@ -236,12 +239,12 @@ uint8_t * APulseController::get_response ( uint16_t& size ) {
 			size = 4;
 			return p.data;
 		}
-		arm_copy_q31((q31_t*)&InputDSP::get_psd()[cmd_idx++ * 16], (q31_t*)p.data, 16);
+		arm_copy_f32((float32_t*)&InputDSP::get_psd()[cmd_idx++ * 16], (float32_t*)p.data, 16);
 		size = 64;
 		return p.data;
 	case ST_GETAVG:
-		arm_copy_q31((q31_t*)&InputDSP::get_average()[cmd_idx++ * 16], (q31_t*)p.data, 16);
-		if(cmd_idx == 32){
+		arm_copy_f32((float32_t*)&InputDSP::get_average()[cmd_idx++ * 16], (float32_t*)p.data, 16);
+		if(cmd_idx == 64){
 			state = ST_RESET;
 			cmd_idx = 0;
 		}
