@@ -25,14 +25,14 @@ class Plot(gdb.Command):
                            '(?: \[(?P<numel>[0-9]+)\])?')
             arrs = []
             for word in s:
-                gdb.write("Word: '{}'\n".format(word))
+                #gdb.write("Word: '{}'\n".format(word))
                 val = gdb.parse_and_eval(word)
                 match = r.match(str(val.type)).groupdict()
-                gdb.write("Lazy: '{}'\n".format(val.is_lazy))
+                #gdb.write("Lazy: '{}'\n".format(val.is_lazy))
 
-                gdb.write("Type: '{}'\n".format(val.type))
-                gdb.write("Type: '{}'\n".format(match['base']))
-                gdb.write("Numel: '{}'\n".format(match['numel']))
+                #gdb.write("Type: '{}'\n".format(val.type))
+                #gdb.write("Type: '{}'\n".format(match['base']))
+                #gdb.write("Numel: '{}'\n".format(match['numel']))
 
                 if not match['numel']:
                     gdb.write("This isn't an array\n")
@@ -59,7 +59,7 @@ class Plot(gdb.Command):
                                      match['targs']).groupdict()
                     fbits = int(parts['f'])
                     arr = np.empty(numel, dtype=np.float32)
-                    gdb.write("VAL: {}".format(val[0]['i']))
+                    #gdb.write("VAL: {}".format(val[0]['i']))
                     for i in range(numel):
                         arr[i] = float(int(val[i]['i'])) / (2 ** fbits)
                 else:
@@ -70,7 +70,7 @@ class Plot(gdb.Command):
                 arrs.append((word, arr,))
 
             def plotlauncher(data):
-                title = ', '.join(map(lambda x, y: x, data))
+                title = ', '.join(map(lambda x: x[0], data))
                 fig = pylab.gcf()
                 fig.canvas.set_window_title(title)
                 for a in data:
