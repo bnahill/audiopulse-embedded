@@ -1,4 +1,8 @@
 import gdb
+import matplotlib
+# For some reasons the other backends don't work...
+matplotlib.use('TKAgg')
+
 import numpy as np
 import pylab
 import re
@@ -19,6 +23,7 @@ class Plot(gdb.Command):
             r = re.compile('(?P<base>[A-Za-z_\*]+)'
                            '(?P<targs><[0-9A-Za-z_ \*,]+>)?'
                            '(?: \[(?P<numel>[0-9]+)\])?')
+            arrs = []
             for word in s:
                 gdb.write("Word: '{}'\n".format(word))
                 val = gdb.parse_and_eval(word)
@@ -31,7 +36,7 @@ class Plot(gdb.Command):
 
                 if not match['numel']:
                     gdb.write("This isn't an array\n")
-                    return
+                    continue
 
                 numel = int(match['numel'])
 
@@ -60,14 +65,22 @@ class Plot(gdb.Command):
                 else:
                     gdb.write("Yeah don't know what to do with "
                               "type '{}'\n".format(base))
-                    return
+                    continue
 
-                def plotlauncher(data):
-                    pylab.plot(data)
-                    pylab.show()
+                arrs.append((word, arr,))
 
+            def plotlauncher(data):
+                title = ', '.join(map(lambda x, y: x, data))
+                fig = pylab.gcf()
+                fig.canvas.set_window_title(title)
+                for a in data:
+                    pylab.plot(a[1])
+                pylab.title(title)
+                pylab.show()
+
+            if arrs:
                 multiprocessing.Process(target=plotlauncher,
-                                        args=(arr,)).start()
+                                        args=(arrs,)).start()
                 #pylab.plot(arr)
                 #pylab.show(block=False)
 Plot()
