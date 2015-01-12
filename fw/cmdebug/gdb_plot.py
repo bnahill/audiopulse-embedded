@@ -4,10 +4,13 @@ import matplotlib
 matplotlib.use('TKAgg')
 
 import numpy as np
-import pylab
+#import pylab
 import re
 import multiprocessing
+import threading
+import pylab
 
+pylab.ion()
 
 class Plot(gdb.Command):
 
@@ -59,7 +62,8 @@ class Plot(gdb.Command):
                                      match['targs']).groupdict()
                     fbits = int(parts['f'])
                     arr = np.empty(numel, dtype=np.float32)
-                    #gdb.write("VAL: {}".format(val[0]['i']))
+                    for i in range(min(50, numel)):
+                        gdb.write("VAL: {}\n".format(val[i]['i']))
                     for i in range(numel):
                         arr[i] = float(int(val[i]['i'])) / (2 ** fbits)
                 else:
@@ -70,17 +74,27 @@ class Plot(gdb.Command):
                 arrs.append((word, arr,))
 
             def plotlauncher(data):
-                title = ', '.join(map(lambda x: x[0], data))
-                fig = pylab.gcf()
-                fig.canvas.set_window_title(title)
-                for a in data:
-                    pylab.plot(a[1])
-                pylab.title(title)
-                pylab.show()
+                try:
+                    title = ', '.join(map(lambda x: x[0], data))
+                    fig = pylab.gcf()
+                    fig.canvas.set_window_title(title)
+                    for a in data:
+                        pylab.plot(a[1])
+                    pylab.title(title)
+                    pylab.show()
+                except KeyboardInterrupt:
+                    pass
 
             if arrs:
-                multiprocessing.Process(target=plotlauncher,
-                                        args=(arrs,)).start()
-                #pylab.plot(arr)
+                pylab.figure()
+                #multiprocessing.Process(target=plotlauncher,
+                #                        args=(arrs,)).start()
+                title = ', '.join(map(lambda x: x[0], arrs))
+                fig = pylab.gcf()
+                fig.canvas.set_window_title(title)
+                for a in arrs:
+                    pylab.plot(a[1])
+                pylab.draw()
+                #pylab.plot(arrs[0][1])
                 #pylab.show(block=False)
 Plot()
