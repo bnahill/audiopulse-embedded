@@ -1,0 +1,59 @@
+Cmp-Mod V01 Created by CvPcb (2013-may-18)-stable date = Wed 11 Feb 2015 11:21:42 PM EST
+
+BeginCmp
+TimeStamp = /54DC264D;
+Reference = J1;
+ValeurCmp = COAX;
+IdModule  = SMA_EDGE;
+EndCmp
+
+BeginCmp
+TimeStamp = /54DC2663;
+Reference = J2;
+ValeurCmp = COAX;
+IdModule  = SMA_EDGE;
+EndCmp
+
+BeginCmp
+TimeStamp = /54DC267B;
+Reference = J3;
+ValeurCmp = COAX;
+IdModule  = SMA_EDGE;
+EndCmp
+
+BeginCmp
+TimeStamp = /54DC26A8;
+Reference = J4;
+ValeurCmp = COAX;
+IdModule  = SMA_EDGE;
+EndCmp
+
+BeginCmp
+TimeStamp = /54DC22D5;
+Reference = J5;
+ValeurCmp = CONN_2;
+IdModule  = HDR_2X1_50MIL;
+EndCmp
+
+BeginCmp
+TimeStamp = /54DC22E2;
+Reference = J6;
+ValeurCmp = CONN_2;
+IdModule  = HDR_2X1_50MIL;
+EndCmp
+
+BeginCmp
+TimeStamp = /54DC22E8;
+Reference = J7;
+ValeurCmp = CONN_2;
+IdModule  = HDR_2X1_50MIL;
+EndCmp
+
+BeginCmp
+TimeStamp = /54DC230A;
+Reference = J8;
+ValeurCmp = CONN_2;
+IdModule  = HDR_2X1_50MIL;
+EndCmp
+
+EndListe
