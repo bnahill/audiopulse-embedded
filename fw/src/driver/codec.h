@@ -133,9 +133,7 @@ public:
 				}
 				cb_in(buffer, in_buffer_size / 2);
 			} else {
-				for(int i = 0; i < in_buffer_size; i++){
-					cb_in(buffer, in_buffer_size);
-				}
+				cb_in(buffer, in_buffer_size);
 			}
 			rx_buffer_sel ^= 1;
 		}
@@ -191,7 +189,7 @@ public:
 	/*!
 	 @brief The number of samples in a single outgoing buffer (there are two)
 	 */
-	static constexpr uint32_t out_buffer_size = 256;
+	static constexpr uint32_t out_buffer_size = 128;
 
 	static constexpr uint32_t fs = 48000;
 
