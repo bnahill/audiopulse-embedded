@@ -11,6 +11,9 @@ uint_fast8_t AK4621::tx_buffer_sel;
 
 AK4621::Src AK4621::source = AK4621::Src::MIC;
 
+uint32_t AK4621::dma_rx_isr_count = 0;
+uint32_t AK4621::dma_tx_isr_count = 0;
+
 decltype(AK4621::mix_mic) AK4621::mix_mic;
 decltype(AK4621::mix_ext) AK4621::mix_ext;
 
@@ -374,11 +377,12 @@ void AK4621::stop(){
 }
 
 
+
+
 void DMA_CH1_ISR() { // Receive
-	static uint32_t count = 0;
-	count += 1;
 	AK4621::dma_rx_isr();
 }
+
 
 void DMA_CH0_ISR() { // Transmit
 	AK4621::dma_tx_isr();

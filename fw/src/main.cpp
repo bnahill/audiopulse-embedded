@@ -74,12 +74,12 @@ void main(){
 	Platform::lateInit();
 
 	USB::hidClassInit();
-	
-	swo_setup();
-	swo_sendchar('a');
-	swo_sendchar('b');
-	swo_sendchar('c');
-	swo_sendchar('d');
+
+// 	swo_setup();
+// 	swo_sendchar('a');
+// 	swo_sendchar('b');
+// 	swo_sendchar('c');
+// 	swo_sendchar('d');
 
 	while(true){
 		Platform::power_on();

@@ -88,6 +88,9 @@ public:
 	 */
 	static void set_out_cb(audio_out_cb_t new_cb){cb_out= new_cb;}
 
+	static uint32_t dma_rx_isr_count;
+	static uint32_t dma_tx_isr_count;
+
 	/*!
 	 @brief Interrupt service routine for outgoing data buffer empty
 
@@ -95,6 +98,7 @@ public:
 	 */
 	static void dma_tx_isr(){
 		if(cb_out){
+			dma_tx_isr_count += 1;
 			if(enable_loopback){
 
 			} else {
@@ -114,6 +118,7 @@ public:
 	 */
 	static void dma_rx_isr(){
 		if(cb_in){
+			dma_rx_isr_count += 1;
 			sample_t * buffer =  &buffer_in[in_buffer_size * rx_buffer_sel];
 			if(enable_loopback){
 				// Overwrite input data with output data

@@ -170,7 +170,7 @@ set(COMMON_FLAGS "${LTO} -ffunction-sections -ffreestanding -fdata-sections ${MC
 # Eliminate the need for a bunch of extra support code that may not work on the chip anyways
 set(CMAKE_CXX_FLAGS "--std=gnu++11 -fno-rtti -fno-exceptions -fno-threadsafe-statics  ${CXX_WARNINGS} ${COMMON_FLAGS}")
 # Use the new C11 standard
-set(CMAKE_C_FLAGS "--std=gnu1x ${C_WARNINGS} ${COMMON_FLAGS}")
+set(CMAKE_C_FLAGS "--std=gnu11 ${C_WARNINGS} ${COMMON_FLAGS}")
 set(CMAKE_EXE_LINKER_FLAGS "-T${LINKER_SCRIPT} ${LTO} ${OPTIMIZATION} -Wl,-Map=${TARGET}.map,--cref,-static,--gc-sections -nostartfiles --entry=__reset_vector ${MCFLAGS} ${CMAKE_EXE_LINKER_FLAGS}")
 #set(CMAKE_EXE_LINKER_FLAGS "-T${LINKER_SCRIPT} ${LTO} ${OPTIMIZATION} -Wl,-Map=${TARGET}.map,--cref,-static,--gc-sections ${MCFLAGS} ${CMAKE_EXE_LINKER_FLAGS}")
 

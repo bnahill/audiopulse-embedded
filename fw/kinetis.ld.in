@@ -38,8 +38,8 @@ __SP_INIT = _estack;
 __stack = _estack; /* For newlib */
 
 /* Generate a link error if heap and stack don't fit into RAM */
-__heap_size = 0x00;                 /* required amount of heap  */
-__stack_size = 1k;                 /* required amount of stack */
+__heap_size = 2k;                 /* required amount of heap  */
+__stack_size = 2k;                 /* required amount of stack */
 
 
 MEMORY {

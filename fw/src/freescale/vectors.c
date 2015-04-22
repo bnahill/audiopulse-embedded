@@ -59,6 +59,10 @@ void PIT_ISR(void)
 }
 #endif
 
+void USB_ISR2(){
+	while(1);
+}
+
 #ifndef _USB_BATT_CHG_APP_H_
 	extern void IRQ_ISR_PORTA();
 #endif 
@@ -83,6 +87,7 @@ void Cpu_Interrupt(void)
 	
 	vector_num = *(volatile uint8_t*)(0xE000ED04);
 	(void)vector_num;
+	while(1);
 }
 
 void Cpu_INT_HardFaultInterrupt()
@@ -100,6 +105,7 @@ void Cpu_INT_HardFaultInterrupt()
          " ldr r1,[r0,#20]  \n"
          " bkpt #0          \n"
     );
+	while(1);
 }
 
 void Cpu_INT_BusFaultInterrupt()
@@ -109,7 +115,7 @@ void Cpu_INT_BusFaultInterrupt()
 
 void Cpu_INT_UsageFaultInterrupt()
 {
-	
+	while(1);
 }
 /*
 __attribute__((__weak__))
@@ -123,19 +129,19 @@ void USB_ISR(){
 }
 */
 void IRQ_ISR_PORTA(){
-	
+	while(1);
 }
 
 void IRQ_ISR_PORTC(){
-	
+	while(1);
 }
 
 void IRQ_ISR_PORTD(){
-	
+	while(1);
 }
 
 void IRQ_ISR_PORTE(){
-	
+	while(1);
 }
 
 /*lint -save  -e926 -e927 -e928 -e929 Disable MISRA rule (11.4) checking. Need to explicitly cast pointers to the general ISR for Interrupt vector table */
