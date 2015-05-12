@@ -31,13 +31,13 @@ LIBS:atmel
 LIBS:contrib
 LIBS:valves
 LIBS:audio_iface_rev2-cache
-EELAYER 25 0
+EELAYER 27 0
 EELAYER END
 $Descr A 11000 8500
 encoding utf-8
 Sheet 4 6
 Title "Android DPOAE Interface"
-Date "29 jun 2014"
+Date "12 may 2015"
 Rev "2b"
 Comp "Sana AudioPulse"
 Comment1 "Ben Nahill <bnahill@gmail.com>"
@@ -355,9 +355,23 @@ F 3 "" H 8500 6650 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
-	3300 2600 3300 4550
+	3300 2600 3300 4400
 Wire Wire Line
-	2750 4800 4700 4800
+	3300 4400 3300 4550
+Wire Wire Line
+	2750 4800 2900 4800
+Wire Wire Line
+	2900 4800 3300 4800
+Wire Wire Line
+	3300 4800 3450 4800
+Wire Wire Line
+	3450 4800 3750 4800
+Wire Wire Line
+	3750 4800 4050 4800
+Wire Wire Line
+	4050 4800 4600 4800
+Wire Wire Line
+	4600 4800 4700 4800
 Connection ~ 4050 4800
 Wire Wire Line
 	3750 4800 3750 4750
@@ -377,15 +391,21 @@ Wire Wire Line
 	3450 4750 3450 4800
 Connection ~ 3450 4800
 Wire Wire Line
-	4150 6700 4450 6700
+	4150 6700 4300 6700
 Wire Wire Line
-	4150 6500 4700 6500
+	4300 6700 4450 6700
+Wire Wire Line
+	4150 6500 4300 6500
+Wire Wire Line
+	4300 6500 4700 6500
 Connection ~ 4300 6700
 Connection ~ 4300 6500
 Wire Wire Line
 	3950 6500 3850 6500
 Wire Wire Line
-	3850 6500 3850 6700
+	3850 6500 3850 6600
+Wire Wire Line
+	3850 6600 3850 6700
 Wire Wire Line
 	3850 6700 3950 6700
 Wire Wire Line
@@ -408,7 +428,9 @@ Wire Wire Line
 Wire Wire Line
 	7250 4100 5950 4100
 Wire Wire Line
-	5950 4200 7250 4200
+	5950 4200 7200 4200
+Wire Wire Line
+	7200 4200 7250 4200
 Wire Wire Line
 	6400 5600 5950 5600
 Wire Wire Line
@@ -441,7 +463,15 @@ Wire Wire Line
 Wire Wire Line
 	4700 4700 4600 4700
 Wire Wire Line
-	4600 4700 4600 5200
+	4600 4700 4600 4800
+Wire Wire Line
+	4600 4800 4600 4900
+Wire Wire Line
+	4600 4900 4600 5000
+Wire Wire Line
+	4600 5000 4600 5100
+Wire Wire Line
+	4600 5100 4600 5200
 Wire Wire Line
 	4600 4900 4700 4900
 Connection ~ 4600 4800
@@ -457,7 +487,17 @@ Connection ~ 4600 5100
 Wire Wire Line
 	4700 4000 4600 4000
 Wire Wire Line
-	4600 3800 4600 4500
+	4600 3800 4600 4000
+Wire Wire Line
+	4600 4000 4600 4100
+Wire Wire Line
+	4600 4100 4600 4200
+Wire Wire Line
+	4600 4200 4600 4300
+Wire Wire Line
+	4600 4300 4600 4400
+Wire Wire Line
+	4600 4400 4600 4500
 Wire Wire Line
 	4600 4100 4700 4100
 Wire Wire Line
@@ -476,11 +516,15 @@ Wire Wire Line
 Wire Wire Line
 	4450 6600 4700 6600
 Wire Wire Line
-	4050 4200 4050 4550
+	4050 4200 4050 4400
+Wire Wire Line
+	4050 4400 4050 4550
 Wire Wire Line
 	4050 4800 4050 4750
 Wire Wire Line
-	2900 4050 2900 4950
+	2900 4050 2900 4800
+Wire Wire Line
+	2900 4800 2900 4950
 Connection ~ 2900 4800
 Connection ~ 3300 4800
 Wire Wire Line
@@ -506,7 +550,11 @@ Wire Wire Line
 	3850 3700 3850 3600
 Connection ~ 3850 3700
 Wire Wire Line
-	2750 3700 4700 3700
+	2750 3700 2900 3700
+Wire Wire Line
+	2900 3700 3850 3700
+Wire Wire Line
+	3850 3700 4700 3700
 Wire Wire Line
 	8500 6000 8500 6100
 Wire Wire Line
@@ -516,9 +564,13 @@ I2C_SCL
 Text HLabel 7250 2700 2    60   BiDi ~ 0
 I2C_SDA
 Wire Wire Line
-	5950 2700 7250 2700
+	5950 2700 6700 2700
 Wire Wire Line
-	5950 2600 7250 2600
+	6700 2700 7250 2700
+Wire Wire Line
+	5950 2600 6850 2600
+Wire Wire Line
+	6850 2600 7250 2600
 $Comp
 L RES R21
 U 1 1 53570B82
@@ -559,14 +611,24 @@ F 3 "" H 6700 2000 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
-	6700 2000 6700 2150
+	6700 2000 6700 2050
+Wire Wire Line
+	6700 2050 6700 2150
 Wire Wire Line
 	6700 2050 6850 2050
 Wire Wire Line
 	6850 2050 6850 2150
 Connection ~ 6700 2050
 Wire Wire Line
-	3300 4400 4700 4400
+	3300 4400 3450 4400
+Wire Wire Line
+	3450 4400 3750 4400
+Wire Wire Line
+	3750 4400 4050 4400
+Wire Wire Line
+	4050 4400 4600 4400
+Wire Wire Line
+	4600 4400 4700 4400
 Text HLabel 6250 5300 2    60   Output ~ 0
 ANALOG_EN
 Wire Wire Line
@@ -648,7 +710,9 @@ F 3 "" H 7300 4350 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
-	7300 4350 7300 4500
+	7300 4350 7300 4400
+Wire Wire Line
+	7300 4400 7300 4500
 Wire Wire Line
 	7300 4500 7050 4500
 $Comp
@@ -663,15 +727,17 @@ F 3 "" H 6350 4850 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
-	6350 4600 6350 4850
+	6350 4600 6350 4750
+Wire Wire Line
+	6350 4750 6350 4850
 Wire Wire Line
 	6350 4600 6450 4600
 Wire Wire Line
-	5950 3200 6250 3200
+	5950 3200 6150 3200
 Wire Wire Line
-	6250 3200 6250 4500
+	6150 3200 6150 4500
 Wire Wire Line
-	6250 4500 6450 4500
+	6150 4500 6450 4500
 $Comp
 L CAP C71
 U 1 1 53697AF9
@@ -693,4 +759,12 @@ Wire Wire Line
 Wire Wire Line
 	7400 4400 7300 4400
 Connection ~ 7300 4400
+Text HLabel 6250 4300 2    60   Input ~ 0
+SPI1_SIN
+Wire Wire Line
+	6250 4300 5950 4300
+Text HLabel 6250 3600 2    60   Output ~ 0
+SPI1_CS_FLASH
+Wire Wire Line
+	6250 3600 5950 3600
 $EndSCHEMATC

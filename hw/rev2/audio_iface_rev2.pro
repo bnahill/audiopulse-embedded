@@ -1,4 +1,4 @@
-update=Fri 11 Oct 2013 05:17:35 PM EDT
+update=Mon 11 May 2015 11:19:16 PM EDT
 version=1
 last_client=pcbnew
 [cvpcb]
@@ -52,10 +52,10 @@ LibName31=valves
 version=1
 LastNetListRead=audio_iface_rev1.net
 UseCmpFile=1
-PadDrill="    0.000000"
-PadDrillOvalY="    0.000000"
-PadSizeH="    1.700000"
-PadSizeV="    2.400000"
+PadDrill="    2.286000"
+PadDrillOvalY="    2.286000"
+PadSizeH="    2.286000"
+PadSizeV="    2.286000"
 PcbTextSizeV="    1.500000"
 PcbTextSizeH="    1.500000"
 PcbTextThickness="    0.300000"
@@ -65,10 +65,11 @@ ModuleTextSizeThickness="    0.150000"
 SolderMaskClearance="    0.000000"
 SolderMaskMinWidth="    0.000000"
 DrawSegmentWidth="    0.200000"
-BoardOutlineThickness="    0.100000"
+BoardOutlineThickness="    0.050000"
 ModuleOutlineThickness="    0.150000"
 [pcbnew/libraries]
 LibDir=
 LibName1=../lib/footprints
 LibName2=../lib/oshw
 LibName3=../lib/ear
+LibName4=/home/ben/git/android-audio-iface/hw/lib/MICRON_VFBGA63

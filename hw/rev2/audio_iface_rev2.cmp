@@ -1,4 +1,4 @@
-Cmp-Mod V01 Created by CvPcb (2013-may-18)-stable date = Tue 24 Jun 2014 10:04:10 AM EDT
+Cmp-Mod V01 Created by CvPcb (2013-may-18)-stable date = Mon 11 May 2015 11:19:48 PM EDT
 
 BeginCmp
 TimeStamp = /535741F7;
@@ -102,6 +102,13 @@ BeginCmp
 TimeStamp = /523B0E12/524E3E21;
 Reference = C15;
 ValeurCmp = 0.1u 6.3V;
+IdModule  = SMD0402;
+EndCmp
+
+BeginCmp
+TimeStamp = /5551E392;
+Reference = C16;
+ValeurCmp = 0.1u;
 IdModule  = SMD0402;
 EndCmp
 
@@ -498,6 +505,13 @@ IdModule  = SMD0402;
 EndCmp
 
 BeginCmp
+TimeStamp = /5551E951;
+Reference = C73;
+ValeurCmp = 1u;
+IdModule  = SMD0402;
+EndCmp
+
+BeginCmp
 TimeStamp = /523BF424/53645218;
 Reference = D1;
 ValeurCmp = LTST-C19FD1WT;
@@ -731,14 +745,14 @@ EndCmp
 BeginCmp
 TimeStamp = /523BF424/5251B82C;
 Reference = R23;
-ValeurCmp = RES;
+ValeurCmp = 220;
 IdModule  = SMD0402;
 EndCmp
 
 BeginCmp
 TimeStamp = /523BF424/5352B52D;
 Reference = R24;
-ValeurCmp = RES;
+ValeurCmp = 7.5;
 IdModule  = SMD0402;
 EndCmp
 
@@ -780,7 +794,7 @@ EndCmp
 BeginCmp
 TimeStamp = /523BF424/5363BE41;
 Reference = R30;
-ValeurCmp = RES;
+ValeurCmp = 39;
 IdModule  = SMD0402;
 EndCmp
 
@@ -841,6 +855,13 @@ IdModule  = SMD0402;
 EndCmp
 
 BeginCmp
+TimeStamp = /5551D023;
+Reference = R39;
+ValeurCmp = 100k;
+IdModule  = ;
+EndCmp
+
+BeginCmp
 TimeStamp = /523B0E12/5245ECF6;
 Reference = Rf1;
 ValeurCmp = 5.11k (1%);
@@ -876,16 +897,16 @@ IdModule  = TP_HOLE;
 EndCmp
 
 BeginCmp
-TimeStamp = /523BF424/5251B955;
+TimeStamp = /524EE3EB/53AF6D72;
 Reference = TP5;
-ValeurCmp = TP_PTB3;
+ValeurCmp = TP;
 IdModule  = TP_HOLE;
 EndCmp
 
 BeginCmp
-TimeStamp = /523BF424/5251B77F;
+TimeStamp = /524EE3EB/53AF7518;
 Reference = TP6;
-ValeurCmp = TP_PTB16;
+ValeurCmp = TP;
 IdModule  = TP_HOLE;
 EndCmp
 
@@ -971,6 +992,13 @@ TimeStamp = /523BC94C/5356E12C;
 Reference = U8;
 ValeurCmp = TPA6130A2;
 IdModule  = TPA8130A2-QFN20;
+EndCmp
+
+BeginCmp
+TimeStamp = /55517642;
+Reference = U9;
+ValeurCmp = MT29FXX01A;
+IdModule  = MICRON_VFBGA63;
 EndCmp
 
 BeginCmp
