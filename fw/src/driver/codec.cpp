@@ -112,7 +112,7 @@ void AK4621::spi_init(){
 			SPI_CTAR_CSSCK(6)  |   // Base delay is 128*Tsys
 			SPI_CTAR_ASC(3)    |   // Unit delay before end of PCS
 			SPI_CTAR_DT(3)     |   // Same after end of PCS
-			SPI_CTAR_BR(6);        // Scale by 64
+			SPI_CTAR_BR(8);        // Scale by 256
 
 	SPI->MCR =
 			SPI_MCR_MSTR_MASK |    // Master
@@ -252,9 +252,6 @@ void AK4621::i2s_init(){
 }
 
 void AK4621::i2s_dma_init(){
-	rx_buffer_sel = 0;
-	tx_buffer_sel = 0;
-
 	DMA_CR =
 		DMA_CR_EMLM_MASK |      // Enable minor looping
 		DMA_CR_ERCA_MASK;       // Enable RR arbitration
@@ -329,6 +326,8 @@ void AK4621::i2s_dma_init(){
 }
 
 void AK4621::start(){
+	rx_buffer_sel = 0;
+	tx_buffer_sel = 0;
 	if(cb_out){
 		cb_out(&buffer_out[0], out_buffer_size, 2);
 		cb_out(&buffer_out[out_buffer_size], out_buffer_size, 2);
@@ -375,15 +374,18 @@ void AK4621::stop(){
 		while(DMA_TCD0_CSR & DMA_CSR_DREQ_MASK);
 	}
 }
-
+static volatile uint32_t dma_rx_isr_count = 0;
+static volatile uint32_t dma_tx_isr_count = 0;
 
 
 
 void DMA_CH1_ISR() { // Receive
 	AK4621::dma_rx_isr();
+	dma_rx_isr_count += 1;
 }
 
 
 void DMA_CH0_ISR() { // Transmit
 	AK4621::dma_tx_isr();
+	dma_tx_isr_count += 1;
 }
