@@ -1,4 +1,4 @@
-Cmp-Mod V01 Created by CvPcb (2013-may-18)-stable date = Mon 11 May 2015 11:19:48 PM EDT
+Cmp-Mod V01 Created by CvPcb (2013-may-18)-stable date = Tue 12 May 2015 11:27:33 PM EDT
 
 BeginCmp
 TimeStamp = /535741F7;
@@ -519,10 +519,10 @@ IdModule  = LED-6PLCC;
 EndCmp
 
 BeginCmp
-TimeStamp = /523BE918;
+TimeStamp = /5552E623;
 Reference = J1;
-ValeurCmp = CONN_2;
-IdModule  = HDR_2X1_50MIL;
+ValeurCmp = COAX;
+IdModule  = SMA_EDGE;
 EndCmp
 
 BeginCmp
@@ -554,17 +554,17 @@ IdModule  = HDR_2X1_50MIL;
 EndCmp
 
 BeginCmp
-TimeStamp = /524E6315;
+TimeStamp = /5552D17B;
 Reference = J6;
-ValeurCmp = CONN_2;
-IdModule  = HDR_2X1_50MIL;
+ValeurCmp = COAX;
+IdModule  = SMA_EDGE;
 EndCmp
 
 BeginCmp
-TimeStamp = /524E6F43;
+TimeStamp = /5552CC5E;
 Reference = J7;
-ValeurCmp = CONN_2;
-IdModule  = HDR_2X1_50MIL;
+ValeurCmp = COAX;
+IdModule  = SMA_EDGE;
 EndCmp
 
 BeginCmp
@@ -858,7 +858,7 @@ BeginCmp
 TimeStamp = /5551D023;
 Reference = R39;
 ValeurCmp = 100k;
-IdModule  = ;
+IdModule  = SMD0402;
 EndCmp
 
 BeginCmp
