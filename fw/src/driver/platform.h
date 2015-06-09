@@ -30,6 +30,7 @@
 #include <driver/codec.h>
 #include <driver/tpa6130a2.h>
 #include <driver/pwm_gpio.h>
+#include <driver/spi.h>
 #include <pt.h>
 
 class Platform {
@@ -46,10 +47,12 @@ public:
 	 @brief Initialize peripherals and devices that depend on clocks and data initialization
 	 */
 	static void lateInit(){
+		SIM_SCGC6 |= SIM_SCGC6_DMAMUX_MASK;
+		SIM_SCGC7 |= SIM_SCGC7_DMA_MASK;
 
 		USB::lateInit();
 
-		AK4621::init_hw();
+		AK4621::init_hw(&spi0, &codec_slave);
 
 		TPA6130A2::init_hw();
 
@@ -62,6 +65,9 @@ public:
 
 	static GPIOPin const leds[3];
 	static PWMGPIOPin const pwm[3];
+
+	static SPI spi0;
+	static SPI_slave codec_slave;
 
 	static void power_on(){power_en.set();}
 	static void power_off(){power_en.clear();}
@@ -84,6 +90,11 @@ extern "C" {
  * @brief An earlyInit with C-ready linkage
  */
 void earlyInitC();
+
+// SPI DMA ISRs
+void DMA_CH2_ISR();
+void DMA_CH3_ISR();
+
 #ifdef __cplusplus
 };
 #endif

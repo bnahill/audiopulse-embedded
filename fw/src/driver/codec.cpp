@@ -1,3 +1,24 @@
+/*!
+ (C) Copyright 2013 Ben Nahill
+
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+ @file codec.cpp
+ @brief
+ @author Ben Nahill <bnahill@gmail.com>
+ */
+
 #include <driver/codec.h>
 
 AK4621::sample_t AK4621::buffer_in[in_buffer_size * 2];
@@ -17,23 +38,19 @@ uint32_t AK4621::dma_tx_isr_count = 0;
 decltype(AK4621::mix_mic) AK4621::mix_mic;
 decltype(AK4621::mix_ext) AK4621::mix_ext;
 
-void AK4621::init_hw() {
-	__disable_irq();
-	SIM_SCGC6 |= SIM_SCGC6_I2S_MASK | SIM_SCGC6_DMAMUX_MASK;
-	if(SPI == SPI0_BASE_PTR){
-		SIM_SCGC6 |= SIM_SCGC6_SPI0_MASK;
-	} else if(SPI == SPI1_BASE_PTR){
-		SIM_SCGC6 |= SIM_SCGC6_SPI1_MASK;
-	} else {
-		while(true);
-	}
+SPI * AK4621::spi = nullptr;
+SPI_slave * AK4621::slave = nullptr;
 
-	SIM_SCGC7 |= SIM_SCGC7_DMA_MASK;
+void AK4621::init_hw(SPI * spi_driver, SPI_slave * spi_slave) {
+	SIM_SCGC6 |= SIM_SCGC6_I2S_MASK;
 
 	gpio_init();
 
-	spi_init();
+	spi = spi_driver;
+	slave = spi_slave;
 
+	spi->init();
+	spi->register_slave(*slave);
 
 	for(uint32_t volatile a = 0xFFFF; a; a--);
 	// Turn on
@@ -83,10 +100,6 @@ void AK4621::gpio_init(){
 	XTAL_12288.make_output();
 	XTAL_12288.set_mux(GPIOPin::MUX_GPIO);
 
-	MOSI.configure(MOSI_mux);
-	SCLK.configure(SCLK_mux);
-	NCS.configure(NCS_mux);
-
 	MCLK.configure(MCLK_mux, true, false, false, true, false, false);
 	LRCK.configure(LRCK_mux, true);
 	BCLK.configure(BCLK_mux, true);
@@ -94,41 +107,17 @@ void AK4621::gpio_init(){
 	SDIN.configure(SDIN_mux, true);
 }
 
-void AK4621::spi_init(){
-	SPI->MCR = SPI_MCR_HALT_MASK;
-
-	/*
-	 So the AK4621 specifies that the first clock edge it sees is rising and
-	 that it will register on that rising edge. CPOL=CPHA=0
-	 */
-	SPI->CTAR[0] =
-			SPI_CTAR_FMSZ(15) |     // 16 bit frames
-			SPI_CTAR_CPOL_MASK |   // Clock idle high
-			SPI_CTAR_CPHA_MASK |   // Sample following edge
-			SPI_CTAR_PCSSCK(2) |   // PCS to SCK prescaler = 5
-			SPI_CTAR_PASC(2)   |   // Same delay before end of PCS
-			SPI_CTAR_PDT(3)    |   // Same delay after end of PCS
-			SPI_CTAR_PBR(0)    |   // Use sysclk / 2
-			SPI_CTAR_CSSCK(6)  |   // Base delay is 128*Tsys
-			SPI_CTAR_ASC(3)    |   // Unit delay before end of PCS
-			SPI_CTAR_DT(3)     |   // Same after end of PCS
-			SPI_CTAR_BR(8);        // Scale by 256
-
-	SPI->MCR =
-			SPI_MCR_MSTR_MASK |    // Master
-			SPI_MCR_DCONF(0) |     // SPI mode
-			SPI_MCR_PCSIS(1) |     // All nCS idle high
-			SPI_MCR_DIS_RXF_MASK | // No RX FIFO
-			SPI_MCR_CLR_TXF_MASK | // Clear TX FIFO
-			SPI_MCR_SMPL_PT(0);    // Sample on clock edge
-}
 
 void AK4621::spi_write_reg(reg_t reg, uint8_t value){
+	uint8_t data[2] = {reg, value};
+	while(!spi->transfer(*slave, data, nullptr, 2, nullptr, nullptr));
+	/*
 	while((SPI->SR & SPI_SR_TFFF_MASK) == 0);
 	SPI->PUSHR = SPI_PUSHR_TXDATA(((0xA0 | reg) << 8) | value) |
 					SPI_PUSHR_PCS(1) | SPI_PUSHR_EOQ_MASK;
 	while((SPI->SR & SPI_SR_EOQF_MASK) == 0); // Wait for end of queue
 	SPI->SR = SPI_SR_EOQF_MASK; // Clear flag
+	*/
 }
 
 void AK4621::i2s_init(){

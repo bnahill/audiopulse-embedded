@@ -34,6 +34,33 @@ PWMGPIOPin const Platform::pwm[] = {
 	PWMGPIOPin(Platform::pwm_ftm, Platform::leds[2], 3)
 };
 
+SPI Platform::spi0 = {
+	SPI0_BASE_PTR,
+	{PTD_BASE_PTR, 2}, GPIOPin::MUX_ALT2,
+	{PTC_BASE_PTR, 7}, GPIOPin::MUX_ALT2,
+	{PTD_BASE_PTR, 1}, GPIOPin::MUX_ALT2,
+	2, 3 // DMA channels 2 and 3 for TX and RX
+};
+
+SPI_slave Platform::codec_slave = SPI_slave(
+	spi0,
+	{PTD_BASE_PTR, 0}, GPIOPin::MUX_ALT2,
+	(
+		SPI_CTAR_FMSZ(7)   |   // 8-bit frames
+		SPI_CTAR_CPOL_MASK |   // Clock idle high
+		SPI_CTAR_CPHA_MASK |   // Sample following edge
+		SPI_CTAR_PCSSCK(2) |   // PCS to SCK prescaler = 5
+		SPI_CTAR_PASC(2)   |   // Same delay before end of PCS
+		SPI_CTAR_PDT(3)    |   // Same delay after end of PCS
+		SPI_CTAR_PBR(0)    |   // Use sysclk / 2
+		SPI_CTAR_CSSCK(6)  |   // Base delay is 128*Tsys
+		SPI_CTAR_ASC(3)    |   // Unit delay before end of PCS
+		SPI_CTAR_DT(3)     |   // Same after end of PCS
+		SPI_CTAR_BR(8)         // Scale by 256
+	),
+    0
+);
+
 void earlyInitC(){
 #if ((__FPU_PRESENT == 1) && (__FPU_USED == 1))
 	SCB->CPACR |= ((3UL << 10*2) | (3UL << 11*2));    /* set CP10, CP11 Full Access */
@@ -104,3 +131,12 @@ decltype(cfmconf) cfmconf = {
 };
 #endif
 
+
+
+void DMA_CH2_ISR(){
+	Platform::spi0.handle_complete_isr();
+}
+
+void DMA_CH3_ISR(){
+	Platform::spi0.handle_complete_isr();
+}

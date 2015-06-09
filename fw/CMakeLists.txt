@@ -226,6 +226,7 @@ set(APP_SOURCES
 	src/driver/usb.cpp
 	src/driver/clocks.cpp
 	src/driver/tpa6130a2.cpp
+	src/driver/spi.cpp
 	src/startup.s
 )
 

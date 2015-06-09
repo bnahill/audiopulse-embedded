@@ -60,6 +60,25 @@ void swo_setup(){
 	*((volatile unsigned *)(ITM_BASE + 0x40304)) = 0x00000100; // Formatter and Flush Control Register
 }
 
+static SPI_slave volatile	test_slave = SPI_slave(
+	Platform::spi0,
+	{PTD_BASE_PTR, 0}, GPIOPin::MUX_ALT2,
+	(
+		SPI_CTAR_FMSZ(7)   |   // 8-bit frames
+		SPI_CTAR_CPOL_MASK |   // Clock idle high
+		SPI_CTAR_CPHA_MASK |   // Sample following edge
+		SPI_CTAR_PCSSCK(2) |   // PCS to SCK prescaler = 5
+		SPI_CTAR_PASC(2)   |   // Same delay before end of PCS
+		SPI_CTAR_PDT(3)    |   // Same delay after end of PCS
+		SPI_CTAR_PBR(0)    |   // Use sysclk / 2
+		SPI_CTAR_CSSCK(6)  |   // Base delay is 128*Tsys
+		SPI_CTAR_ASC(3)    |   // Unit delay before end of PCS
+		SPI_CTAR_DT(3)     |   // Same after end of PCS
+		SPI_CTAR_BR(8)         // Scale by 256
+	),
+    0
+);
+
 /*!
  * @brief Application entry point
  */
@@ -74,6 +93,8 @@ void main(){
 	Platform::lateInit();
 
 	USB::hidClassInit();
+
+	AK4621::init();
 
 // 	swo_setup();
 // 	swo_sendchar('a');

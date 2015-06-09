@@ -1,6 +1,7 @@
 #include "derivative.h" /* include peripheral declarations */
 #include "user_config.h"
 #include "driver/codec.h"
+#include "driver/platform.h"
 
 /*--------------------------------------------------------------*/
 typedef void (*const tIsrFunc)(void);
@@ -166,8 +167,8 @@ const tVectorTable __vector_table __attribute__ ((section(".vectortable"))) = {
 			(tIsrFunc)Cpu_Interrupt,				/* 0x0F  0x0000003C   -   ivINT_SysTick                  unused by PE */
 			(tIsrFunc)DMA_CH0_ISR,					/* 0x10  0x00000040   -   ivINT_DMA0                     unused by PE */
 			(tIsrFunc)DMA_CH1_ISR,					/* 0x11  0x00000044   -   ivINT_DMA1                     unused by PE */
-			(tIsrFunc)Cpu_Interrupt,				/* 0x12  0x00000048   -   ivINT_DMA2                     unused by PE */
-			(tIsrFunc)Cpu_Interrupt,				/* 0x13  0x0000004C   -   ivINT_DMA3                     unused by PE */
+			(tIsrFunc)DMA_CH2_ISR,					/* 0x12  0x00000048   -   ivINT_DMA2                     unused by PE */
+			(tIsrFunc)DMA_CH3_ISR,					/* 0x13  0x0000004C   -   ivINT_DMA3                     unused by PE */
 			(tIsrFunc)Cpu_Interrupt,				/* 0x14  0x00000050   -   ivINT_DMA4                     unused by PE */
 			(tIsrFunc)Cpu_Interrupt,				/* 0x15  0x00000054   -   ivINT_DMA5                     unused by PE */
 			(tIsrFunc)Cpu_Interrupt,				/* 0x16  0x00000058   -   ivINT_DMA6                     unused by PE */

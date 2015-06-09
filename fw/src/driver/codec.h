@@ -14,7 +14,7 @@
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
- @file
+ @file codec.h
  @brief
  @author Ben Nahill <bnahill@gmail.com>
  */
@@ -30,6 +30,7 @@
 #include <driver/gpio.h>
 #include "clocks.h"
 #include <apulse_math.h>
+#include <driver/spi.h>
 
 class AK4621 {
 public:
@@ -58,7 +59,7 @@ public:
 
 	 @post Ready to call init()
 	 */
-	static void init_hw();
+	static void init_hw(SPI * spi_driver, SPI_slave * spi_slave);
 
 	/*!
 	 @brief Configure the actual device
@@ -214,21 +215,14 @@ protected:
 
 	static void gpio_init();
 
-	static void spi_init();
-
 	static void spi_write_reg(reg_t reg, uint8_t value);
 
 	static void i2s_init();
 
 	static void i2s_dma_init();
 
-	static constexpr SPI_MemMapPtr SPI = SPI0_BASE_PTR;
-	static constexpr GPIOPin MOSI = {PTD_BASE_PTR, 2};
-	static constexpr GPIOPin::mux_t MOSI_mux = GPIOPin::MUX_ALT2;
-	static constexpr GPIOPin SCLK = {PTD_BASE_PTR, 1};
-	static constexpr GPIOPin::mux_t SCLK_mux = GPIOPin::MUX_ALT2;
-	static constexpr GPIOPin NCS = {PTD_BASE_PTR, 0};
-	static constexpr GPIOPin::mux_t NCS_mux = GPIOPin::MUX_ALT2;
+	static SPI * spi;
+	static SPI_slave * slave;
 
 
 	static constexpr GPIOPin MCLK = {PTC_BASE_PTR, 6};
