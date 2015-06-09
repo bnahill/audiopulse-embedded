@@ -103,6 +103,13 @@ void Platform::earlyInit(){
 			  | SIM_SCGC5_PORTD_MASK
 			  | SIM_SCGC5_PORTE_MASK);
 
+    SIM_SCGC6 |= SIM_SCGC6_DMAMUX_MASK;
+    SIM_SCGC7 |= SIM_SCGC7_DMA_MASK;
+
+    DMA_CR =
+        DMA_CR_EMLM_MASK |      // Enable minor looping
+        DMA_CR_ERCA_MASK;       // Enable RR arbitration
+
 	power_en.clear();
 	power_en.make_output();
 	power_en.configure(GPIOPin::MUX_GPIO, true);

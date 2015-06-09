@@ -109,8 +109,8 @@ void AK4621::gpio_init(){
 
 
 void AK4621::spi_write_reg(reg_t reg, uint8_t value){
-	uint8_t data[2] = {reg, value};
-	while(!spi->transfer(*slave, data, nullptr, 2, nullptr, nullptr));
+    uint8_t data[24] = {0xA0 | ((uint8_t)reg), value, 0x55, 0xa0};
+    while(!spi->transfer(*slave, data, nullptr, 24, nullptr, nullptr));
 	/*
 	while((SPI->SR & SPI_SR_TFFF_MASK) == 0);
 	SPI->PUSHR = SPI_PUSHR_TXDATA(((0xA0 | reg) << 8) | value) |
@@ -241,9 +241,7 @@ void AK4621::i2s_init(){
 }
 
 void AK4621::i2s_dma_init(){
-	DMA_CR =
-		DMA_CR_EMLM_MASK |      // Enable minor looping
-		DMA_CR_ERCA_MASK;       // Enable RR arbitration
+
 
 	if(enable_dma_rx){
 	DMA_TCD1_CSR = 0;

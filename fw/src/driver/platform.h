@@ -47,8 +47,7 @@ public:
 	 @brief Initialize peripherals and devices that depend on clocks and data initialization
 	 */
 	static void lateInit(){
-		SIM_SCGC6 |= SIM_SCGC6_DMAMUX_MASK;
-		SIM_SCGC7 |= SIM_SCGC7_DMA_MASK;
+
 
 		USB::lateInit();
 
