@@ -40,13 +40,38 @@ public:
 	typedef void (*audio_cb_t)(sample_t *, size_t);
 	typedef void (*audio_out_cb_t)(sample_t *, size_t, uint32_t);
 
+
 	enum class Src : uint8_t {
 		MIC = 0,
 		EXT = 1,
 		MIX = 2,
 	};
 
-	static bool is_Src(Src val){
+    constexpr AK4621(
+           GPIOPin MCLK, GPIOPin::mux_t MCLK_mux,
+           GPIOPin LRCK, GPIOPin::mux_t LRCK_mux,
+           GPIOPin BCLK, GPIOPin::mux_t BCLK_mux,
+           GPIOPin SDO,  GPIOPin::mux_t SDO_mux,
+           GPIOPin SDIN,  GPIOPin::mux_t SDIN_mux,
+           GPIOPin XTAL_12288, GPIOPin PDN,
+           I2S_MemMapPtr I2S,
+           uint8_t dma_ch_rx, uint8_t dma_ch_tx,
+           SPI_slave slave) :
+        MCLK(MCLK), MCLK_mux(MCLK_mux),
+        LRCK(LRCK), LRCK_mux(LRCK_mux),
+        BCLK(BCLK), BCLK_mux(BCLK_mux),
+        SDO(SDO),   SDO_mux(SDO_mux),
+        SDIN(SDIN), SDIN_mux(SDIN_mux),
+        XTAL_12288(XTAL_12288), PDN(PDN),
+        I2S(I2S), dma_ch_rx(dma_ch_rx), dma_ch_tx(dma_ch_tx),
+        slave(slave), spi(slave.spi),
+        // Private
+        dma_rx_isr_count(0), dma_tx_isr_count(0),
+        rx_buffer_sel(0), tx_buffer_sel(0),
+        source(Src::MIC), cb_in(nullptr), cb_out(nullptr)
+    {}
+
+    bool is_Src(Src val){
 		return (val == Src::MIC) || (val == Src::EXT) || (val == Src::MIX);
 	}
 
@@ -59,7 +84,7 @@ public:
 
 	 @post Ready to call init()
 	 */
-	static void init_hw(SPI * spi_driver, SPI_slave * spi_slave);
+    void init_hw();
 
 	/*!
 	 @brief Configure the actual device
@@ -68,7 +93,7 @@ public:
 
 	 @note This must be called after any loss of power on analog circuitry
 	 */
-	static void init();
+    void init();
 
 	/*!
 	 @brief Set callback for new input data
@@ -76,7 +101,7 @@ public:
 	 The function provided will be called with a pointer to the new data, which
 	 will be of length \ref in_buffer_size
 	 */
-	static void set_in_cb(audio_cb_t new_cb){cb_in = new_cb;}
+    void set_in_cb(audio_cb_t new_cb){cb_in = new_cb;}
 
 	/*!
 	 @brief Set callback for free output buffer
@@ -87,17 +112,17 @@ public:
 	 @note If called before starting output, both buffers will be presented for
 	 population before the stream begins
 	 */
-	static void set_out_cb(audio_out_cb_t new_cb){cb_out= new_cb;}
+    void set_out_cb(audio_out_cb_t new_cb){cb_out= new_cb;}
 
-	static uint32_t dma_rx_isr_count;
-	static uint32_t dma_tx_isr_count;
+    uint32_t dma_rx_isr_count;
+    uint32_t dma_tx_isr_count;
 
 	/*!
 	 @brief Interrupt service routine for outgoing data buffer empty
 
 	 @warning Please don't actually call this unless from interrupt context
 	 */
-	static void dma_tx_isr(){
+    void dma_tx_isr(){
 		if(cb_out){
 			dma_tx_isr_count += 1;
 			if(enable_loopback){
@@ -108,8 +133,8 @@ public:
 			}
 			tx_buffer_sel ^= 1;
 		}
-		DMA_CINT = DMA_CINT_CINT(0);
-		NVIC_ClearPendingIRQ(DMA_CH0_IRQn);
+        DMA_CINT = DMA_CINT_CINT(dma_ch_rx);
+        NVIC_ClearPendingIRQ((IRQn_Type)dma_ch_rx);
 	}
 
 	/*!
@@ -117,7 +142,7 @@ public:
 
 	 @warning Please don't actually call this unless from interrupt context
 	 */
-	static void dma_rx_isr(){
+    void dma_rx_isr(){
 		if(cb_in){
 			dma_rx_isr_count += 1;
 			sample_t * buffer =  &buffer_in[in_buffer_size * rx_buffer_sel];
@@ -145,8 +170,8 @@ public:
 		}
 
 		// Clear the interrupt
-		DMA_CINT = DMA_CINT_CINT(1);
-		NVIC_ClearPendingIRQ(DMA_CH1_IRQn);
+        DMA_CINT = DMA_CINT_CINT(dma_ch_tx);
+        NVIC_ClearPendingIRQ((IRQn_Type)dma_ch_tx);
 	}
 
 	/*!
@@ -154,9 +179,9 @@ public:
 
 	 @note Right now there is no corresponding 'stop'
 	 */
-	static void start();
+    void start();
 	
-	static void stop();
+    void stop();
 
 	/*!
 	 @brief Select which channels are enabled
@@ -168,10 +193,10 @@ public:
 	 @note The channel configuration is initialized to all channels disabled,
 	 allowing for the first assignment to occur after initialization.
 	 */
-	static void set_source(Src new_source,
-						   sFractional<0,31> new_mix_mic = (sFractional<0,31>) 0.0,
-						   sFractional<0,31> new_mix_ext = (sFractional<0,31>) 0.0){
-		AK4621::source = new_source;
+    void set_source(Src new_source,
+                    sFractional<0,31> new_mix_mic = (sFractional<0,31>) 0.0,
+                    sFractional<0,31> new_mix_ext = (sFractional<0,31>) 0.0){
+        source = new_source;
 		switch(new_source){
 		case Src::MIC:
 			I2S->RMR = ~1;
@@ -211,36 +236,37 @@ protected:
 		REG_RCH_EXT     = 9
 	} reg_t;
 
-	static sFractional<0,31> mix_mic, mix_ext;
+    sFractional<0,31> mix_mic, mix_ext;
 
-	static void gpio_init();
+    void gpio_init();
 
-	static void spi_write_reg(reg_t reg, uint8_t value);
+    void spi_write_reg(reg_t reg, uint8_t value);
 
-	static void i2s_init();
+    void i2s_init();
 
-	static void i2s_dma_init();
+    void i2s_dma_init();
 
-	static SPI * spi;
-	static SPI_slave * slave;
+    SPI& spi;
+    SPI_slave slave;
 
+    GPIOPin const MCLK;
+    GPIOPin::mux_t const MCLK_mux;
+    GPIOPin const LRCK;
+    GPIOPin::mux_t const LRCK_mux;
+    GPIOPin const BCLK;
+    GPIOPin::mux_t BCLK_mux = GPIOPin::MUX_ALT6;
+    GPIOPin const SDO;
+    GPIOPin::mux_t const SDO_mux;
+    GPIOPin const SDIN;
+    GPIOPin::mux_t const SDIN_mux;
+    GPIOPin const XTAL_12288;
+    GPIOPin const PDN;
 
-	static constexpr GPIOPin MCLK = {PTC_BASE_PTR, 6};
-	static constexpr GPIOPin::mux_t MCLK_mux = GPIOPin::MUX_ALT6;
-	static constexpr GPIOPin LRCK = {PTC_BASE_PTR, 2};
-	static constexpr GPIOPin::mux_t LRCK_mux = GPIOPin::MUX_ALT6;
-	static constexpr GPIOPin BCLK = {PTC_BASE_PTR, 3};
-	static constexpr GPIOPin::mux_t BCLK_mux = GPIOPin::MUX_ALT6;
-	static constexpr GPIOPin SDO  = {PTC_BASE_PTR, 1};
-	static constexpr GPIOPin::mux_t SDO_mux = GPIOPin::MUX_ALT6;
-	static constexpr GPIOPin SDIN = {PTC_BASE_PTR, 5};
-	static constexpr GPIOPin::mux_t SDIN_mux = GPIOPin::MUX_ALT4;
+    I2S_MemMapPtr I2S;
 
-	static constexpr GPIOPin XTAL_12288 = {PTB_BASE_PTR, 18};
+    uint32_t const dma_ch_rx;
+    uint32_t const dma_ch_tx;
 
-	static constexpr GPIOPin PDN  = {PTB_BASE_PTR, 3};
-
-	static constexpr I2S_MemMapPtr I2S = I2S0_BASE_PTR;
 #if CFG_TARGET_K20
 	static constexpr uint32_t I2S_DMAMUX_SOURCE_RX = 14; // p77 of RM
 	static constexpr uint32_t I2S_DMAMUX_SOURCE_TX = 15;
@@ -248,8 +274,6 @@ protected:
 	static constexpr uint32_t I2S_DMAMUX_SOURCE_RX = 12; // p78 of RM
 	static constexpr uint32_t I2S_DMAMUX_SOURCE_TX = 13;
 #endif
-	static constexpr IRQn_Type DMA_CH0_IRQn = (IRQn_Type)0;
-	static constexpr IRQn_Type DMA_CH1_IRQn = (IRQn_Type)1;
 
 	static constexpr uint32_t word_width = 32;
 	static constexpr uint32_t nwords = 2;
@@ -274,31 +298,21 @@ protected:
 	static constexpr bool ext_mclk = true;
 	static constexpr bool enable_loopback = CFG_ENABLE_LOOPBACK;
 
-	static uint_fast8_t rx_buffer_sel;
-	static uint_fast8_t tx_buffer_sel;
+    uint_fast8_t rx_buffer_sel;
+    uint_fast8_t tx_buffer_sel;
 
-	static Src source;
+    Src source;
 
 	//! @name DMA Buffers
 	//! @{
-	static sample_t buffer_in[in_buffer_size * 2];
-	static sample_t buffer_out[out_buffer_size * 2];
+    sample_t buffer_in[in_buffer_size * 2];
+    sample_t buffer_out[out_buffer_size * 2];
 	//! @}
 
-	static void (*cb_in)(sample_t *, size_t);
-	static void (*cb_out)(sample_t *, size_t, uint32_t);
+    void (*cb_in)(sample_t *, size_t);
+    void (*cb_out)(sample_t *, size_t, uint32_t);
 };
 
-extern "C" {
-
-#endif // __cplusplus
-
-// C prototypes for vector table
-void DMA_CH0_ISR();
-void DMA_CH1_ISR();
-
-#if __cplusplus
-};
 #endif // __cplusplus
 
 #endif // __APULSE_CODEC_H_

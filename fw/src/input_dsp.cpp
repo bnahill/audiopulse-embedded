@@ -196,7 +196,7 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 	////////////////////////////
 
 	//AK4621::set_source(AK4621::Src::MIC);
-	AK4621::set_in_cb(put_samplesI);
+    Platform::codec.set_in_cb(put_samplesI);
 
 	////////////////////////////
 	// Prepare FIR decimation
@@ -224,7 +224,7 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 		if(pending_reset){ do_reset(); continue; }
 
 		// Switch to the correct source and reset buffers
-		AK4621::set_source(src, scale_mic, scale_ext);
+        Platform::codec.set_source(src, scale_mic, scale_ext);
 		new_samples = nullptr;
 		state = ST_CAPTURING;
 		Platform::leds[0].set();

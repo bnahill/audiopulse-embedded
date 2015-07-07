@@ -113,7 +113,7 @@ PT_THREAD(APulseController::pt_controller)(struct pt * pt){
 		if(InputDSP::get_state() == InputDSP::ST_DONE &&
 		   WaveGen::get_state() == WaveGen::ST_DONE){
 			if(teststate == TEST_RUNNING){
-				AK4621::stop();
+                Platform::codec.stop();
 			}
 			Platform::leds[1].clear();
 			// Clean up after test
@@ -135,7 +135,7 @@ PT_THREAD(APulseController::pt_controller)(struct pt * pt){
 			timer.reset();
 
 			TPA6130A2::enable();
-			AK4621::init();
+            Platform::codec.init();
 
 			// Delay for init
 			timer.reset();
@@ -157,7 +157,7 @@ PT_THREAD(APulseController::pt_controller)(struct pt * pt){
 				PT_WAIT_UNTIL(pt, WaveGen::get_state() == WaveGen::ST_RESET);
 
 				WaveGen::set_tone(0, 0, f, 0, 500, calib_tone_level);
-				InputDSP::configure(256, 25, 15, AK4621::Src::MIC, 0.0, 0.0);
+                InputDSP::configure(256, 25, 15, Platform::codec.Src::MIC, 0.0, 0.0);
 
 				PT_WAIT_UNTIL(pt, InputDSP::is_ready() && WaveGen::is_ready());
 
@@ -188,8 +188,8 @@ PT_THREAD(APulseController::pt_controller)(struct pt * pt){
 			PT_WAIT_UNTIL(pt, timer.get_ms() > 50);
 
 			TPA6130A2::enable();
-			AK4621::init();
-			AK4621::start();
+            Platform::codec.init();
+            Platform::codec.start();
 
 			// Delay for init
 			timer.reset();
@@ -327,7 +327,7 @@ void APulseController::handle_dataI ( uint8_t* data, uint8_t size ) {
 		   teststate == TEST_CONFIGURING ||
 		   teststate == TEST_READY){
 
-			if(!AK4621::is_Src(a->capture_config_pkt.source))
+            if(!Platform::codec.is_Src(a->capture_config_pkt.source))
 				break;
 
 			InputDSP::configure(

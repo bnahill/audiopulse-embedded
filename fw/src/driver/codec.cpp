@@ -21,36 +21,14 @@
 
 #include <driver/codec.h>
 
-AK4621::sample_t AK4621::buffer_in[in_buffer_size * 2];
-AK4621::sample_t AK4621::buffer_out[out_buffer_size * 2];
-
-void (*AK4621::cb_in)(sample_t *, size_t) = nullptr;
-void (*AK4621::cb_out)(sample_t *, size_t, uint32_t) = nullptr;
-
-uint_fast8_t AK4621::rx_buffer_sel;
-uint_fast8_t AK4621::tx_buffer_sel;
-
-AK4621::Src AK4621::source = AK4621::Src::MIC;
-
-uint32_t AK4621::dma_rx_isr_count = 0;
-uint32_t AK4621::dma_tx_isr_count = 0;
-
-decltype(AK4621::mix_mic) AK4621::mix_mic;
-decltype(AK4621::mix_ext) AK4621::mix_ext;
-
-SPI * AK4621::spi = nullptr;
-SPI_slave * AK4621::slave = nullptr;
-
-void AK4621::init_hw(SPI * spi_driver, SPI_slave * spi_slave) {
+void AK4621::init_hw() {
 	SIM_SCGC6 |= SIM_SCGC6_I2S_MASK;
 
 	gpio_init();
 
-	spi = spi_driver;
-	slave = spi_slave;
 
-	spi->init();
-	spi->register_slave(*slave);
+    spi.init();
+    spi.register_slave(slave);
 
 	for(uint32_t volatile a = 0xFFFF; a; a--);
 	// Turn on
@@ -110,13 +88,13 @@ void AK4621::gpio_init(){
 
 void AK4621::spi_write_reg(reg_t reg, uint8_t value){
     uint8_t data[24] = {0xA0 | ((uint8_t)reg), value, 0x55, 0xa0};
-    while(!spi->transfer(*slave, data, nullptr, 24, nullptr, nullptr));
+    while(!spi.transfer(slave, data, nullptr, 24, nullptr, nullptr));
 	/*
-	while((SPI->SR & SPI_SR_TFFF_MASK) == 0);
-	SPI->PUSHR = SPI_PUSHR_TXDATA(((0xA0 | reg) << 8) | value) |
+    while((spi.SR & SPI_SR_TFFF_MASK) == 0);
+    spi.PUSHR = SPI_PUSHR_TXDATA(((0xA0 | reg) << 8) | value) |
 					SPI_PUSHR_PCS(1) | SPI_PUSHR_EOQ_MASK;
-	while((SPI->SR & SPI_SR_EOQF_MASK) == 0); // Wait for end of queue
-	SPI->SR = SPI_SR_EOQF_MASK; // Clear flag
+    while((spi.SR & SPI_SR_EOQF_MASK) == 0); // Wait for end of queue
+    spi.SR = SPI_SR_EOQF_MASK; // Clear flag
 	*/
 }
 
@@ -244,71 +222,71 @@ void AK4621::i2s_dma_init(){
 
 
 	if(enable_dma_rx){
-	DMA_TCD1_CSR = 0;
+    DMA_CSR_REG(DMA0, dma_ch_rx) = 0;
 
 	// First configure receive channel
-	DMAMUX_CHCFG1 = 0;
+    DMAMUX_CHCFG(dma_ch_rx) = 0;
 
-	NVIC_EnableIRQ(DMA_CH1_IRQn);
+    NVIC_EnableIRQ((IRQn_Type)dma_ch_rx);
 
-	DMA_TCD1_SADDR = (uint32_t)&I2S->RDR[0]; // Receive FIFO
-	DMA_TCD1_DADDR = (uint32_t)&buffer_in[0]; // Receive FIFO
-	DMA_TCD1_SOFF = 0; // Don't increment source
-	DMA_TCD1_DOFF = 4; // Increment destination 32 bits
-	DMA_TCD1_ATTR = DMA_ATTR_SMOD(0) | DMA_ATTR_SSIZE(2) | // 32-bit src
+    DMA_SADDR_REG(DMA0, dma_ch_rx) = (uint32_t)&I2S->RDR[0]; // Receive FIFO
+    DMA_DADDR_REG(DMA0, dma_ch_rx) = (uint32_t)&buffer_in[0]; // Receive FIFO
+    DMA_SOFF_REG(DMA0, dma_ch_rx) = 0; // Don't increment source
+    DMA_DOFF_REG(DMA0, dma_ch_rx) = 4; // Increment destination 32 bits
+    DMA_ATTR_REG(DMA0, dma_ch_rx) = DMA_ATTR_SMOD(0) | DMA_ATTR_SSIZE(2) | // 32-bit src
 					DMA_ATTR_DMOD(0) | DMA_ATTR_DSIZE(2);  // 32-bit dst
-	DMA_TCD1_NBYTES_MLNO = 4;
+    DMA_NBYTES_MLNO_REG(DMA0, dma_ch_rx) = 4;
 	// CITER and BITER must be the same
-	DMA_TCD1_CITER_ELINKNO = DMA_CITER_ELINKNO_CITER(in_buffer_size * 2);
-	DMA_TCD1_BITER_ELINKNO = DMA_BITER_ELINKNO_BITER(in_buffer_size * 2);
-	DMA_TCD1_SLAST = 0;
+    DMA_CITER_ELINKNO_REG(DMA0, dma_ch_rx) = DMA_CITER_ELINKNO_CITER(in_buffer_size * 2);
+    DMA_BITER_ELINKNO_REG(DMA0, dma_ch_rx) = DMA_BITER_ELINKNO_BITER(in_buffer_size * 2);
+    DMA_SLAST_REG(DMA0, dma_ch_rx) = 0;
 
-	DMA_TCD1_DLASTSGA = -(in_buffer_size * 2 * 4);
+    DMA_DLAST_SGA_REG(DMA0, dma_ch_rx) = -(in_buffer_size * 2 * 4);
 
-	DMA_TCD1_CSR = DMA_CSR_INTMAJOR_MASK | // Major loop IRQ
+    DMA_CSR_REG(DMA0, dma_ch_rx) = DMA_CSR_INTMAJOR_MASK | // Major loop IRQ
 				   DMA_CSR_INTHALF_MASK | // Also at half
 				   DMA_CSR_BWC(0); // 0-cycle delay
 
-	DMA_SERQ = DMA_SERQ_SERQ(1); // Enable ch 1 requests
+    DMA_SERQ = DMA_SERQ_SERQ(dma_ch_rx); // Enable ch 1 requests
 
-	DMAMUX_CHCFG1 = DMAMUX_CHCFG_SOURCE(I2S_DMAMUX_SOURCE_RX) |
-					DMAMUX_CHCFG_ENBL_MASK;
+    DMAMUX_CHCFG(dma_ch_rx) = DMAMUX_CHCFG_SOURCE(I2S_DMAMUX_SOURCE_RX) |
+                              DMAMUX_CHCFG_ENBL_MASK;
 
-	DMA_TCD1_CSR |= DMA_CSR_ACTIVE_MASK; // Set active
+    DMA_CSR_REG(DMA0, dma_ch_rx) |= DMA_CSR_ACTIVE_MASK; // Set active
 	}
 
 	// Then output
 	if(enable_dma_tx){
-	DMAMUX_CHCFG0 = 0;
+    DMAMUX_CHCFG(dma_ch_tx) = 0;
 
-	NVIC_EnableIRQ(DMA_CH0_IRQn);
+    NVIC_EnableIRQ((IRQn_Type)dma_ch_tx);
 
-	DMA_TCD0_DADDR = (uint32_t)&I2S->TDR[0]; // Transmit FIFO
-	DMA_TCD0_SADDR = (uint32_t)&buffer_out[0];
-	DMA_TCD0_SOFF = 4; // Increment source!
-	DMA_TCD0_DOFF = 0; // Don't increment destination!
-	DMA_TCD0_ATTR = DMA_ATTR_SMOD(0) | DMA_ATTR_SSIZE(2) | // 32-bit src
+    DMA_DADDR_REG(DMA0, dma_ch_tx) = (uint32_t)&I2S->TDR[0]; // Transmit FIFO
+    DMA_SADDR_REG(DMA0, dma_ch_tx) = (uint32_t)&buffer_out[0];
+    DMA_SOFF_REG(DMA0, dma_ch_tx) = 4; // Increment source!
+    DMA_DOFF_REG(DMA0, dma_ch_tx) = 0; // Don't increment destination!
+    DMA_ATTR_REG(DMA0, dma_ch_tx) = DMA_ATTR_SMOD(0) | DMA_ATTR_SSIZE(2) | // 32-bit src
 					DMA_ATTR_DMOD(0) | DMA_ATTR_DSIZE(2);  // 32-bit dst
-	DMA_TCD0_NBYTES_MLNO = 4;
-	DMA_TCD0_NBYTES_MLOFFNO = 4;
-	DMA_TCD0_NBYTES_MLOFFYES = 4;
+    DMA_NBYTES_MLNO_REG(DMA0, dma_ch_tx) = 4;
+    DMA_NBYTES_MLOFFNO_REG(DMA0, dma_ch_tx) = 4;
+    DMA_NBYTES_MLOFFYES_REG(DMA0, dma_ch_tx) = 4;
 	// CITER and BITER must be the same
-	DMA_TCD0_CITER_ELINKNO = DMA_CITER_ELINKNO_CITER(out_buffer_size * 2);
-	DMA_TCD0_BITER_ELINKNO = DMA_BITER_ELINKNO_BITER(out_buffer_size * 2);
-	DMA_TCD0_SLAST = -(out_buffer_size * 2 * 4);
+    DMA_CITER_ELINKNO_REG(DMA0, dma_ch_tx) = DMA_CITER_ELINKNO_CITER(out_buffer_size * 2);
+    DMA_BITER_ELINKNO_REG(DMA0, dma_ch_tx) = DMA_BITER_ELINKNO_BITER(out_buffer_size * 2);
+    DMA_SLAST_REG(DMA0, dma_ch_tx) = -(out_buffer_size * 2 * 4);
 
-	DMA_TCD0_DLASTSGA = 0;
+    DMA_DLAST_SGA_REG(DMA0, dma_ch_tx) = 0;
 
-	DMA_TCD0_CSR = DMA_CSR_INTMAJOR_MASK | // Major loop IRQ
+    DMA_CSR_REG(DMA0, dma_ch_tx) = DMA_CSR_INTMAJOR_MASK | // Major loop IRQ
 				   DMA_CSR_INTHALF_MASK | // Also at half
 				   DMA_CSR_BWC(0); // 0-cycle delay
 
-	DMA_SERQ = DMA_SERQ_SERQ(0); // Enable ch 0 requests
+    DMA_SERQ = DMA_SERQ_SERQ(dma_ch_tx); // Enable ch 0 requests
 
-	DMAMUX_CHCFG0 = DMAMUX_CHCFG_SOURCE(I2S_DMAMUX_SOURCE_TX) |
-					DMAMUX_CHCFG_ENBL_MASK;
+    DMAMUX_CHCFG(dma_ch_tx) = DMAMUX_CHCFG_SOURCE(I2S_DMAMUX_SOURCE_TX) |
+                              DMAMUX_CHCFG_ENBL_MASK;
 
-	DMA_TCD0_CSR |= DMA_CSR_ACTIVE_MASK; // Set actuve
+    DMA_CSR_REG(DMA0, dma_ch_tx) |= DMA_CSR_ACTIVE_MASK; // Set actuve
 	}
 }
 
@@ -331,34 +309,34 @@ void AK4621::start(){
 		I2S_TCSR_FRF_MASK;
 
 	if(enable_dma_rx){
-		DMA_CERR = DMA_CERR_CERR(1);
-		DMA_CINT = DMA_CINT_CINT(1);
+        DMA_CERR = DMA_CERR_CERR(dma_ch_rx);
+        DMA_CINT = DMA_CINT_CINT(dma_ch_rx);
 
 		// Start receive
-		DMA_SSRT = DMA_SSRT_SSRT(1);
+        DMA_SSRT = DMA_SSRT_SSRT(dma_ch_rx);
 	}
 
 	if(enable_dma_tx){
-		DMA_CERR = DMA_CERR_CERR(0);
-		DMA_CINT = DMA_CINT_CINT(0);
+        DMA_CERR = DMA_CERR_CERR(dma_ch_tx);
+        DMA_CINT = DMA_CINT_CINT(dma_ch_tx);
 
 		// Start transmit
-		DMA_SSRT = DMA_SSRT_SSRT(0);
+        DMA_SSRT = DMA_SSRT_SSRT(dma_ch_tx);
 	}
 }
 
 void AK4621::stop(){
 	if(enable_dma_rx){
-		DMA_EARS = DMA_EARS_EDREQ_1_MASK;
+        DMA_EARS = 1 << dma_ch_rx;
 	}
 	if(enable_dma_tx){
-		DMA_EARS = DMA_EARS_EDREQ_0_MASK;
+        DMA_EARS = 1 << dma_ch_tx;
 	}
 	if(enable_dma_rx){
-		while(DMA_TCD1_CSR & DMA_CSR_DREQ_MASK);
+        while(DMA_CSR_REG(DMA0, dma_ch_rx) & DMA_CSR_DREQ_MASK);
 	}
 	if(enable_dma_tx){
-		while(DMA_TCD0_CSR & DMA_CSR_DREQ_MASK);
+        while(DMA_CSR_REG(DMA0, dma_ch_tx) & DMA_CSR_DREQ_MASK);
 	}
 }
 static volatile uint32_t dma_rx_isr_count = 0;
@@ -366,13 +344,3 @@ static volatile uint32_t dma_tx_isr_count = 0;
 
 
 
-void DMA_CH1_ISR() { // Receive
-	AK4621::dma_rx_isr();
-	dma_rx_isr_count += 1;
-}
-
-
-void DMA_CH0_ISR() { // Transmit
-	AK4621::dma_tx_isr();
-	dma_tx_isr_count += 1;
-}

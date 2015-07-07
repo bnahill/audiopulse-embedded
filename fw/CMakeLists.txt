@@ -73,6 +73,7 @@ option(ENABLE_LOOPBACK "Enable a loopback connection from output to input" OFF)
 option(ENABLE_INPUT_DEBUG "Check for errors in input timing" ON)
 option(ENABLE_INPUT_IIR "Use an IIR filter instead of FIR for decimation" OFF)
 option(ENABLE_INPUT_CALIBRATION "Apply per-frequency calibration to input" OFF)
+option(POWER_ALWAYS_ON "Keep analog power always on" ON)
 
 if(${TARGET_K22})
 	add_definitions(-DCFG_TARGET_K22=true)
@@ -122,6 +123,15 @@ else()
 	message("Building without input calibration")
 endif()
 
+
+
+if(${POWER_ALWAYS_ON})
+        add_definitions(-DCFG_POWER_ALWAYS_ON=true)
+        message("Building with power always on")
+else()
+        add_definitions(-DCFG_POWER_ALWAYS_ON=false)
+        message("Building with power selectively on")
+endif()
 
 ########################################################
 # Build Options

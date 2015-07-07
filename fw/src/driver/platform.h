@@ -51,7 +51,7 @@ public:
 
 		USB::lateInit();
 
-		AK4621::init_hw(&spi0, &codec_slave);
+        Platform::codec.init_hw();
 
 		TPA6130A2::init_hw();
 
@@ -68,8 +68,14 @@ public:
 	static SPI spi0;
 	static SPI_slave codec_slave;
 
+    static AK4621 codec;
+
 	static void power_on(){power_en.set();}
+#if CFG_POWER_ALWAYS_ON
+    static void power_off(){}
+#else
 	static void power_off(){power_en.clear();}
+#endif
 
 	//! The external 12.288MHz oscillator
 	static GPIOPin const xtal_ex;
@@ -93,6 +99,10 @@ void earlyInitC();
 // SPI DMA ISRs
 void DMA_CH2_ISR();
 void DMA_CH3_ISR();
+
+// Codec DMA ISRs
+void DMA_CH0_ISR();
+void DMA_CH1_ISR();
 
 #ifdef __cplusplus
 };

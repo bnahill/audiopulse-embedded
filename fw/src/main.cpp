@@ -94,7 +94,7 @@ void main(){
 
 	USB::hidClassInit();
 
-	AK4621::init();
+    Platform::codec.init();
 
 // 	swo_setup();
 // 	swo_sendchar('a');

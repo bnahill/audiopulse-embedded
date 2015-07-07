@@ -159,7 +159,7 @@ public:
 	static inline void runI(){
 		if(state == ST_READY){
 			state = ST_STARTING;
-			AK4621::set_out_cb(get_samplesI);
+            Platform::codec.set_out_cb(get_samplesI);
 			bool have_active = false;
 			for(auto &gen : generators){
 				if(gen.type != Generator::GEN_OFF)
@@ -173,7 +173,7 @@ public:
 	static PT_THREAD(pt_wavegen(struct pt * pt)){
 		PT_BEGIN(pt);
 
-		AK4621::set_out_cb(get_samplesI);
+        Platform::codec.set_out_cb(get_samplesI);
 
 		do_reset();
 

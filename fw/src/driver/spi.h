@@ -40,10 +40,11 @@ public:
 	}
 	void init();
 
+    SPI &spi;
+
 protected:
 	friend class SPI;
 
-	SPI &spi;
 	uint32_t CTAR;
 	GPIOPin const NCS;// = {PTD_BASE_PTR, 0};
 	uint32_t const mux;
@@ -52,6 +53,9 @@ protected:
 	uint32_t index;
 };
 
+/*!
+ * \brief A class for simple serial communication
+ */
 class SPI {
 public:
     constexpr SPI(SPI_MemMapPtr spi, GPIOPin const MOSI, GPIOPin::mux_t MOSI_mux,
@@ -68,6 +72,10 @@ public:
 
 	}
 
+    /*!
+     * \brief Initialize all hardware necessary as well as internal data
+     *        structures
+     */
 	void init(){
 		if(is_init)
 			return;
@@ -84,33 +92,8 @@ public:
 		MISO.configure(MISO_mux, true);
 		MOSI.configure(MOSI_mux, true);
 
-		spi->MCR = SPI_MCR_HALT_MASK;
+        spi->MCR = SPI_MCR_HALT_MASK;
 
-		/*
-		So the AK4621 specifies that the first clock edge it sees is rising and
-		that it will register on that rising edge. CPOL=CPHA=0
-		*/
-		//SPI->CTAR[0] =
-		//	SPI_CTAR_FMSZ(15) |     // 16 bit frames
-		//	SPI_CTAR_CPOL_MASK |   // Clock idle high
-		//	SPI_CTAR_CPHA_MASK |   // Sample following edge
-		//	SPI_CTAR_PCSSCK(2) |   // PCS to SCK prescaler = 5
-		//	SPI_CTAR_PASC(2)   |   // Same delay before end of PCS
-		//	SPI_CTAR_PDT(3)    |   // Same delay after end of PCS
-		//	SPI_CTAR_PBR(0)    |   // Use sysclk / 2
-		//	SPI_CTAR_CSSCK(6)  |   // Base delay is 128*Tsys
-		//	SPI_CTAR_ASC(3)    |   // Unit delay before end of PCS
-		//	SPI_CTAR_DT(3)     |   // Same after end of PCS
-		//	SPI_CTAR_BR(8);        // Scale by 256
-/*
-		spi->MCR =
-				SPI_MCR_MSTR_MASK |    // Master
-				SPI_MCR_DCONF(0) |     // SPI mode
-				SPI_MCR_PCSIS(1) |     // All nCS idle high
-				SPI_MCR_DIS_RXF_MASK | // No RX FIFO
-		        SPI_MCR_DIS_TXF_MASK | // No TX FIFO
-				SPI_MCR_SMPL_PT(0);    // Sample on clock edge
-*/
 		dma_init();
 
 		is_init = true;

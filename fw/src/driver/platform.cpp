@@ -42,24 +42,37 @@ SPI Platform::spi0 = {
 	2, 3 // DMA channels 2 and 3 for TX and RX
 };
 
-SPI_slave Platform::codec_slave = SPI_slave(
-	spi0,
-	{PTD_BASE_PTR, 0}, GPIOPin::MUX_ALT2,
-	(
-		SPI_CTAR_FMSZ(7)   |   // 8-bit frames
-		SPI_CTAR_CPOL_MASK |   // Clock idle high
-		SPI_CTAR_CPHA_MASK |   // Sample following edge
-		SPI_CTAR_PCSSCK(2) |   // PCS to SCK prescaler = 5
-		SPI_CTAR_PASC(2)   |   // Same delay before end of PCS
-		SPI_CTAR_PDT(3)    |   // Same delay after end of PCS
-		SPI_CTAR_PBR(0)    |   // Use sysclk / 2
-		SPI_CTAR_CSSCK(6)  |   // Base delay is 128*Tsys
-		SPI_CTAR_ASC(3)    |   // Unit delay before end of PCS
-		SPI_CTAR_DT(3)     |   // Same after end of PCS
-		SPI_CTAR_BR(8)         // Scale by 256
-	),
-    0
-);
+
+AK4621 Platform::codec = {
+    {PTC_BASE_PTR, 6}, GPIOPin::MUX_ALT6, // MCLK
+    {PTC_BASE_PTR, 2}, GPIOPin::MUX_ALT6, // LRCK
+    {PTC_BASE_PTR, 3}, GPIOPin::MUX_ALT6, // BCLK
+    {PTC_BASE_PTR, 1}, GPIOPin::MUX_ALT6, // SDO
+    {PTC_BASE_PTR, 5}, GPIOPin::MUX_ALT4, // SDIN
+    {PTB_BASE_PTR, 18}, // XTAL
+    {PTB_BASE_PTR, 3},  //PDN
+    I2S0_BASE_PTR,
+    1, // RX DMA Channel
+    0, // TX DMA Channel
+    SPI_slave( // SPI slave
+        spi0,
+        {PTD_BASE_PTR, 0}, GPIOPin::MUX_ALT2,
+        (
+            SPI_CTAR_FMSZ(7)   |   // 8-bit frames
+            SPI_CTAR_CPOL_MASK |   // Clock idle high
+            SPI_CTAR_CPHA_MASK |   // Sample following edge
+            SPI_CTAR_PCSSCK(2) |   // PCS to SCK prescaler = 5
+            SPI_CTAR_PASC(2)   |   // Same delay before end of PCS
+            SPI_CTAR_PDT(3)    |   // Same delay after end of PCS
+            SPI_CTAR_PBR(0)    |   // Use sysclk / 2
+            SPI_CTAR_CSSCK(6)  |   // Base delay is 128*Tsys
+            SPI_CTAR_ASC(3)    |   // Unit delay before end of PCS
+            SPI_CTAR_DT(3)     |   // Same after end of PCS
+            SPI_CTAR_BR(8)         // Scale by 256
+        ),
+        0
+    )
+};
 
 void earlyInitC(){
 #if ((__FPU_PRESENT == 1) && (__FPU_USED == 1))
@@ -112,8 +125,10 @@ void Platform::earlyInit(){
 
 	power_en.clear();
 	power_en.make_output();
-	power_en.configure(GPIOPin::MUX_GPIO, true);
-
+    power_en.configure(GPIOPin::MUX_GPIO, true);
+#if CFG_POWER_ALWAYS_ON
+    power_on();
+#endif
 
 	for(auto &led : leds){
 		// Setup that one LED so it can be used for debugging
@@ -146,4 +161,15 @@ void DMA_CH2_ISR(){
 
 void DMA_CH3_ISR(){
 	Platform::spi0.handle_complete_isr();
+}
+
+void DMA_CH1_ISR() { // Receive
+    Platform::codec.dma_rx_isr();
+    //dma_rx_isr_count += 1;
+}
+
+
+void DMA_CH0_ISR() { // Transmit
+    Platform::codec.dma_tx_isr();
+    //dma_tx_isr_count += 1;
 }
