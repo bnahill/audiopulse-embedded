@@ -35,8 +35,8 @@ class SPI_slave {
 public:
 	constexpr SPI_slave(SPI &spi, GPIOPin NCS, GPIOPin::mux_t NCS_mux, uint32_t CTAR,
 	          uint32_t ncs_index) :
-	    spi(spi), NCS(NCS), mux((GPIOPin::mux_t)2), CTAR(CTAR), ncs_index(ncs_index),
-	    index(~0){
+        spi(spi), NCS(NCS), mux((GPIOPin::mux_t)2), CTAR(CTAR), ncs_index(ncs_index),
+        index(~0){
 	}
 	void init();
 
@@ -66,7 +66,9 @@ public:
 		MISO(MISO), MISO_mux(MISO_mux), SCLK(SCLK), SCLK_mux(SCLK_mux),
 		dma_ch_tx(dma_ch_tx), dma_ch_rx(dma_ch_rx),
         current_cb(nullptr), current_arg(nullptr), current_slave(nullptr),
-		is_init(false), busy(true)
+        current_tx_ptr(nullptr), current_rx_ptr(nullptr),
+        current_tx_count(0), current_rx_count(0), current_hold(false),
+        is_init(false), busy(true), use_dma(false)
 	{
 
 
@@ -92,13 +94,19 @@ public:
 		MISO.configure(MISO_mux, true);
 		MOSI.configure(MOSI_mux, true);
 
-        spi->MCR = SPI_MCR_HALT_MASK;
+		spi->MCR = SPI_MCR_HALT_MASK;
 
-		dma_init();
+
+        if(use_dma)
+            dma_init();
+        else
+            non_dma_init();
 
 		is_init = true;
 		busy = false;
 	}
+
+    void non_dma_init();
 
     void dma_init();
 
@@ -118,7 +126,22 @@ public:
 	bool transfer(SPI_slave &slave,
 	              uint8_t const * tx_buf, uint8_t * rx_buf,
 	              uint32_t count,
-                  spi_cb_t cb, void * arg);
+                  spi_cb_t cb=nullptr, void * arg=nullptr,
+                  bool hold=false);
+
+
+    bool send_sync(SPI_slave &slave, uint8_t const * tx_buf, uint32_t count, bool hold=false){
+        return transfer(slave, tx_buf, nullptr, count, nullptr, nullptr, hold);
+    }
+
+    bool read_sync(SPI_slave &slave, uint8_t * rx_buf, uint32_t count, bool hold=false){
+        return transfer(slave, nullptr, rx_buf, count, nullptr, nullptr, hold);
+    }
+
+    bool transfer_dma(SPI_slave &slave,
+                      uint8_t const * tx_buf, uint8_t * rx_buf,
+                      uint32_t count,
+                      spi_cb_t cb, void * arg);
 
 	void handle_complete_isr(){
         volatile uint16_t errs;
@@ -143,6 +166,49 @@ public:
         //NVIC_ClearPendingIRQ((IRQn_Type)dma_ch_tx);
 	}
 
+    void handle_dready_isr(){
+        uint32_t dummy = 0;
+
+
+
+        while((spi->SR & SPI_SR_RXCTR_MASK) && current_rx_count){
+            if(current_rx_ptr){
+                *(current_rx_ptr++) = spi->POPR;
+            } else {
+                dummy = spi->POPR;
+            }
+            current_rx_count -= 1;
+        }
+        if(current_rx_count == 0){
+            // Have we received everything?
+            busy = false;
+            if(current_cb)
+                current_cb(current_arg);
+        } else {
+            uint32_t tx_mask =
+                    SPI_PUSHR_CTAS(current_slave->index) |
+                    SPI_PUSHR_CONT_MASK |
+                    SPI_PUSHR_CTCNT_MASK |
+                    SPI_PUSHR_PCS(1 << current_slave->ncs_index);
+            while(((spi->SR & SPI_SR_TXCTR_MASK) >> SPI_SR_TXCTR_SHIFT < 4) && current_tx_count){
+                if(current_tx_count == 1){
+                    if(!current_hold)
+                        tx_mask &= ~SPI_PUSHR_CONT_MASK;
+                    tx_mask |= SPI_PUSHR_EOQ_MASK;
+                }
+                if(current_tx_ptr){
+                    spi->PUSHR = tx_mask | *(current_tx_ptr++);
+                } else {
+                    spi->PUSHR = tx_mask;
+                }
+                current_tx_count -= 1;
+            }
+        }
+
+        spi->SR = SPI_SR_RFDF_MASK;
+        NVIC_ClearPendingIRQ((IRQn_Type)26);
+    }
+
 protected:
 	uint32_t nslaves;
 
@@ -151,9 +217,16 @@ protected:
 	spi_cb_t current_cb;
 	void *   current_arg;
     SPI_slave * current_slave;
+    uint8_t const * current_tx_ptr;
+    uint8_t * current_rx_ptr;
+    uint16_t current_tx_count;
+    uint16_t current_rx_count;
+    bool current_hold;
 
 	bool busy;
 	bool is_init;
+
+    bool use_dma;
 
 	SPI_MemMapPtr const spi;// = SPI0_BASE_PTR;
 	GPIOPin const MOSI;// = {PTD_BASE_PTR, 2};

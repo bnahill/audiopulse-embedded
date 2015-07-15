@@ -32,6 +32,7 @@
 #include <apulse_math.h>
 #include <driver/spi.h>
 
+
 class AK4621 {
 public:
 	//! A single audio sample
@@ -41,6 +42,27 @@ public:
 	typedef void (*audio_out_cb_t)(sample_t *, size_t, uint32_t);
 
 
+    // Early declaration to ensure alignment
+
+    /*!
+     @brief The number of samples in a single incoming buffer (there are two)
+     */
+    static constexpr uint32_t in_buffer_size = 768*2;
+
+    /*!
+     @brief The number of samples in a single outgoing buffer (there are two)
+     */
+    static constexpr uint32_t out_buffer_size = 128;
+private:
+    //! @name DMA Buffers
+    //! @{
+    sample_t buffer_in[in_buffer_size * 2];
+    sample_t buffer_out[out_buffer_size * 2];
+    //! @}
+
+    // End early buffer declarations
+
+public:
 	enum class Src : uint8_t {
 		MIC = 0,
 		EXT = 1,
@@ -133,8 +155,8 @@ public:
 			}
 			tx_buffer_sel ^= 1;
 		}
-        DMA_CINT = DMA_CINT_CINT(dma_ch_rx);
-        NVIC_ClearPendingIRQ((IRQn_Type)dma_ch_rx);
+        DMA_CINT = DMA_CINT_CINT(dma_ch_tx);
+        NVIC_ClearPendingIRQ((IRQn_Type)dma_ch_tx);
 	}
 
 	/*!
@@ -170,8 +192,8 @@ public:
 		}
 
 		// Clear the interrupt
-        DMA_CINT = DMA_CINT_CINT(dma_ch_tx);
-        NVIC_ClearPendingIRQ((IRQn_Type)dma_ch_tx);
+        DMA_CINT = DMA_CINT_CINT(dma_ch_rx);
+        NVIC_ClearPendingIRQ((IRQn_Type)dma_ch_rx);
 	}
 
 	/*!
@@ -212,15 +234,7 @@ public:
 		}
 	}
 
-	/*!
-	 @brief The number of samples in a single incoming buffer (there are two)
-	 */
-	static constexpr uint32_t in_buffer_size = 768*2;
 
-	/*!
-	 @brief The number of samples in a single outgoing buffer (there are two)
-	 */
-	static constexpr uint32_t out_buffer_size = 128;
 
 	static constexpr uint32_t fs = 48000;
 
@@ -295,7 +309,7 @@ protected:
 
 	static constexpr bool enable_dma_tx = true;
 	static constexpr bool enable_dma_rx = true;
-	static constexpr bool ext_mclk = true;
+    static constexpr bool ext_mclk = true;
 	static constexpr bool enable_loopback = CFG_ENABLE_LOOPBACK;
 
     uint_fast8_t rx_buffer_sel;
@@ -303,15 +317,10 @@ protected:
 
     Src source;
 
-	//! @name DMA Buffers
-	//! @{
-    sample_t buffer_in[in_buffer_size * 2];
-    sample_t buffer_out[out_buffer_size * 2];
-	//! @}
 
     void (*cb_in)(sample_t *, size_t);
     void (*cb_out)(sample_t *, size_t, uint32_t);
-};
+} __attribute__ ((aligned (64)));
 
 #endif // __cplusplus
 

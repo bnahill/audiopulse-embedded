@@ -96,14 +96,23 @@ void main(){
 
     Platform::codec.init();
 
+
+    /*
+    Platform::spi0.register_slave(flash_slave);
+
+    uint8_t tx_buf[8] = {0x9f,0x00, 0, 0};
+    uint8_t rx_buf[8] = {0};
+
+    Platform::spi0.transfer(flash_slave, tx_buf, rx_buf, 4, nullptr, nullptr);
+    */
+
 // 	swo_setup();
 // 	swo_sendchar('a');
 // 	swo_sendchar('b');
 // 	swo_sendchar('c');
 // 	swo_sendchar('d');
 
-	while(true){
-		Platform::power_on();
+    while(true){
 		InputDSP::pt_dsp(&pt_dsp);
 		WaveGen::pt_wavegen(&pt_wavegen);
 		APulseController::pt_controller(&pt_controller);

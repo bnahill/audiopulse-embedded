@@ -42,7 +42,6 @@ SPI Platform::spi0 = {
 	2, 3 // DMA channels 2 and 3 for TX and RX
 };
 
-
 AK4621 Platform::codec = {
     {PTC_BASE_PTR, 6}, GPIOPin::MUX_ALT6, // MCLK
     {PTC_BASE_PTR, 2}, GPIOPin::MUX_ALT6, // LRCK
@@ -73,6 +72,50 @@ AK4621 Platform::codec = {
         0
     )
 };
+
+SPI_slave Platform::codec_slave = SPI_slave(
+	spi0,
+	{PTD_BASE_PTR, 0}, GPIOPin::MUX_ALT2,
+	(
+		SPI_CTAR_FMSZ(7)   |   // 8-bit frames
+		SPI_CTAR_CPOL_MASK |   // Clock idle high
+		SPI_CTAR_CPHA_MASK |   // Sample following edge
+		SPI_CTAR_PCSSCK(2) |   // PCS to SCK prescaler = 5
+		SPI_CTAR_PASC(2)   |   // Same delay before end of PCS
+		SPI_CTAR_PDT(3)    |   // Same delay after end of PCS
+		SPI_CTAR_PBR(0)    |   // Use sysclk / 2
+		SPI_CTAR_CSSCK(6)  |   // Base delay is 128*Tsys
+		SPI_CTAR_ASC(3)    |   // Unit delay before end of PCS
+		SPI_CTAR_DT(3)     |   // Same after end of PCS
+		SPI_CTAR_BR(8)         // Scale by 256
+	),
+    0
+);
+
+SPI_slave Platform::flash_slave = SPI_slave(
+    Platform::spi0,
+    {PTC_BASE_PTR, 0}, GPIOPin::MUX_ALT2,
+    (
+        SPI_CTAR_FMSZ(7)   |   // 8-bit frames
+        SPI_CTAR_CPOL_MASK |   // Clock idle high
+        SPI_CTAR_CPHA_MASK |   // Sample following edge
+        SPI_CTAR_PCSSCK(2) |   // PCS to SCK prescaler = 5
+        SPI_CTAR_PASC(2)   |   // Same delay before end of PCS
+        SPI_CTAR_PDT(3)    |   // Same delay after end of PCS
+        SPI_CTAR_PBR(0)    |   // Use sysclk / 2
+        SPI_CTAR_CSSCK(6)  |   // Base delay is 128*Tsys
+        SPI_CTAR_ASC(3)    |   // Unit delay before end of PCS
+        SPI_CTAR_DT(3)     |   // Same after end of PCS
+        SPI_CTAR_BR(8)         // Scale by 256
+    ),
+    0
+);
+
+MT29FxG01 Platform::flash = MT29FxG01(
+    Platform::spi0,
+    MT29FxG01::SIZE_4G,
+    Platform::flash_slave
+);
 
 void earlyInitC(){
 #if ((__FPU_PRESENT == 1) && (__FPU_USED == 1))
@@ -126,6 +169,7 @@ void Platform::earlyInit(){
 	power_en.clear();
 	power_en.make_output();
     power_en.configure(GPIOPin::MUX_GPIO, true);
+
 #if CFG_POWER_ALWAYS_ON
     power_on();
 #endif
@@ -153,7 +197,17 @@ decltype(cfmconf) cfmconf = {
 };
 #endif
 
+void SPI0_ISR(){
+    Platform::spi0.handle_dready_isr();
+}
 
+void DMA_CH0_ISR(){
+    Platform::codec.dma_tx_isr();
+}
+
+void DMA_CH1_ISR(){
+    Platform::codec.dma_rx_isr();
+}
 
 void DMA_CH2_ISR(){
 	Platform::spi0.handle_complete_isr();
@@ -161,15 +215,4 @@ void DMA_CH2_ISR(){
 
 void DMA_CH3_ISR(){
 	Platform::spi0.handle_complete_isr();
-}
-
-void DMA_CH1_ISR() { // Receive
-    Platform::codec.dma_rx_isr();
-    //dma_rx_isr_count += 1;
-}
-
-
-void DMA_CH0_ISR() { // Transmit
-    Platform::codec.dma_tx_isr();
-    //dma_tx_isr_count += 1;
 }

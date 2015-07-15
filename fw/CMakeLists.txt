@@ -189,6 +189,7 @@ include_directories(
 	.
 	src
 	src/freescale
+        FLogFS/inc
 	${CMSIS_DIR}/Include
 	${CMSIS_DIR}/Include/device/MK22F51212
 	Device/ARM/ARMCM4/Include
@@ -237,6 +238,7 @@ set(APP_SOURCES
 	src/driver/clocks.cpp
 	src/driver/tpa6130a2.cpp
 	src/driver/spi.cpp
+        src/driver/mt29fxg01.cpp
 	src/startup.s
 )
 

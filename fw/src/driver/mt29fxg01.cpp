@@ -1,0 +1,378 @@
+/*!
+ @file mt29fxg01.cpp
+ @brief Body for \ref MT29FxG01 class
+ @author Ben Nahill <bnahill@gmail.com>
+ */
+
+#include "driver/mt29fxg01.h"
+
+MT29FxG01::MT29FxG01(SPI &spi,
+                     numblocks_t num_blocks,
+                     SPI_slave &_spi_slave) :
+        spi(spi), num_blocks(num_blocks), init_success(INIT_NOT_YET),
+        spi_slave(_spi_slave)
+{
+
+}
+
+void MT29FxG01::write_enable(){
+        uint8_t x = CMD_WRITE_ENABLE;
+        spi.send_sync(spi_slave, &x, 1);
+}
+
+
+bool MT29FxG01::init(){
+        uint8_t rx[4] = {0};
+        uint8_t const tx[4] = {CMD_READ_ID, 0,0,0};
+
+
+        if(init_success != INIT_NOT_YET){
+                return init_success == INIT_SUCCESS;
+        }
+
+        spi.init();
+
+        reset();
+
+        spi.transfer(spi_slave, tx, rx, 4);
+        init_success = ((rx[2] == 0x2C) && (rx[3] == 0x32)) ? INIT_SUCCESS :
+                                                              INIT_FAILURE;
+
+        return (init_success == INIT_SUCCESS);
+}
+
+void MT29FxG01::set_defaults(){
+        // Unlock all blocks
+        set_feature(FADDR_BLOCK_LOCK, 0x00);
+        // Enable ECC
+        set_feature(FADDR_OTP, 0x10);
+
+        // Disable ECC
+        //set_feature(FADDR_OTP, 0x00);
+}
+
+
+void MT29FxG01::reset(){
+        uint8_t tx = CMD_RESET;
+        spi.send_sync(spi_slave, &tx, 1);
+
+        // Wait here?
+
+        set_defaults();
+}
+
+uint8_t MT29FxG01::get_feature(feature_addr_t feature){
+        uint8_t rx[3];
+        uint8_t tx[3] = {
+                CMD_GET_FEATURE,
+                feature,
+                0
+        };
+        spi.transfer(spi_slave, tx, rx, 3);
+        return rx[2];
+}
+
+void MT29FxG01::set_feature(feature_addr_t feature, uint8_t value){
+        uint8_t tx[3] = {
+                CMD_SET_FEATURE,
+                feature,
+                value
+        };
+        // Clear bits 6 and 7 if it might mess with the OTP area
+        if(feature == FADDR_OTP)
+                tx[2] &= 0x3F;
+        spi.send_sync(spi_slave, tx, 3);
+}
+
+bool MT29FxG01::read_page(uint8_t * dst, uint16_t block, uint8_t page, uint16_t offset, uint16_t bytes){
+        uint8_t tx[4];
+        uint8_t stat;
+        bool err = false;
+        constexpr uint32_t num_tries = 100;
+        uint32_t i;
+
+        address_t const addr(block, page, offset);
+
+        lock();
+
+        page_read_to_cache(addr);
+
+        //chThdSleep(MS2ST(1));
+
+        for(i = 0; i < num_tries; i++){
+                stat = get_feature(FADDR_STATUS);
+                if((stat & STATMASK_OIP) == 0){
+                        if((stat & (STATMASK_ECC_STAT1 | STATMASK_ECC_STAT0)) ==
+                           STATMASK_ECC_STAT1){
+                                // There is an uncorrected error here
+                                err = true;
+                        }
+                        break;
+                }
+        } if(i == num_tries) {
+                unlock();
+                return false;
+        }
+
+        // Now read that page from cache
+
+        tx[0] = CMD_READ_CACHE;
+        addr.get_column_address(&tx[1]);
+        tx[3] = 0;
+
+        spi.send_sync(spi_slave, tx, 4, true);
+        spi.read_sync(spi_slave, dst, bytes);
+
+        unlock();
+
+        return !err;
+}
+
+bool MT29FxG01::check_block_bad ( uint16_t block ){
+        uint8_t ret;
+        if(!read_page(&ret, block, 0, page_size, 1))
+                return true;
+        if(ret == 0){
+                // Bad block marker
+                return true;
+        }
+        return false;
+}
+
+
+void MT29FxG01::cleanup(){
+        uint8_t tx[4];
+        uint8_t stat;
+
+        address_t addr(0,0,0);
+        tx[0] = CMD_PAGE_READ;
+
+        lock();
+
+        for(addr.block = 0; addr.block < num_blocks; addr.block++){
+                for(addr.page = 0; addr.page < pages_per_block; addr.page++){
+                        addr.get_row_address(&tx[1]);
+                        spi.send_sync(spi_slave, tx, 4);
+                        while(true){
+                                stat = get_feature(FADDR_STATUS);
+                                if((stat & STATMASK_OIP) == 0)
+                                        break;
+                        }
+                        write_enable();
+                        program_load(addr, nullptr, 0, true);
+                        program_execute(addr);
+                        while(true){
+                                stat = get_feature(FADDR_STATUS);
+                                if((stat & STATMASK_OIP) == 0)
+                                        break;
+                        }
+                }
+        }
+
+        unlock();
+}
+
+bool MT29FxG01::page_open ( uint16_t block, uint8_t page ) {
+        current_addr = address_t(block, page, 0);
+        // Make sure that all future load calls are done random
+        writes_so_far = 1;
+
+        page_read_to_cache(current_addr);
+
+        do {
+
+        } while(get_feature(FADDR_STATUS) & STATMASK_OIP);
+
+        return true;
+}
+
+bool MT29FxG01::page_open_write ( uint16_t block, uint8_t page ) {
+        current_addr = address_t(block, page, 0);
+        // Next call shouldn't be random
+        writes_so_far = 0;
+}
+
+
+bool MT29FxG01::page_commit () {
+        constexpr uint32_t num_tries = 20000;
+
+        uint32_t i;
+        uint8_t stat;
+        write_enable();
+        program_execute(current_addr);
+
+        for(i = 0; i < num_tries; i++){
+                stat = get_feature(FADDR_STATUS);
+                if(stat & STATMASK_P_FAIL){
+                        // oops
+                        break;
+                }
+                if((stat & STATMASK_OIP) == 0){
+                        // Done
+                        return true;
+                }
+        }
+
+        return false;
+}
+
+bool MT29FxG01::page_read_continued ( uint8_t* dst, uint16_t offset, uint16_t n ) {
+        uint8_t tx[4];
+
+        current_addr.offset = offset;
+        // Now read that page from cache
+
+        tx[0] = CMD_READ_CACHE;
+        current_addr.get_column_address(&tx[1]);
+        tx[3] = 0;
+
+        spi.send_sync(spi_slave, tx, 4, true);
+        spi.read_sync(spi_slave, dst, n);
+
+        return true;
+}
+
+bool MT29FxG01::page_write_continued ( const uint8_t* src, uint16_t offset, uint16_t n ) {
+        current_addr.offset = offset;
+        program_load(current_addr, src, n, (writes_so_far++) > 0);
+        return true;
+}
+
+void MT29FxG01::page_read_to_cache( const MT29FxG01::address_t& addr ) {
+        uint8_t tx[4];
+
+        tx[0] = CMD_PAGE_READ;
+        addr.get_row_address(&tx[1]);
+
+        spi.send_sync(spi_slave, tx, 4);
+}
+
+
+
+void MT29FxG01::program_load (address_t const &addr, const uint8_t * src,
+                                  uint16_t n, bool random){
+        uint8_t tx[3];
+        tx[0] = (random) ? CMD_PROGRAM_LOAD_RANDOM : CMD_PROGRAM_LOAD;
+        addr.get_column_address(&tx[1]);
+        if(n) {
+                spi.send_sync(spi_slave, tx, 3, true);
+                spi.send_sync(spi_slave, src, n);
+        } else {
+                // There may for some reason not be any data...
+                spi.send_sync(spi_slave, tx, 3);
+        }
+}
+
+void MT29FxG01::program_execute ( const MT29FxG01::address_t & addr ){
+        uint8_t tx[4];
+
+        tx[0] = CMD_PROGRAM_EXECUTE;
+        addr.get_row_address(&tx[1]);
+        spi.send_sync(spi_slave, tx, 4);
+}
+
+bool MT29FxG01::write_page(uint8_t const * src, uint16_t block,
+                           uint8_t page){
+        uint8_t stat;
+        constexpr uint32_t num_tries = 200;
+        uint32_t i;
+
+        address_t const addr(block, page, 0);
+
+        lock();
+
+        write_enable();
+
+        program_load(addr, src, page_size);
+
+        program_execute(addr);
+
+        for(i = 0; i < num_tries; i++){
+
+            stat = get_feature(FADDR_STATUS);
+                if(stat & STATMASK_P_FAIL){
+                        // oops
+                        break;
+                }
+                if((stat & STATMASK_OIP) == 0){
+                        // Done
+                        unlock();
+                        return true;
+                }
+        }
+
+        unlock();
+        return false;
+}
+
+bool MT29FxG01::write ( const uint8_t * src, uint16_t block, uint8_t page,
+                        uint16_t offset, uint16_t n ){
+        uint8_t stat;
+        constexpr uint32_t num_tries = 200;
+        uint32_t i;
+
+        address_t const addr(block, page, offset);
+        lock();
+
+        // Read the page to cache
+        page_read_to_cache(addr);
+
+        do {
+
+        } while(get_feature(FADDR_STATUS) & STATMASK_OIP);
+
+        write_enable();
+
+        program_load(addr, src, n, true);
+
+        program_execute(addr);
+
+        for(i = 0; i < num_tries; i++){
+
+                stat = get_feature(FADDR_STATUS);
+                if(stat & STATMASK_P_FAIL){
+                        // oops
+                        break;
+                }
+                if((stat & STATMASK_OIP) == 0){
+                        // Done
+                        unlock();
+                        return true;
+                }
+        }
+
+        unlock();
+        return false;
+}
+
+
+
+bool MT29FxG01::erase_block ( uint16_t block ){
+        uint8_t tx[4];
+        uint8_t stat;
+
+        address_t addr(block,0,0);
+
+        //lock();
+        write_enable();
+        tx[0] = CMD_BLOCK_ERASE;
+        addr.get_row_address(&tx[1]);
+
+        spi.send_sync(spi_slave, tx, 4);
+
+        while(1){
+                stat = get_feature(FADDR_STATUS);
+                if(stat & STATMASK_E_FAIL){
+                        // There was the fail
+                        break;
+                }
+                if((stat & STATMASK_OIP) == 0){
+                        // Done
+                        //unlock();
+                        return true;
+                }
+        }
+
+        //unlock();
+        return false;
+}

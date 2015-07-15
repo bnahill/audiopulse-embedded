@@ -31,6 +31,7 @@
 #include <driver/tpa6130a2.h>
 #include <driver/pwm_gpio.h>
 #include <driver/spi.h>
+#include <driver/mt29fxg01.h>
 #include <pt.h>
 
 class Platform {
@@ -47,8 +48,6 @@ public:
 	 @brief Initialize peripherals and devices that depend on clocks and data initialization
 	 */
 	static void lateInit(){
-
-
 		USB::lateInit();
 
         Platform::codec.init_hw();
@@ -69,6 +68,9 @@ public:
 	static SPI_slave codec_slave;
 
     static AK4621 codec;
+
+    static MT29FxG01 flash;
+    static SPI_slave flash_slave;
 
 	static void power_on(){power_en.set();}
 #if CFG_POWER_ALWAYS_ON
@@ -99,6 +101,8 @@ void earlyInitC();
 // SPI DMA ISRs
 void DMA_CH2_ISR();
 void DMA_CH3_ISR();
+
+void SPI0_ISR();
 
 // Codec DMA ISRs
 void DMA_CH0_ISR();
