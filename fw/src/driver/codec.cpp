@@ -152,7 +152,7 @@ void AK4621::i2s_init(){
 		I2S_RCR2_BCD_MASK;      // Master mode but bit clock internal?
 
 	I2S->RCR3 =                 // Receiver configuration
-		I2S_RCR3_RCE_MASK |       // Enable channel
+        I2S_RCR3_RCE_MASK |     // Enable channel
 		I2S_RCR3_WDFL(0);       // Send once each channel has a frame?
 
 	I2S->RCR4 =                 // Receiver configuration
@@ -233,8 +233,10 @@ void AK4621::i2s_dma_init(){
     DMA_SOFF_REG(DMA0, dma_ch_rx) = 0; // Don't increment source
     DMA_DOFF_REG(DMA0, dma_ch_rx) = 4; // Increment destination 32 bits
     DMA_ATTR_REG(DMA0, dma_ch_rx) = DMA_ATTR_SMOD(0) | DMA_ATTR_SSIZE(2) | // 32-bit src
-					DMA_ATTR_DMOD(0) | DMA_ATTR_DSIZE(2);  // 32-bit dst
+                                    DMA_ATTR_DMOD(0) | DMA_ATTR_DSIZE(2);  // 32-bit dst
     DMA_NBYTES_MLNO_REG(DMA0, dma_ch_rx) = 4;
+    DMA_NBYTES_MLOFFNO_REG(DMA0, dma_ch_rx) = 4;
+    DMA_NBYTES_MLOFFYES_REG(DMA0, dma_ch_rx) = 4;
 	// CITER and BITER must be the same
     DMA_CITER_ELINKNO_REG(DMA0, dma_ch_rx) = DMA_CITER_ELINKNO_CITER(in_buffer_size * 2);
     DMA_BITER_ELINKNO_REG(DMA0, dma_ch_rx) = DMA_BITER_ELINKNO_BITER(in_buffer_size * 2);
@@ -290,6 +292,8 @@ void AK4621::i2s_dma_init(){
 }
 
 void AK4621::start(){
+    i2s_init();
+    i2s_dma_init();
 	rx_buffer_sel = 0;
 	tx_buffer_sel = 0;
 	if(cb_out){

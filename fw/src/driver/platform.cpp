@@ -25,6 +25,8 @@
 GPIOPin const Platform::leds[] = {{PTD_BASE_PTR, 4}, {PTD_BASE_PTR, 5}, {PTC_BASE_PTR, 4}};
 
 GPIOPin const Platform::power_en = {PTD_BASE_PTR, 3};
+GPIOPin const Platform::uart_rx = {PTD_BASE_PTR, 6};
+GPIOPin const Platform::uart_tx = {PTD_BASE_PTR, 7};
 
 PWMFTM const Platform::pwm_ftm = {FTM0_BASE_PTR, GPIOPin::MUX_ALT4};
 
@@ -180,6 +182,10 @@ void Platform::earlyInit(){
 		led.clear();
 		led.configure(GPIOPin::MUX_GPIO, true);
 	}
+
+    uart_tx.make_output();
+    uart_tx.clear();
+    uart_tx.configure(GPIOPin::MUX_GPIO, true);
 
 	Clock::setupClocks();
 }

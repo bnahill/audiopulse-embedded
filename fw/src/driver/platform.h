@@ -81,6 +81,8 @@ public:
 
 	//! The external 12.288MHz oscillator
 	static GPIOPin const xtal_ex;
+    static GPIOPin const uart_tx;
+    static GPIOPin const uart_rx;
 
 private:
 	//! Analog power enable

@@ -118,6 +118,7 @@ PT_THREAD(APulseController::pt_controller)(struct pt * pt){
 			Platform::leds[1].clear();
 			// Clean up after test
 			teststate = TEST_DONE;
+
 			// Disable analog supply
 			//Platform::power_en.clear();
 			if(timer.is_running())
@@ -188,7 +189,7 @@ PT_THREAD(APulseController::pt_controller)(struct pt * pt){
 			PT_WAIT_UNTIL(pt, timer.get_ms() > 50);
 
 			TPA6130A2::enable();
-            Platform::codec.init();
+
             Platform::codec.start();
 
 			// Delay for init

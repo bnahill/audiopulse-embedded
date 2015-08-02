@@ -44,6 +44,10 @@ void TPA6130A2::init_hw(){
 			 I2C_F_ICR(0x27); // / 480 = 100kHz
 
 	I2C->C1 = I2C_C1_IICEN_MASK;
+
+#if CFG_POWER_ALWAYS_ON
+    enable();
+#endif
 }
 
 void TPA6130A2::enable(){
@@ -60,8 +64,10 @@ void TPA6130A2::enable(){
 }
 
 void TPA6130A2::disable(){
+#if !CFG_POWER_ALWAYS_ON
 	nSD.clear();
 	enabled = false;
+#endif
 }
 
 void TPA6130A2::write_reg (uint8_t addr, uint8_t val ) {

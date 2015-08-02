@@ -33,13 +33,14 @@
 #include <driver/spi.h>
 
 
+
 class AK4621 {
 public:
 	//! A single audio sample
 	typedef sFractional<0,31> sample_t;
 	//! A callback for handling either unused or full data buffers
-	typedef void (*audio_cb_t)(sample_t *, size_t);
-	typedef void (*audio_out_cb_t)(sample_t *, size_t, uint32_t);
+    typedef void (*audio_cb_t)(sample_t * samples, size_t nframes);
+    typedef void (*audio_out_cb_t)(sample_t * samples, size_t nframes, uint32_t channels);
 
 
     // Early declaration to ensure alignment
@@ -146,6 +147,7 @@ public:
 	 */
     void dma_tx_isr(){
 		if(cb_out){
+
 			dma_tx_isr_count += 1;
 			if(enable_loopback){
 
@@ -154,6 +156,7 @@ public:
 					   0, 2);
 			}
 			tx_buffer_sel ^= 1;
+
 		}
         DMA_CINT = DMA_CINT_CINT(dma_ch_tx);
         NVIC_ClearPendingIRQ((IRQn_Type)dma_ch_tx);
@@ -191,7 +194,7 @@ public:
 			rx_buffer_sel ^= 1;
 		}
 
-		// Clear the interrupt
+        // Clear the interrupt
         DMA_CINT = DMA_CINT_CINT(dma_ch_rx);
         NVIC_ClearPendingIRQ((IRQn_Type)dma_ch_rx);
 	}
