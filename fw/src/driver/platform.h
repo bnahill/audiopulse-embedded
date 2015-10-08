@@ -84,9 +84,70 @@ public:
     static GPIOPin const uart_tx;
     static GPIOPin const uart_rx;
 
+    typedef bool (*tick_cb_t)(void *);
+    typedef struct _task_t {
+        uint32_t period;
+        tick_cb_t cb;
+        void * ptr;
+        uint32_t remaining;
+        struct _task_t * next;
+    } task_t;
+
+    static void add_task(uint32_t period, tick_cb_t cb, void * ptr, task_t * buffer){
+
+
+        buffer->period = period;
+        buffer->cb = cb;
+        buffer->ptr = ptr;
+        buffer->remaining = period;
+        buffer->next = nullptr;
+
+        __disable_irq();
+
+        if(head){
+            task_t * iter = head;
+            while(iter->next)
+                iter = iter->next;
+            iter->next = buffer;
+        } else {
+            head = buffer;
+        }
+
+        __enable_irq();
+    }
+
+    static task_t * head;
+
+    static void tick(){
+        task_t * iter;
+        task_t * last_iter = nullptr;
+        iter = head;
+        while(iter){
+            iter->remaining -= 1;
+            if(iter->remaining == 0){
+                if(iter->cb(iter->ptr)){
+                    // Continue
+                    iter->remaining = iter->period;
+                } else {
+                    // Die
+                    if(last_iter){
+                        last_iter->next = iter->next;
+                        iter = iter->next;
+                        continue;
+                    }
+                }
+            }
+
+            last_iter = iter;
+            iter = iter->next;
+        }
+    }
+
 private:
 	//! Analog power enable
 	static GPIOPin const power_en;
+
+
 };
 
 #endif // __cplusplus
@@ -109,6 +170,8 @@ void SPI0_ISR();
 // Codec DMA ISRs
 void DMA_CH0_ISR();
 void DMA_CH1_ISR();
+
+void SysTick_ISR();
 
 #ifdef __cplusplus
 };

@@ -164,7 +164,7 @@ const tVectorTable __vector_table __attribute__ ((section(".vectortable"))) = {
 			(tIsrFunc)Cpu_Interrupt,				/* 0x0C  0x00000030   -   ivINT_DebugMonitor             unused by PE */
 			(tIsrFunc)Cpu_Interrupt,				/* 0x0D  0x00000034   -   ivINT_Reserved13               unused by PE */
 			(tIsrFunc)Cpu_Interrupt,				/* 0x0E  0x00000038   -   ivINT_PendableSrvReq           unused by PE */
-			(tIsrFunc)Cpu_Interrupt,				/* 0x0F  0x0000003C   -   ivINT_SysTick                  unused by PE */
+            (tIsrFunc)SysTick_ISR,  				/* 0x0F  0x0000003C   -   ivINT_SysTick                  unused by PE */
 			(tIsrFunc)DMA_CH0_ISR,					/* 0x10  0x00000040   -   ivINT_DMA0                     unused by PE */
 			(tIsrFunc)DMA_CH1_ISR,					/* 0x11  0x00000044   -   ivINT_DMA1                     unused by PE */
 			(tIsrFunc)DMA_CH2_ISR,					/* 0x12  0x00000048   -   ivINT_DMA2                     unused by PE */

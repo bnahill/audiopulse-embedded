@@ -22,6 +22,8 @@
 
 #include <driver/platform.h>
 
+Platform::task_t * Platform::head = nullptr;
+
 GPIOPin const Platform::leds[] = {{PTD_BASE_PTR, 4}, {PTD_BASE_PTR, 5}, {PTC_BASE_PTR, 4}};
 
 GPIOPin const Platform::power_en = {PTD_BASE_PTR, 3};
@@ -188,6 +190,11 @@ void Platform::earlyInit(){
     uart_tx.configure(GPIOPin::MUX_GPIO, true);
 
 	Clock::setupClocks();
+
+    // 1ms system tick
+    if(SysTick_Config(Clock::config.mcgoutclk / 1000)){
+        while(1);
+    }
 }
 
 extern "C" {
@@ -221,4 +228,8 @@ void DMA_CH2_ISR(){
 
 void DMA_CH3_ISR(){
 	Platform::spi0.handle_complete_isr();
+}
+
+void SysTick_ISR(){
+    Platform::tick();
 }
