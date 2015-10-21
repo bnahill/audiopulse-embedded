@@ -354,7 +354,7 @@ void APulseController::handle_dataI ( uint8_t* data, uint8_t size ) {
 						a->tone_config_pkt.tones[i].f1,
 						a->tone_config_pkt.tones[i].t1,
 						a->tone_config_pkt.tones[i].t2,
-						a->tone_config_pkt.tones[i].amplitude);
+                        a->tone_config_pkt.tones[i].amplitude.asFloat());
 					break;
 				case TONE_CHIRP:
 					WaveGen::set_off(i);

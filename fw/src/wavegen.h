@@ -51,7 +51,7 @@ public:
 	uint16_t theta;  //!< Current phase in wavetable
 	uint16_t w_current; //!< Theta for angular rate in chirp, might not use
 	uint8_t ch;      //!< Which channel is it?
-	uFractional<0,32> gain;   //!< Gain applied to each full-scale sample
+    float gain;   //!< Gain applied to each full-scale sample
 
 	inline operator bool() const {return type != GEN_OFF;}
 	inline bool operator !() const {return type == GEN_OFF;}
@@ -59,7 +59,8 @@ public:
 
 class WaveGen {
 public:
-	typedef sFractional<0,31> sample_t;
+    typedef sFractional<0,31> out_sample_t;
+    typedef float wave_sample_t;
 
 	static inline void request_resetI(){
 		pending_reset = true;
@@ -97,7 +98,7 @@ public:
 
 	 @note Inlined because only a single caller
 	 */
-	static inline void get_samplesI(sample_t * dst, size_t n, uint32_t increment=2){
+    static inline void get_samplesI(out_sample_t * dst, size_t n, uint32_t increment=2){
 		// Zero the whole damn thing first
 		zero16(dst, increment * (buffer_size / 2));
 
@@ -146,7 +147,7 @@ public:
 	}
 
 	static void set_tone(uint8_t idx, uint8_t ch, uint16_t f1,
-				  uint16_t t1, uint16_t t2, sFractional<7,8> gaindb);
+                  uint16_t t1, uint16_t t2, float gaindb);
 
 	static inline void set_off(uint8_t idx){
 		if(state == ST_RESET || state == ST_READY){
@@ -202,7 +203,7 @@ public:
 protected:
 	static constexpr uint32_t buffer_size = AK4621::out_buffer_size;
 	static constexpr uint32_t wavetable_len = 8192;
-	static const sFractional<0,31> wavetable[wavetable_len];
+    static const wave_sample_t wavetable[wavetable_len];
 	static constexpr uint32_t fs = AK4621::fs;
 
 	static bool silent;
@@ -231,16 +232,16 @@ protected:
 	 This will generate \ref buffer_size / increment samples and add them to @ref dst
 	 in alternating slots (to apply to a single channel only)
 	 */
-	static void generate_wave(Generator &generator, sample_t * dst, uint16_t t, uint32_t increment=2){
+    static void generate_wave(Generator &generator, out_sample_t * dst, uint16_t t, uint32_t increment=2){
 		if(t < generator.t1 || t > generator.t2){
 			return;
 		}
 
 		// Just some temporary storage
 		//*dst = *dst + (s * get_speaker_gain(generator.f1));
-		sample_t s;
+        wave_sample_t s;
 		uint32_t theta = generator.theta;
-		uFractional<0,32> gain = generator.gain;
+        wave_sample_t gain = generator.gain;
 		for(uint32_t i = 0; i < buffer_size / 2; i++){
 			s = wavetable[theta & (wavetable_len - 1)];
 			// Negate for second half-wave
@@ -251,7 +252,7 @@ protected:
 			//s = s * get_speaker_gain(generator.f1);
 
 			// Add this sample to the output
-			*dst = *dst + s;
+            *dst = *dst + out_sample_t::fromInternal(clip_q63_to_q31(s * 2147483647.0f));
 
 			dst += increment;
 
@@ -269,7 +270,7 @@ protected:
 	 This will generate \ref buffer_size / 2 samples and add them to @ref dst
 	 in alternating slots (to apply to a single channel only)
 	 */
-	static void generate_chirp(Generator &generator, sample_t * dst, uint16_t t, uint32_t increment=2){
+    static void generate_chirp(Generator &generator, out_sample_t * dst, uint16_t t, uint32_t increment=2){
 
 	}
 
@@ -293,21 +294,19 @@ protected:
 	// Divide frequency by 32 first
 	static constexpr uint32_t speaker_coeffs_scaling = 32;
 
-	static sFractional<0,31>::internal_t speaker_coeffs[speaker_coeffs_size];
+    static float speaker_coeffs[speaker_coeffs_size];
 
 	/*!
 	 @brief Compute the frequency-independent gain to be applied to a full-range
 	 sine wave to achieve the desired gain.
 	 */
-	static uFractional<0,32> db_to_pp(sFractional<7,8> db){
-		return (uFractional<0,32>) (pow10f(db.asFloat()/20.0) / 31623.0);
+    static float db_to_pp(float db){
+        return pow10f(db/20.0);
 		//return pow10f(db.asFloat()/20.0) / 4096;
 	}
 
-	static sFractional<0,31> get_speaker_gain(uint16_t freq){
-		return sFractional<0,31>::fromInternal(
-					speaker_coeffs[(freq - speaker_coeffs_start +
-								   (speaker_coeffs_scaling / 2)) / speaker_coeffs_scaling]);
+    static float get_speaker_gain(uint16_t freq){
+        return speaker_coeffs[(freq - speaker_coeffs_start + (speaker_coeffs_scaling / 2)) / speaker_coeffs_scaling];
 	}
 
 
