@@ -346,7 +346,7 @@ dwt cyccnt enable"
 endif()
 
 configure_file(${CMAKE_SOURCE_DIR}/start.gdb.in ${CMAKE_CURRENT_BINARY_DIR}/start.gdb)
-set(GDB_ARGS -x start.gdb)
+set(GDB_ARGS -x ${CMAKE_CURRENT_BINARY_DIR}/start.gdb)
 
 ##############################################################
 # Configuration for GDB

@@ -1,6 +1,3 @@
-shell killall JLinkGDBServer
-shell JLinkGDBServer -select USB -device ${JLINK_DEVICE} -if SWD -speed 6000 > /dev/null &
-
 define r
 	mon reset
 ${USING_SVD_RESET_CMD}
