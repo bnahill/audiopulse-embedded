@@ -58,10 +58,15 @@ void AK4621::init_hw() {
 
 
 void AK4621::init(){
+    static constexpr bool deem_48k = false; // Otherwise off
+    static constexpr bool high_pass = true; // Otherwise off
+
 	PDN.set();
+
 	spi_write_reg(REG_RESET, 0x00); // Reset
 	spi_write_reg(REG_CLK_FORMAT, 0x40); // MCLK = 256fs, fs = 48k
-	spi_write_reg(REG_DEEM_VOL, 0x02); // 48k de-emph
+    spi_write_reg(REG_DEEM_VOL, (deem_48k  ? 0x02 : 0x01) |
+                                (high_pass ? 0x00 : 0x60));
 
 	//spi_write_reg(REG_POWER_DOWN, 0x07); // These are defaults...
 
@@ -88,13 +93,6 @@ void AK4621::gpio_init(){
 void AK4621::spi_write_reg(reg_t reg, uint8_t value){
     uint8_t data[2] = {0xA0 | ((uint8_t)reg), value};
     while(!spi.transfer(slave, data, nullptr, 2, nullptr, nullptr));
-	/*
-    while((spi.SR & SPI_SR_TFFF_MASK) == 0);
-    spi.PUSHR = SPI_PUSHR_TXDATA(((0xA0 | reg) << 8) | value) |
-					SPI_PUSHR_PCS(1) | SPI_PUSHR_EOQ_MASK;
-    while((spi.SR & SPI_SR_EOQF_MASK) == 0); // Wait for end of queue
-    spi.SR = SPI_SR_EOQF_MASK; // Clear flag
-	*/
 }
 
 void AK4621::i2s_init(){
