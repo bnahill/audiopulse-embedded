@@ -243,7 +243,7 @@ protected:
 		uint32_t theta = generator.theta;
         wave_sample_t gain = generator.gain;
 		for(uint32_t i = 0; i < buffer_size / 2; i++){
-			s = wavetable[theta & (wavetable_len - 1)];
+            s = wavetable[theta & (wavetable_len - 1)];
 			// Negate for second half-wave
 			if(theta & wavetable_len)
 				s = -s;
@@ -301,7 +301,7 @@ protected:
 	 sine wave to achieve the desired gain.
 	 */
     static float db_to_pp(float db){
-        return pow10f(db/20.0);
+        return pow10f((db - 80)/20.0);
 		//return pow10f(db.asFloat()/20.0) / 4096;
 	}
 

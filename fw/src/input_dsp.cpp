@@ -446,19 +446,20 @@ void InputDSP::do_reset(){
 	for(auto &a : mag_psd) a = 0;
 	for(auto &a : average_buffer) a = 0;
 
-	if(use_iir) {
-		arm_biquad_cascade_df1_init_f32(&biquad_cascade, biquad_stages,
-		                                (float32_t *)biquad_coeffs, biquad_state);
-	} else {
-		auto result =
-		arm_fir_decimate_init_f32(&decimate, decimate_fir_order, 3,
-		                          (float32_t*)decimate_coeffs,
-		                          (float32_t*)decimate_buffer,
-		                          decimate_block_size);
-		
-		while(result != ARM_MATH_SUCCESS);
-	}
-	
+    if(do_filter){
+        if(use_iir) {
+            arm_biquad_cascade_df1_init_f32(&biquad_cascade, biquad_stages,
+                                            (float32_t *)biquad_coeffs, biquad_state);
+        } else {
+            auto result =
+            arm_fir_decimate_init_f32(&decimate, decimate_fir_order, 3,
+                                      (float32_t*)decimate_coeffs,
+                                      (float32_t*)decimate_buffer,
+                                      decimate_block_size);
+
+            while(result != ARM_MATH_SUCCESS);
+        }
+    }
 
 	is_reset = true;
 	pending_reset = false;
@@ -485,25 +486,35 @@ void InputDSP::do_decimate(sampleFractional const * src,
 						   size_t n_in){
 	static sampleFractional const * iter_in;
 	iter_in = src;
-	for(auto i = 0; i < (n_in / decimate_block_size); i++){
-		//arm_shift_q31((q31_t*)iter_in, -6, (q31_t*)iter_in, decimate_block_size);
-		if(use_iir) {
-			biquad_cascade_f32_decimate<decimate_block_size / 3, 3>(
-			            biquad_cascade, (float32_t *)iter_in, (float32_t *)dst);
-		} else {
-			arm_fir_decimate_f32(&decimate, (float32_t*)iter_in,
-			            (float32_t*)dst, decimate_block_size);
-		}
-		iter_in += decimate_block_size;
-		dst += decimate_block_size / 3;
-	}
+    if(do_filter){
+        for(auto i = 0; i < (n_in / decimate_block_size); i++){
+            //arm_shift_q31((q31_t*)iter_in, -6, (q31_t*)iter_in, decimate_block_size);
+            if(use_iir) {
+                biquad_cascade_f32_decimate<decimate_block_size / 3, 3>(
+                            biquad_cascade, (float32_t *)iter_in, (float32_t *)dst);
+            } else {
+                arm_fir_decimate_f32(&decimate, (float32_t*)iter_in,
+                            (float32_t*)dst, decimate_block_size);
+            }
+            iter_in += decimate_block_size;
+            dst += decimate_block_size / 3;
+        }
+    } else {
+        for(auto i = 0; i < n_in / 3; i++){
+            *dst = *iter_in;
+
+            iter_in += 3;
+            dst += 1;
+        }
+    }
 }
 
 void InputDSP::put_samplesI(sample_t * samples, size_t n){
 	if(state == ST_CAPTURING){
-		for(int i = 0; i < n; i++){
-			((sampleFractional *)samples)[i] = samples[i].asFloat();
-		}
+        arm_q31_to_float(reinterpret_cast<q31_t*>(samples), reinterpret_cast<float*>(samples), n);
+        //for(int i = 0; i < n; i++){
+        //	((sampleFractional *)samples)[i] = samples[i].asFloat();
+        //}
 		new_samples = reinterpret_cast<sampleFractional *>(samples);
 		num_received = n;
 		for(uint32_t i = 0; i < n; i++){

@@ -237,6 +237,8 @@ protected:
 	//! Apply calibration coefficients to input spectrum
 	static constexpr bool calibrate_mic = false;
 	
+    static constexpr bool do_filter = true;
+
 	//! Use the IIR decimation routines instead of FIR
 	static constexpr bool use_iir = false;
 	//! @}

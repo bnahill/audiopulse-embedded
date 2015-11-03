@@ -262,6 +262,7 @@ set(DSP_SOURCES
 	${DSP_SRC}/TransformFunctions/arm_bitreversal.c
 	${DSP_SRC}/SupportFunctions/arm_copy_q31.c
 	${DSP_SRC}/SupportFunctions/arm_copy_f32.c
+        ${DSP_SRC}/SupportFunctions/arm_q31_to_float.c
 	${DSP_SRC}/CommonTables/arm_common_tables.c
 )
 set_property(SOURCE ${DSP_SRC}/TransformFunctions/arm_bitreversal2.S PROPERTY LANGUAGE C)
