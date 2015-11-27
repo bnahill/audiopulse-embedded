@@ -223,7 +223,8 @@ set(FREESCALE_SOURCES
 	#${USB_DIR}/Source/Device/app/common/kinetis/wdt_kinetis.c
 	#${USB_DIR}/Source/Device/app/common/kinetis/RealTimerCounter_kinetis.c
 
-	#${USB_DIR}/Source/Device/source/class/usb_audio.c
+        ${USB_DIR}/Source/Device/source/class/usb_composite.c
+        ${USB_DIR}/Source/Device/source/class/usb_audio.c
 	${USB_DIR}/Source/Device/source/class/usb_hid.c
 )
 

@@ -25,6 +25,7 @@
 #include <derivative.h>
 #include <usb_class.h>
 #include <driver/clocks.h>
+#include <usb_composite.h>
 
 class USB {
 public:
@@ -73,8 +74,19 @@ public:
 	static void audioClassInit();
 	static void audioSend();
 private:
-	static void callback(uint8_t controller_ID,
-						 uint8_t event_type, void * val);
+	static void HIDcallback(uint8_t controller_ID,
+	                        uint8_t event_type, void * val);
+	static uint8_t HIDParamCallback(uint_8 request,
+	                                uint_16 value,
+	                                uint_16 wIndex,
+	                                uint8_t ** data,
+	                                USB_PACKET_SIZE * size);
+	static void AudioCallback(uint8_t controller_ID,
+	                          uint8_t event_type, void * val);
+	
+	static CLASS_APP_CALLBACK_STRUCT hid_class_callback_struct;
+	static CLASS_APP_CALLBACK_STRUCT audio_class_callback_struct;
+	static COMPOSITE_CALLBACK_STRUCT usb_composite_callback;
 
 	/*!
 	 * \brief callback_param

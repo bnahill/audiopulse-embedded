@@ -33,6 +33,10 @@
 	#endif
 #endif
 
+#define USE_HID_CLASS     (1)
+#define USE_AUDIO_CLASS   (1)
+#define COMPOSITE_DEV     (1)
+
 /* Below two MACROS are required for Keyboard Application to execute */
 #define LONG_SEND_TRANSACTION       /* support to send large data pkts */
 #define LONG_RECEIVE_TRANSACTION    /* support to receive large data pkts */

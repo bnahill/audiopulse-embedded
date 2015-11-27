@@ -232,8 +232,11 @@ void USB_Service_Audio_Isochronous_IN(PTR_USB_DEV_EVENT_STRUCT event)
 		{
 			event_type = USB_APP_ERROR;
 		}
+/*
+ * DO AUDIO CALLBACK HERE
 		g_audio_class_callback(event->controller_ID, event_type,
 				(uint_8*)(&iso_in_recv));
+ */
 	}
 }
 

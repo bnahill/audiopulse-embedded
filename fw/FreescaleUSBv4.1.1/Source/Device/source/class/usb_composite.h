@@ -35,6 +35,10 @@
 #ifndef _USB_COMPOSITE_H
 #define _USB_COMPOSITE_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /******************************************************************************
  * Includes
  *****************************************************************************/
@@ -113,5 +117,10 @@ extern uint_8 USB_Composite_Init (
 extern uint_8 USB_Composite_DeInit(
     uint_8    controller_ID                            /* [IN] Controller ID */
 );
+
+#ifdef __cplusplus
+};
+#endif
+
 #endif
 /* EOF */

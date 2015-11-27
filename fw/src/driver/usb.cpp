@@ -22,6 +22,7 @@
 #include <driver/usb.h>
 #include <driver/platform.h>
 #include <controller.h>
+#include <usb_descriptor.h>
 
 
 extern "C" {
@@ -32,21 +33,31 @@ extern "C" {
 static uint8_t test[64];
 
 
-void USB::hidClassInit(){
-	__disable_irq();
+CLASS_APP_CALLBACK_STRUCT USB::hid_class_callback_struct = {
+  HIDcallback,
+  nullptr,
+  nullptr,
+  HIDParamCallback
+};
 
-	uint8_t error = USB_Class_HID_Init(CONTROLLER_ID, callback, nullptr, callback_param);
+CLASS_APP_CALLBACK_STRUCT USB::audio_class_callback_struct = {
+    AudioCallback,
+    nullptr,
+    nullptr,
+    nullptr
+};
 
-	if(error != USB_OK)
-		while(true);
+COMPOSITE_CALLBACK_STRUCT USB::usb_composite_callback ={
+    COMP_CLASS_UNIT_COUNT,
+    {
+        &hid_class_callback_struct,
+        &audio_class_callback_struct
+    }
+};
 
-	__enable_irq();
-	
-	for(auto &a : test) a = 'p';
-}
-
-void USB::callback(uint8_t controller_ID, uint8_t event_type, void *val){
-	APulseController::handle_eventI(event_type);
+void USB::HIDcallback(uint8_t controller_ID,
+	              uint8_t event_type, void * val){
+  	APulseController::handle_eventI(event_type);
 
 	if((event_type == USB_APP_BUS_RESET) || (event_type == USB_APP_CONFIG_CHANGED)){
 //		keyboard_init=FALSE;
@@ -69,8 +80,33 @@ void USB::callback(uint8_t controller_ID, uint8_t event_type, void *val){
 	}
 }
 
-uint8_t USB::callback_param(uint8_t request, uint16_t value, uint16_t iface,
-                            uint8_t **data, uint_16 *size){
+void USB::AudioCallback(uint8_t controller_ID,
+			  uint8_t event_type, void * val){
+    uint_8 i;
+    switch(event_type){
+      case USB_APP_BUS_RESET:
+	break;
+      case USB_APP_BUS_RESUME:
+	break;
+      case USB_APP_BUS_SUSPEND:
+	break;
+      case USB_APP_CONFIG_CHANGED:
+	break;
+      case USB_APP_DATA_RECEIVED:
+	break;
+      case USB_APP_ENUM_COMPLETE:
+	break;
+      case USB_APP_ERROR:
+	break;
+      default:
+	while(1);
+    }
+    
+    return;
+}
+
+uint8_t USB::HIDParamCallback(uint_8 request, uint_16 value,
+			      uint_16 wIndex, uint8_t** data, uint_16* size){
 	// Request buffers
 	//static uint8_t report_buf[64] = {'a','b','a','a','c'};
 	static uint8_t protocol_req = 0;
@@ -146,3 +182,19 @@ uint8_t USB::callback_param(uint8_t request, uint16_t value, uint16_t iface,
 
 	return status;
 }
+
+
+void USB::hidClassInit(){
+	__disable_irq();
+	
+	//uint8_t error = USB_Class_HID_Init(CONTROLLER_ID, callback, nullptr, callback_param);
+	uint8_t error = USB_Composite_Init(CONTROLLER_ID, &usb_composite_callback);
+	
+	if(error != USB_OK)
+		while(true);
+
+	__enable_irq();
+	
+	for(auto &a : test) a = 'p';
+}
+
