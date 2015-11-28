@@ -24,14 +24,6 @@
 
 #define MCGOUTCLK_48_MHZ
 
-#if ((defined __MK_xxx_H__)||(defined MCU_mcf51jf128))
-    #define  KEY_PRESS_SIM_TMR_INTERVAL		(1000)        /* 2s between simulated key press events */
-#else
-	#ifdef __MCF52277_H__
-		#define  BUTTON_PRESS_SIMULATION	(1)
-		#define  KEY_PRESS_SIM_TMR_INTERVAL	(2000)        /* 2s between simulated key press events */
-	#endif
-#endif
 
 #define USE_HID_CLASS     (1)
 #define USE_AUDIO_CLASS   (1)
@@ -53,11 +45,11 @@
 #undef TIMER_CALLBACK_ARG
 #endif
 
-#ifndef _MC9S08JS16_H
+//#ifndef _MC9S08JS16_H
 #define USB_PACKET_SIZE  uint_16 /* support 16/32 bit packet size */
-#else
-#define USB_PACKET_SIZE  uint_8 /* support 8 bit packet size */
-#endif
+//#else
+//#define USB_PACKET_SIZE  uint_8 /* support 8 bit packet size */
+//#endif
 
 #ifndef _MCF51JM128_H
 /* Use double buffered endpoints 5 & 6. To be only used with S08 cores */
