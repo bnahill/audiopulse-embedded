@@ -222,9 +222,8 @@ set(FREESCALE_SOURCES
 	${USB_DIR}/Source/Device/source/common/usb_framework.c
 	#${USB_DIR}/Source/Device/app/common/kinetis/wdt_kinetis.c
 	#${USB_DIR}/Source/Device/app/common/kinetis/RealTimerCounter_kinetis.c
-
-        ${USB_DIR}/Source/Device/source/class/usb_composite.c
-        ${USB_DIR}/Source/Device/source/class/usb_audio.c
+	${USB_DIR}/Source/Device/source/class/usb_composite.c
+	${USB_DIR}/Source/Device/source/class/usb_audio.c
 	${USB_DIR}/Source/Device/source/class/usb_hid.c
 )
 
@@ -239,7 +238,7 @@ set(APP_SOURCES
 	src/driver/clocks.cpp
 	src/driver/tpa6130a2.cpp
 	src/driver/spi.cpp
-        src/driver/mt29fxg01.cpp
+	src/driver/mt29fxg01.cpp
 	src/startup.s
 )
 

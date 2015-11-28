@@ -78,13 +78,17 @@ static SPI_slave volatile	test_slave = SPI_slave(
 	),
     0
 );
-
+//#undef AUDIO_ENDPOINT_SIZE
+//#define AUDIO_ENDPOINT_SIZE 512
+static __attribute__((aligned(512))) uint32_t audio_test[AUDIO_ENDPOINT_SIZE/4];
+static uint32_t audio_ones[AUDIO_ENDPOINT_SIZE/4];
+static uint32_t audio_zeros[AUDIO_ENDPOINT_SIZE/4];
 /*!
  * @brief Application entry point
  */
 void main(){
 	struct pt pt_dsp, pt_controller, pt_wavegen;
-
+	
 	PT_INIT(&pt_dsp);
 	PT_INIT(&pt_controller);
 	PT_INIT(&pt_wavegen);
@@ -96,6 +100,12 @@ void main(){
 
     Platform::codec.init();
 
+	for(auto &a : audio_ones){
+		a = 0x7fffffff;
+	}
+	for(auto &a : audio_zeros){
+		a = 0;
+	}
 
     /*
     Platform::spi0.register_slave(flash_slave);
@@ -112,10 +122,22 @@ void main(){
 // 	swo_sendchar('c');
 // 	swo_sendchar('d');
 
+	uint32_t i = 0;
     while(true){
-		InputDSP::pt_dsp(&pt_dsp);
-		WaveGen::pt_wavegen(&pt_wavegen);
-		APulseController::pt_controller(&pt_controller);
+		//InputDSP::pt_dsp(&pt_dsp);
+		//WaveGen::pt_wavegen(&pt_wavegen);
+		//APulseController::pt_controller(&pt_controller);
+		if(USB::audioReady() and USB::audioEmpty()){
+			for(int j = 0; j < AUDIO_ENDPOINT_SIZE/4; j++){
+				audio_test[j] = (i+j) * 1000000;
+			}
+			USB::audioSend((uint8_t*)audio_test, AUDIO_ENDPOINT_SIZE);
+			i += AUDIO_ENDPOINT_SIZE/4;
+			//if(i++ & 1)
+			//	USB::audioSend((uint8_t*)audio_zeros, AUDIO_ENDPOINT_SIZE);
+			//else
+			//	USB::audioSend((uint8_t*)audio_ones, AUDIO_ENDPOINT_SIZE);
+		}
 	}
 }
 

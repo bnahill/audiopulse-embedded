@@ -39,7 +39,7 @@ __stack = _estack; /* For newlib */
 
 /* Generate a link error if heap and stack don't fit into RAM */
 __heap_size = 2k;                  /* required amount of heap  */
-__stack_size = 4k;                 /* required amount of stack */
+__stack_size = 8k;                 /* required amount of stack */
 
 
 MEMORY {

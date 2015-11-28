@@ -48,12 +48,6 @@
 #define PHDC_CC                            (0x0f)
 #define DFU_CC                             (0xfe)
 
-#define HID_ENDPOINT_IN                    (1)
-#define HID_ENDPOINT_OUT                   (2)
-#define AUDIO_ENDPOINT                     (3)
-
-#define HID_ENDPOINT_SIZE                  (8)
-#define AUDIO_ENDPOINT_SIZE                (64)
 
 /* structure containing details of all the endpoints used by this device */
 /*
@@ -124,7 +118,7 @@ uint_8 usb_audio_class_info[] =
     /* Audio endpoint */
     AUDIO_ENDPOINT,
     USB_ISOCHRONOUS_PIPE,
-    USB_RECV,
+    USB_SEND,
     USB_uint_16_high(AUDIO_ENDPOINT_PACKET_SIZE),
     USB_uint_16_low(AUDIO_ENDPOINT_PACKET_SIZE),
     /* Interface count */
@@ -223,9 +217,11 @@ uint_8 USB_DESC_CONST g_config_descriptor[] =
     0x07,0x01,                       /* wTerminalType (radio receiver) */
     0x00,                            /* bAssocTerminal (none) */
     0x02,                            /* bNrChannels (2) */
-    0x00,0x03,                       /* wChannelConfig (left, right) */
+    0x00,0x01,                       /* wChannelConfig (left, right) */
     0x00,                            /* iChannelNames (none) */
     0x00,                            /* iTerminal (none) */
+    
+    // Channel config should be 0x03 for stereo
 
     /* Audio class-specific feature unit */
     FEATURE_UNIT_ONLY_DESC_SIZE,     /* bLength (9) */
@@ -238,7 +234,7 @@ uint_8 USB_DESC_CONST g_config_descriptor[] =
     (//AUDIO_AUTOMATIC_GAIN_CONTROL |  /* Controls enabled: AGC, TREBLE, BASS, VOLUME, MUTE */
     //AUDIO_TREBLE_CONTROL         |
     //AUDIO_BASS_CONTROL           |
-    //AUDIO_VOLUME_CONTROL         |
+    AUDIO_VOLUME_CONTROL         |
     AUDIO_MUTE_CONTROL
     ),
 
@@ -288,25 +284,29 @@ uint_8 USB_DESC_CONST g_config_descriptor[] =
     AUDIO_STREAMING_GENERAL,         /* GENERAL subtype  */
     0x03,                            /* Unit ID of output terminal */
     0x00,                            /* Interface delay */
-    0x00,0x10,                       /* PCM format */
+    0x01,0x00,                       /* PCM format */
 
     /* USB speaker audio type I format interface descriptor */
     AUDIO_INTERFACE_DESC_TYPE_I_SIZE, /* bLength (11) */
     AUDIO_INTERFACE_DESCRIPTOR_TYPE, /* bDescriptorType (CS_INTERFACE) */
     AUDIO_STREAMING_FORMAT_TYPE,     /* DescriptorSubtype: AUDIO STREAMING FORMAT TYPE */
     AUDIO_FORMAT_TYPE_I,             /* Format Type: Type I */
-    0x02,                            /* Number of Channels: one channel */
-    0x02,                            /* SubFrame Size: one byte per audio subframe */
-    0x10,                            /* Bit Resolution: 8 bits per sample */
+    0x01,                            /* Number of Channels: one channel */
+    0x04,                            /* SubFrame Size: 4 bytes per audio subframe */
+    0x20,                            /* Bit Resolution: 32 bits per sample */
     0x01,                            /* One frequency supported */
-    0x80,0xbb,0x00,                  /* 48 kHz */
+    0x80,0x3e,0x00,                  /* 16 kHz */
 
     /*Endpoint 1 - standard descriptor*/
     AUDIO_ENDP_ONLY_DESC_SIZE,       /* bLength (9) */
     USB_ENDPOINT_DESCRIPTOR,         /* Descriptor type (endpoint descriptor) */
     AUDIO_ENDPOINT|(USB_SEND << 7),  /* OUT endpoint address 1 */
     0x05,                            /* Asynchronous endpoint */
+#if AUDIO_ENDPOINT_PACKET_SIZE==512
     0x00,0x02,                       /* 512 bytes */
+#else
+	0x40,0x00,                       /* 64 bytes */
+#endif
     0x01,                            /* 1 ms */
     0x00,
     0x00,
@@ -749,6 +749,7 @@ uint_8 USB_Desc_Set_Interface (
         return USB_OK;
     }
 
+    while(1);
     return USBERR_INVALID_REQ_TYPE;
 }
 

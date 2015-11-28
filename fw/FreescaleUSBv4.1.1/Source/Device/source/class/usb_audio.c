@@ -172,17 +172,18 @@ void USB_Service_Audio_Status_Interrupt(PTR_USB_DEV_EVENT_STRUCT event)
  ******************************************************************************/
 void USB_Service_Audio_Isochronous_IN(PTR_USB_DEV_EVENT_STRUCT event)
 {
-
-#if IMPLEMENT_QUEUING
-    uint_8 index;
-    uint_8 producer, consumer;
-    APP_DATA_STRUCT iso_in_recv;
+	APP_DATA_STRUCT iso_in_recv;
 
     USB_ENDPOINTS *usb_ep_data = (USB_ENDPOINTS *)
         USB_Desc_Get_Endpoints(event->controller_ID);
         
     iso_in_recv.data_ptr  = event->buffer_ptr;
     iso_in_recv.data_size = event->len;
+	
+#if IMPLEMENT_QUEUING
+    uint_8 index;
+    uint_8 producer, consumer;
+    
 
 	/* map the endpoint num to the index of the endpoint structure */
 
@@ -232,11 +233,10 @@ void USB_Service_Audio_Isochronous_IN(PTR_USB_DEV_EVENT_STRUCT event)
 		{
 			event_type = USB_APP_ERROR;
 		}
-/*
- * DO AUDIO CALLBACK HERE
+
 		g_audio_class_callback(event->controller_ID, event_type,
-				(uint_8*)(&iso_in_recv));
- */
+		                       (uint_8*)(&iso_in_recv));
+
 	}
 }
 

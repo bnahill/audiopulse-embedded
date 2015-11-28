@@ -35,6 +35,11 @@
 #ifndef _USB_AUDIO_H
 #define _USB_AUDIO_H
 
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /******************************************************************************
  * Includes
  *****************************************************************************/
@@ -265,5 +270,10 @@ uint_8 USB_Audio_Other_Requests(uint_8 controller_ID,
 void USB_Service_Audio_Status_Interrupt(PTR_USB_DEV_EVENT_STRUCT event);
 void USB_Service_Audio_Isochronous_IN(PTR_USB_DEV_EVENT_STRUCT event);
 void USB_Service_Audio_Isochronous_OUT(PTR_USB_DEV_EVENT_STRUCT event);
+
+
+#ifdef __cplusplus
+};
+#endif
 
 #endif

@@ -498,6 +498,8 @@ uint_8 _usb_device_set_status(
  * called not already registered so that the registered callback function can
  * be if the event of that type occurs
  *****************************************************************************/
+static uint32_t log_register_callback_count = 0;
+static volatile uint8_t log_register_callback_events[64] = {};
 uint_8 _usb_device_register_service(
     uint_8                    controller_ID, /* [IN] Controller ID           */
     uint_8                    type,          /* [IN] type of event or endpoint
@@ -506,6 +508,10 @@ uint_8 _usb_device_register_service(
                                                      function                */
 )
 {
+	if(log_register_callback_count < 1024){
+		log_register_callback_events[log_register_callback_count] = type;
+	}
+	log_register_callback_count += 1;
     UNUSED (controller_ID)
     UNUSED (service)
 #ifdef MULTIPLE_DEVICES
@@ -591,11 +597,17 @@ uint_8 _usb_device_unregister_service(
  * from the DCI layer.
  *
  *****************************************************************************/
+static uint32_t log_service_callback_count = 0;
+static volatile uint8_t log_service_callback_events[1024] = {0};
 uint_8 USB_Device_Call_Service(
     uint_8                    type,    /* [IN] Type of service or endpoint */
     PTR_USB_DEV_EVENT_STRUCT  event    /* [IN] Pointer to event structure  */
 )
 {
+	if(log_service_callback_count < 1024){
+		log_service_callback_events[log_service_callback_count] = type;
+	}
+	log_service_callback_count += 1;
 
     if(type == USB_SERVICE_BUS_RESET)
     {    /* if it is an reset interrupt then reset all status structures */
@@ -612,9 +624,17 @@ uint_8 USB_Device_Call_Service(
     return USB_OK;
 }
 
+
+static uint32_t log_null_callback_count = 0;
+static volatile PTR_USB_DEV_EVENT_STRUCT log_null_callback_events[64] = {};
 void USB_NULL_CALLBACK (PTR_USB_DEV_EVENT_STRUCT event)
 {
 	UNUSED(event)
+	
+	if(log_null_callback_count < 64){
+		log_null_callback_events[log_null_callback_count] = event;
+	}
+	log_null_callback_count += 1;
 	
 	#if (defined(__CWCC__) || defined(__IAR_SYSTEMS_ICC__) || defined(__GNUC__))
 		asm("nop");

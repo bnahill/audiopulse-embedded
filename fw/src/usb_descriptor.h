@@ -120,7 +120,7 @@ extern "C" {
 
 #define AUDIO_DESC_ENDPOINT_COUNT       (1)
 #define AUDIO_UNIT_COUNT                (3)
-#define AUDIO_ENDPOINT_PACKET_SIZE      (512)
+#define AUDIO_ENDPOINT_PACKET_SIZE      (64)
 
 #define SPEAKER_CTRL_INTF               (2)
 
@@ -145,6 +145,14 @@ extern "C" {
 #define USB_REPORT_DESCRIPTOR     (0x22)
 
 #define USB_MAX_SUPPORTED_INTERFACES     (3)
+
+
+#define HID_ENDPOINT_IN                    (1)
+#define HID_ENDPOINT_OUT                   (2)
+#define AUDIO_ENDPOINT                     (3)
+
+#define HID_ENDPOINT_SIZE                  (64)
+#define AUDIO_ENDPOINT_SIZE                (AUDIO_ENDPOINT_PACKET_SIZE)
 
 /******************************************************************************
  * Types

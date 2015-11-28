@@ -34,39 +34,47 @@ static uint8_t test[64];
 
 
 CLASS_APP_CALLBACK_STRUCT USB::hid_class_callback_struct = {
-  HIDcallback,
-  nullptr,
-  nullptr,
-  HIDParamCallback
+	HIDcallback,
+	nullptr,
+	nullptr,
+	HIDParamCallback
 };
 
 CLASS_APP_CALLBACK_STRUCT USB::audio_class_callback_struct = {
-    AudioCallback,
-    nullptr,
-    nullptr,
-    nullptr
+	AudioCallback,
+	nullptr,
+	nullptr, //AudioCallback, //AudioParamCallback,
+	nullptr
 };
 
 COMPOSITE_CALLBACK_STRUCT USB::usb_composite_callback ={
-    COMP_CLASS_UNIT_COUNT,
-    {
-        &hid_class_callback_struct,
-        &audio_class_callback_struct
-    }
+	COMP_CLASS_UNIT_COUNT,
+	{
+		&hid_class_callback_struct,
+		&audio_class_callback_struct
+	}
 };
+
+bool USB::audio_ready = false;
+bool USB::audio_empty = true;
+bool USB::hid_ready   = false;
+
 
 void USB::HIDcallback(uint8_t controller_ID,
 	              uint8_t event_type, void * val){
   	APulseController::handle_eventI(event_type);
 
 	if((event_type == USB_APP_BUS_RESET) || (event_type == USB_APP_CONFIG_CHANGED)){
+		hid_ready = false;
 //		keyboard_init=FALSE;
 	} else if(event_type == USB_APP_ENUM_COMPLETE) {
 		// if enumeration is complete set keyboard_init so that
 		// application can start 
 //		keyboard_init=TRUE;
+		hid_ready = true;
 	} else if(event_type == USB_APP_ERROR) {
 		// user may add code here for error handling
+		while(true);
 	} else if (event_type == USB_APP_BUS_SUSPEND) {
 		// This is the app callback, so we shouldn't halt the ISR by doing
 		// anything here.
@@ -80,33 +88,58 @@ void USB::HIDcallback(uint8_t controller_ID,
 	}
 }
 
+static uint32_t log_audio_callback_count = 0;
+static volatile uint8_t log_audio_callback_events[64] = {};
+
 void USB::AudioCallback(uint8_t controller_ID,
 			  uint8_t event_type, void * val){
-    uint_8 i;
-    switch(event_type){
-      case USB_APP_BUS_RESET:
-	break;
-      case USB_APP_BUS_RESUME:
-	break;
-      case USB_APP_BUS_SUSPEND:
-	break;
-      case USB_APP_CONFIG_CHANGED:
-	break;
-      case USB_APP_DATA_RECEIVED:
-	break;
-      case USB_APP_ENUM_COMPLETE:
-	break;
-      case USB_APP_ERROR:
-	break;
-      default:
-	while(1);
+	if(log_audio_callback_count < 64){
+		log_audio_callback_events[log_audio_callback_count++] = event_type;
+	}
+	
+	switch(event_type){
+	case USB_APP_BUS_RESET:      // 0
+		audio_ready = false;
+		break;
+	case USB_APP_CONFIG_CHANGED: // 1
+		break;
+	case USB_APP_ENUM_COMPLETE:  // 2
+		audio_ready = true;
+		break;
+	case USB_APP_SEND_COMPLETE:  // 3
+		audio_empty = true;
+		break;
+	case USB_APP_DATA_RECEIVED:  // 4
+		while(true);
+		break;
+	case USB_APP_ERROR:          // 5
+		while(true);
+	case USB_APP_BUS_SUSPEND:    // 10
+		break;
+	case USB_APP_BUS_RESUME:     // 12
+		break;
+	default:
+		while(true);
     }
     
     return;
 }
 
+void USB::audioSend(uint8_t * buffer, uint16_t n){
+	//USB_Class_Send_Data(CONTROLLER_ID, AUDIO_ENDPOINT, buffer, n);
+	USB_Class_Audio_Send_Data(CONTROLLER_ID, AUDIO_ENDPOINT, buffer, n);
+	audio_empty = false;
+}
+
+uint8_t USB::AudioParamCallback(uint_8 request, uint_16 value, uint_16 wIndex,
+                                uint8_t** data, uint_16* size)
+{
+	while(1);
+}
+
+
 uint8_t USB::HIDParamCallback(uint_8 request, uint_16 value,
-			      uint_16 wIndex, uint8_t** data, uint_16* size){
+                              uint_16 wIndex, uint8_t** data, uint_16* size){
 	// Request buffers
 	//static uint8_t report_buf[64] = {'a','b','a','a','c'};
 	static uint8_t protocol_req = 0;
@@ -185,7 +218,7 @@ uint8_t USB::HIDParamCallback(uint_8 request, uint_16 value,
 
 
 void USB::hidClassInit(){
-	__disable_irq();
+	//__disable_irq();
 	
 	//uint8_t error = USB_Class_HID_Init(CONTROLLER_ID, callback, nullptr, callback_param);
 	uint8_t error = USB_Composite_Init(CONTROLLER_ID, &usb_composite_callback);
@@ -193,7 +226,7 @@ void USB::hidClassInit(){
 	if(error != USB_OK)
 		while(true);
 
-	__enable_irq();
+	//__enable_irq();
 	
 	for(auto &a : test) a = 'p';
 }
