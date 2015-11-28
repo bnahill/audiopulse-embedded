@@ -304,8 +304,14 @@ uint_8 USB_DESC_CONST g_config_descriptor[] =
     0x05,                            /* Asynchronous endpoint */
 #if AUDIO_ENDPOINT_PACKET_SIZE==512
     0x00,0x02,                       /* 512 bytes */
-#else
+#elif AUDIO_ENDPOINT_PACKET_SIZE==256
+	0x00,0x01,                       /* 256 bytes */
+#elif AUDIO_ENDPOINT_PACKET_SIZE==128
+	0x80,0x00,                       /* 128 bytes */
+#elif AUDIO_ENDPOINT_PACKET_SIZE==64
 	0x40,0x00,                       /* 64 bytes */
+#else
+	#error "dumb endpoint size"
 #endif
     0x01,                            /* 1 ms */
     0x00,
