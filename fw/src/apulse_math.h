@@ -24,6 +24,7 @@
 
 #include <stdint.h>
 #include <cstddef>
+#include <arm_math.h>
 
 /*!
  @brief Return the maximum of two values
@@ -728,6 +729,18 @@ void zero16(T * dst, uint32_t n){
 	}
 	while(n--){
 		*dst++ = 0;
+	}
+}
+
+template <size_t n_out, size_t factor>
+static void biquad_cascade_f32_decimate(arm_biquad_casd_df1_inst_f32 &inst,
+                                        float32_t * in, float32_t * out){
+	static float32_t tmp[n_out * factor];
+	auto tmpiter = tmp;
+	arm_biquad_cascade_df1_f32(&inst, in, tmp, n_out * factor);
+	for(auto i = n_out; i; i--){
+ 		*(out++) = *tmpiter;
+ 		tmpiter += factor;
 	}
 }
 

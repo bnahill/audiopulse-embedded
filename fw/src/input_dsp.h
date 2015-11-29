@@ -53,6 +53,7 @@ public:
 	 @brief The protothread for performing required DSP operations
 	 */
 	static PT_THREAD(pt_dsp(struct pt * pt));
+	static PT_THREAD(pt_capture_decimate(struct pt * pt));
 
 	static void configure(uint16_t overlap,
 						  uint16_t start_time_ms,
@@ -79,7 +80,10 @@ public:
 		}
 	}
 
-	static inline void request_resetI(){pending_reset = true;}
+	static inline void request_resetI(){
+		pending_reset_dsp = true;
+		pending_reset_capture = true;
+	}
 
 	static inline bool is_resetI(){return is_reset;}
 
@@ -114,6 +118,92 @@ public:
 	static inline const state_t& get_state(){return state;}
 
 protected:
+	
+	class Decimator {
+	public:
+		Decimator() :
+		{
+			Decimator::reset();
+		}
+		
+		void reset(){
+			if(do_filter){
+				if(use_iir) {
+					arm_biquad_cascade_df1_init_f32(&biquad_cascade, biquad_stages,
+					                                (float32_t *)biquad_coeffs, biquad_state);
+				} else {
+					auto result =
+					arm_fir_decimate_init_f32(&decimate_inst, decimate_fir_order, 3,
+					                          (float32_t*)decimate_coeffs,
+					                          (float32_t*)decimate_buffer,
+					                          decimate_block_size);
+
+					while(result != ARM_MATH_SUCCESS);
+				}
+			}
+		}
+		
+		static constexpr uint32_t decimate_factor = 3;
+		//! The filter order for FIR decimation
+		static constexpr uint16_t decimate_fir_order = 17;
+		//! The number of samples processed in each iteration of ARM FIR decimate
+		static constexpr uint16_t decimate_block_size = 48;
+		//! The number of output samples generated at a time
+		static constexpr uint16_t decimate_output_size = 512;
+		//! The size of the buffer containing decimated samples
+		//! This is big enough to perform a transform while writing new decimated data
+		static constexpr uint32_t decimated_frame_buffer_size = 3 * transform_len / 2;
+		
+		size_t getSamples(){
+			
+		}
+		
+	
+		void InputDSP::decimate(sampleFractional const * src,
+		                        sampleFractional * dst,
+		                        size_t n_in){
+			sampleFractional const * iter_in;
+			iter_in = src;
+			if(do_filter){
+				for(auto i = 0; i < (n_in / decimate_block_size); i++){
+					//arm_shift_q31((q31_t*)iter_in, -6, (q31_t*)iter_in, decimate_block_size);
+					if(use_iir) {
+						biquad_cascade_f32_decimate<decimate_block_size / decimate_factor, decimate_factor>(
+						    biquad_cascade, (float32_t *)iter_in, (float32_t *)dst);
+					} else {
+						arm_fir_decimate_f32(&decimate_inst, (float32_t*)iter_in,
+									(float32_t*)dst, decimate_block_size);
+					}
+					iter_in += decimate_block_size;
+					dst += decimate_block_size / decimate_factor;
+				}
+			} else {
+				for(auto i = 0; i < n_in / decimate_factor; i++){
+					*dst = *iter_in;
+
+					iter_in += decimate_factor;
+					dst += 1;
+				}
+			}
+		}
+	protected:
+		sampleFractional decimate_buffer[decimate_block_size + decimate_fir_order - 1];
+		
+		static sampleFractional const decimate_coeffs[decimate_fir_order];
+		
+		
+		//! The buffer containing decimated samples
+		sampleFractional decimated_frame_buffer[decimated_frame_buffer_size];
+		
+		//! The decimate state
+		arm_fir_decimate_instance_f32 decimate_inst;
+		arm_biquad_casd_df1_inst_f32 biquad_cascade;
+		float32_t biquad_state[4 * biquad_stages];
+		static coeffFractional biquad_coeffs[5 * biquad_stages];
+	};
+	
+	static Decimator decimator;
+	
 	static int32_t max, min, in_min, in_max;
 
 	//! The current state in the test state machine
@@ -139,19 +229,9 @@ protected:
 
 	//! @name Decimation variables and configuration
 	//! @{
-	//! The filter order for FIR decimation
-	static constexpr uint16_t decimate_fir_order = 17;
-	static sampleFractional const decimate_coeffs[decimate_fir_order];
-	//! The number of samples processed in each iteration of ARM FIR decimate
-	static constexpr uint16_t decimate_block_size = 48;
-	//! The number of output samples generated at a time
-	static constexpr uint16_t decimate_output_size = 512;
-	//! The size of the buffer containing decimated samples
-	static constexpr uint32_t decimated_frame_buffer_size = 3 * transform_len / 2;
-	//! The buffer containing decimated samples
-	static sampleFractional decimated_frame_buffer[decimated_frame_buffer_size];
-	//! The decimate state
-	static arm_fir_decimate_instance_f32 decimate;
+
+	
+	
 	//! Perform the decimation
 	static void do_decimate(sampleFractional const * src,
 							sampleFractional * dst,
@@ -199,7 +279,7 @@ protected:
 	//! @}
 
 	//! Standard reset flags
-	static bool pending_reset, is_reset;
+	static bool pending_reset_capture, pending_reset_dsp, is_reset;
 
 	struct AverageConstants {
 		sampleFractional one_over;
@@ -247,9 +327,7 @@ protected:
 #if CFG_TARGET_K20
 	static constexpr size_t biquad_shift = coeffFractional::bits_i;
 #endif
-	static arm_biquad_casd_df1_inst_f32 biquad_cascade;
-	static float32_t biquad_state[4 * biquad_stages];
-	static coeffFractional biquad_coeffs[5 * biquad_stages];
+	
 
 };
 

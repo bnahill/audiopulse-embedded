@@ -85,11 +85,12 @@ static __attribute__((aligned(512))) float audio_test[USB::audioMaxSamples];
  * @brief Application entry point
  */
 void main(){
-	struct pt pt_dsp, pt_controller, pt_wavegen;
+	struct pt pt_dsp, pt_controller, pt_wavegen, pt_capture_decimate;
 	
 	PT_INIT(&pt_dsp);
 	PT_INIT(&pt_controller);
 	PT_INIT(&pt_wavegen);
+	PT_INIT(&pt_capture_decimate);
 
 	// Perform late initializations
 	Platform::lateInit();
@@ -115,9 +116,11 @@ void main(){
 
 	uint32_t i = 0;
     while(true){
-		//InputDSP::pt_dsp(&pt_dsp);
-		//WaveGen::pt_wavegen(&pt_wavegen);
-		//APulseController::pt_controller(&pt_controller);
+		InputDSP::pt_capture_decimate(&pt_capture_decimate);
+		InputDSP::pt_dsp(&pt_dsp);
+		WaveGen::pt_wavegen(&pt_wavegen);
+		APulseController::pt_controller(&pt_controller);
+		/*
 		if(USB::audioReady() and !USB::audioQueueFull()){
 			for(int j = 0; j < USB::audioMaxSamples; j++){
 				audio_test[j] = (i+j) * 0.001f;
@@ -127,6 +130,8 @@ void main(){
 			if(i > (1000 - USB::audioMaxSamples))
 				i -= (1000 - USB::audioMaxSamples);
 		}
+		*/
 	}
 }
+
 

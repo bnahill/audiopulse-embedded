@@ -23,6 +23,8 @@
 #include <arm_math.h>
 #include <apulse_math.h>
 #include <controller.h>
+#include <pt-sem.h>
+#include <usb.h>
 
 InputDSP::sampleFractional const * volatile InputDSP::new_samples  = nullptr;
 uint32_t volatile InputDSP::num_samples = 0;
@@ -39,7 +41,7 @@ arm_fir_decimate_instance_f32 InputDSP::decimate;
 decltype(InputDSP::start_time_ms) InputDSP::start_time_ms = -1;
 decltype(InputDSP::end_time_ms) InputDSP::end_time_ms = -1;
 
-bool InputDSP::is_reset, InputDSP::pending_reset;
+bool InputDSP::is_reset, InputDSP::pending_reset_capture, InputDSP::pending_reset_dsp;
 
 uint32_t InputDSP::decimation_read_head = 0;
 uint32_t InputDSP::decimation_write_head = 0;
@@ -61,10 +63,6 @@ InputDSP::sampleFractional InputDSP::average_buffer[transform_len];
 
 uint32_t InputDSP::window_count;
 
-__attribute__((section(".m_data2")))
-InputDSP::sampleFractional InputDSP::decimate_buffer[decimate_block_size +
-													 decimate_fir_order - 1];
-
 decltype(InputDSP::overlap) InputDSP::overlap;
 
 decltype(InputDSP::state) InputDSP::state = ST_UNKNOWN;
@@ -79,7 +77,7 @@ AK4621::Src InputDSP::src;
 InputDSP::sampleFractional InputDSP::scale_mic;
 InputDSP::sampleFractional InputDSP::scale_ext;
 
-InputDSP::coeffFractional InputDSP::biquad_coeffs[] = {
+InputDSP::coeffFractional InputDSP::Decimator::biquad_coeffs[] = {
     0.367872027680277824, -0.713896634057164192, 0.353304294869303703,
     -1.898041920736432076, 0.936312768608331680,
 
@@ -93,8 +91,6 @@ InputDSP::coeffFractional InputDSP::biquad_coeffs[] = {
     -1.438843607902526855, 0.718513110652565956
 };
 
-decltype(InputDSP::biquad_cascade) InputDSP::biquad_cascade;
-decltype(InputDSP::biquad_state) InputDSP::biquad_state;
 
 /**
  * Generated coefficients from http://t-filter.appspot.com/fir/index.html
@@ -111,7 +107,7 @@ decltype(InputDSP::biquad_state) InputDSP::biquad_state;
 //InputDSP::sample_t const InputDSP::decimate_coeffs[decimate_fir_order] = {1.0};
 
 
-InputDSP::sampleFractional const InputDSP::decimate_coeffs[decimate_fir_order] = {
+InputDSP::sampleFractional const InputDSP::Decimator::decimate_coeffs[decimate_fir_order] = {
 	0.04300687444857404,
 	-0.018316535246320275,
 	-0.04279097712851117,
@@ -179,8 +175,73 @@ void InputDSP::configure(uint16_t overlap,
 	}
 }
 
-PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
+static bool need_more_decimated = false;
+
+static pt_sem decimated_data_sem;
+
+InputDSP::Decimator InputDSP::decimator;
+
+
+PT_THREAD(InputDSP::pt_capture_decimate(struct pt * pt)){
 	static decltype(new_samples) old_new_samples;
+	// Always
+	while(true){
+		// Per capture stream
+
+		PT_WAIT_UNTIL(pt, is_reset);
+		
+		////////////////////////////
+		// Configure CODEC
+		////////////////////////////
+
+		//AK4621::set_source(AK4621::Src::MIC);
+		Platform::codec.set_in_cb(put_samplesI);
+
+		////////////////////////////
+		// Prepare FIR decimation
+		////////////////////////////
+
+		static_assert(AK4621::in_buffer_size == 768*2, "Wrong buffer size for DSP");
+		need_more_decimated = false;
+		
+		while(true){
+			PT_WAIT_UNTIL(pt, new_samples || pending_reset_capture);
+			if(pending_reset_capture){ break;}
+
+			num_samples += num_received;
+			old_new_samples = new_samples;
+
+			do_decimate(old_new_samples,
+						&decimated_frame_buffer[decimation_write_head],
+						num_received);
+			decimation_write_head += num_received / 3;
+			
+			
+			static_assert(decimated_frame_buffer_size == 1536, "Decimation size has changed");
+			if(decimation_write_head >= decimated_frame_buffer_size)
+				decimation_write_head -= decimated_frame_buffer_size;
+			num_samples += num_received;
+			
+			if(debug and window_count){
+				// Quick check for overrun
+				if(new_samples != old_new_samples)
+					while(true);
+			}
+			
+			// This is all if we don't need to process the samples
+			if(state != ST_CAPTURING)
+				continue;
+			
+			PT_WAIT_UNTIL(pt, need_more_decimated || pending_reset_capture);
+			if(pending_reset_capture){ break;}
+			
+			
+		}
+	}
+}
+
+PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
+	
 	static AverageConstants constants;
 
 	PT_BEGIN(pt);
@@ -191,18 +252,6 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 
 	do_reset();
 
-	////////////////////////////
-	// Configure CODEC
-	////////////////////////////
-
-	//AK4621::set_source(AK4621::Src::MIC);
-    Platform::codec.set_in_cb(put_samplesI);
-
-	////////////////////////////
-	// Prepare FIR decimation
-	////////////////////////////
-
-	static_assert(AK4621::in_buffer_size == 768*2, "Wrong buffer size for DSP");
 
 	////////////////////////////
 	// Prepare FFT
@@ -215,13 +264,13 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 
 	while(true){
 		// Just wait until we are supposed ot be waiting for the right time
-		PT_WAIT_UNTIL(pt, pending_reset || (state == ST_RUNWAIT));
-		if(pending_reset){ do_reset(); continue; }
+		PT_WAIT_UNTIL(pt, pending_reset_dsp || (state == ST_RUNWAIT));
+		if(pending_reset_dsp){ do_reset(); continue; }
 
 		// Now wait for the right time
-		PT_WAIT_UNTIL(pt, pending_reset ||
+		PT_WAIT_UNTIL(pt, pending_reset_dsp ||
 						  APulseController::get_time_ms() > start_time_ms);
-		if(pending_reset){ do_reset(); continue; }
+		if(pending_reset_dsp){ do_reset(); continue; }
 
 		// Switch to the correct source and reset buffers
         Platform::codec.set_source(src, scale_mic, scale_ext);
@@ -242,26 +291,6 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 		static sampleFractional window_scale = 1.0;// / (float)num_windows;
 
 		while(state == ST_CAPTURING){
-			PT_WAIT_UNTIL(pt, new_samples || pending_reset);
-			if(pending_reset){ do_reset(); break;}
-
-			num_samples += num_received;
-			old_new_samples = new_samples;
-
-			do_decimate(old_new_samples,
-						&decimated_frame_buffer[decimation_write_head],
-						num_received);
-			decimation_write_head += num_received / 3;
-			static_assert(decimated_frame_buffer_size == 1536, "Decimation size has changed");
-			if(decimation_write_head >= decimated_frame_buffer_size)
-				decimation_write_head -= decimated_frame_buffer_size;
-			num_samples += num_received;
-
-			if(debug and window_count){
-				// Quick check for overrun
-				if(new_samples != old_new_samples)
-					while(true);
-			}
 
 			new_samples = nullptr;
 
@@ -468,17 +497,7 @@ void InputDSP::do_reset(){
 }
 
 
-template <size_t n_out, size_t factor>
-static void biquad_cascade_f32_decimate(arm_biquad_casd_df1_inst_f32 &inst,
-                                        float32_t * in, float32_t * out){
-	static float32_t tmp[n_out * factor];
-	auto tmpiter = tmp;
-	arm_biquad_cascade_df1_f32(&inst, in, tmp, n_out * factor);
-	for(auto i = n_out; i; i--){
- 		*(out++) = *tmpiter;
- 		tmpiter += factor;
-	}
-}
+
 
 
 void InputDSP::do_decimate(sampleFractional const * src,
