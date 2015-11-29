@@ -302,8 +302,15 @@ uint_8 USB_DESC_CONST g_config_descriptor[] =
 	AUDIO_INTERFACE_DESCRIPTOR_TYPE, /* bDescriptorType (CS_INTERFACE) */
 	AUDIO_STREAMING_FORMAT_TYPE,     /* DescriptorSubtype: AUDIO STREAMING FORMAT TYPE */
 	AUDIO_FORMAT_TYPE_I,             /* Format Type: Type I */
+#if AUDIO_ENDPOINT_SAMPLE_SIZE==4
 	0x04,                            /* SubFrame Size: 4 bytes per audio subframe */
 	0x20,                            /* Bit Resolution: 32 bits per sample */
+#elif AUDIO_ENDPOINT_SAMPLE_SIZE==3
+	0x03,                            /* SubFrame Size: 3 bytes per audio subframe */
+	0x18,                            /* Bit Resolution: 24 bits per sample */
+#else
+	#error "dumb sample size"
+#endif
 
 	/*Endpoint 1 - standard descriptor*/
 	0x07,                            /* bLength (7) */

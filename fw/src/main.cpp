@@ -80,9 +80,7 @@ static SPI_slave volatile	test_slave = SPI_slave(
 );
 //#undef AUDIO_ENDPOINT_SIZE
 //#define AUDIO_ENDPOINT_SIZE 64
-static __attribute__((aligned(512))) uint32_t audio_test[AUDIO_ENDPOINT_SIZE/4];
-static uint32_t audio_ones[AUDIO_ENDPOINT_SIZE/4];
-static uint32_t audio_zeros[AUDIO_ENDPOINT_SIZE/4];
+static __attribute__((aligned(512))) float audio_test[USB::audioMaxSamples];
 /*!
  * @brief Application entry point
  */
@@ -99,13 +97,6 @@ void main(){
 	USB::hidClassInit();
 
     Platform::codec.init();
-
-	for(auto &a : audio_ones){
-		a = 0x7fffffff;
-	}
-	for(auto &a : audio_zeros){
-		a = 0;
-	}
 
     /*
     Platform::spi0.register_slave(flash_slave);
@@ -127,18 +118,14 @@ void main(){
 		//InputDSP::pt_dsp(&pt_dsp);
 		//WaveGen::pt_wavegen(&pt_wavegen);
 		//APulseController::pt_controller(&pt_controller);
-		if(USB::audioReady() and USB::audioEmpty()){
-			for(int k = 0; k < 2; k++){
-				for(int j = 0; j < AUDIO_ENDPOINT_SIZE/4; j++){
-					audio_test[j] = (i+j) * 1000000;
-				}
-				USB::audioSend((uint8_t*)audio_test, AUDIO_ENDPOINT_SIZE);
-				i += AUDIO_ENDPOINT_SIZE/4;
-				//if(i++ & 1)
-				//	USB::audioSend((uint8_t*)audio_zeros, AUDIO_ENDPOINT_SIZE);
-				//else
-				//	USB::audioSend((uint8_t*)audio_ones, AUDIO_ENDPOINT_SIZE);
+		if(USB::audioReady() and !USB::audioQueueFull()){
+			for(int j = 0; j < USB::audioMaxSamples; j++){
+				audio_test[j] = (i+j) * 0.001f;
 			}
+			USB::audioSend(audio_test, USB::audioMaxSamples);
+			i += USB::audioMaxSamples;
+			if(i > (1000 - USB::audioMaxSamples))
+				i -= (1000 - USB::audioMaxSamples);
 		}
 	}
 }

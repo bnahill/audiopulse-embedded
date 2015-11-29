@@ -122,7 +122,6 @@ extern "C" {
 #define AUDIO_STREAMING_FORMAT_TYPE       (0x02)
 #define AUDIO_FORMAT_TYPE_I               (0x01)
 #define AUDIO_ENDPOINT_GENERAL            (0x01)
-#define AUDIO_BUFFER_SIZE                 (512)
 
 /* Audio controls at Feature Unit descriptor level */
 #define AUDIO_MUTE_CONTROL                (0x01)
@@ -136,7 +135,8 @@ extern "C" {
 
 #define AUDIO_DESC_ENDPOINT_COUNT       (1)
 #define AUDIO_UNIT_COUNT                (3)
-#define AUDIO_ENDPOINT_PACKET_SIZE      (256)
+#define AUDIO_ENDPOINT_PACKET_SIZE      (128)
+#define AUDIO_ENDPOINT_SAMPLE_SIZE      (4)
 
 #define SPEAKER_CTRL_INTF               (2)
 

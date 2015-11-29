@@ -27,6 +27,7 @@
 #include <driver/clocks.h>
 #include <usb_composite.h>
 #include <usb_audio.h>
+#include <arm_math.h>
 
 class USB {
 public:
@@ -73,8 +74,10 @@ public:
 
 	static void hidClassInit();
 	static void audioClassInit();
-	static void audioSend(uint8_t * buffer, uint16_t n);
+	static void audioSend(float const * buffer, uint16_t n);
+	static constexpr size_t audioMaxSamples = AUDIO_ENDPOINT_PACKET_SIZE / AUDIO_ENDPOINT_SAMPLE_SIZE;
 	
+	static bool audioQueueFull(){return queue.isFull();}
 	static bool audioReady(){return audio_ready;}
 	static bool audioEmpty(){return audio_empty;}
 	static bool hidReady(){return hid_ready;}
@@ -83,6 +86,97 @@ private:
 	static bool audio_ready;
 	static bool hid_ready;
 	static bool audio_empty;
+	
+	static void audioSendData(uint8_t const * buffer, uint16_t n);
+	
+	class AudioQueue {
+	public:
+		AudioQueue() :
+			count(0), rd_ptr(0), wr_ptr(0)
+		{}
+		bool isFull(){
+			return count == num_elem;
+		}
+		
+		bool isEmpty(){
+			return count == 0;
+		}
+		
+		/*!
+		 * Look at the first element to use it
+		 */
+		uint32_t peek(uint8_t ** ptr){
+			*ptr = mem[rd_ptr].data;
+			return mem[rd_ptr].len;
+		}
+		
+		/*!
+		 * Actually get rid of that first element
+		 */
+		bool pop(){
+			__disable_irq();
+			if(!isEmpty()){
+				count -= 1;
+				rd_ptr = (rd_ptr == num_elem - 1) ? 0 : (rd_ptr + 1);
+				__enable_irq();
+				return true;
+			} else {
+				__enable_irq();
+				return false;
+			}
+		}
+		
+		bool push(float const * data, uint32_t nsamples){
+			queue_elem_t &store = mem[wr_ptr];
+			uint8_t * iter = store.data;
+			int32_t sample;
+			float fsample;
+			if(nsamples > audioMaxSamples)
+				return false;
+			if(isFull())
+				return false;
+			for(auto i = 0; i < nsamples; i++){
+				if(AUDIO_ENDPOINT_SAMPLE_SIZE == 4){
+					fsample = (*data * 2147483648.0f);
+					// Round it
+					fsample += fsample > 0.0f ? 0.5f : -0.5f;
+					*((uint32_t *)iter) = clip_q63_to_q31((q63_t) (fsample));
+					iter += 4;
+				} else if(AUDIO_ENDPOINT_SAMPLE_SIZE == 3){
+					fsample = (*data * 2147483648.0f / 256.0f);
+					// Round it
+					fsample += fsample > 0.0f ? 0.5f : -0.5f;
+					sample = clip_q63_to_q31((q63_t) (fsample));
+					*((uint32_t *)iter) = sample & 0x00FFFFFF;
+					iter += 3;
+				} else {
+					return false;
+				}
+				data += 1;
+			}
+			wr_ptr = (wr_ptr == num_elem - 1) ? 0 : (wr_ptr + 1);
+			count += 1;
+			store.len = nsamples * AUDIO_ENDPOINT_SAMPLE_SIZE;
+			return true;
+		}
+		
+		
+	protected:
+		static constexpr uint32_t num_elem = 5;
+		static constexpr uint32_t sample_size = 3;
+		typedef struct {
+			uint16_t len;
+			uint8_t data[AUDIO_ENDPOINT_PACKET_SIZE];
+			uint32_t extra_leg_room;
+		} queue_elem_t;
+		queue_elem_t mem[num_elem];
+		
+		uint8_t count;
+		uint8_t rd_ptr;
+		uint8_t wr_ptr;
+	};
+	
+	static AudioQueue queue;
 	
 	static void HIDcallback(uint8_t controller_ID,
 	                        uint8_t event_type, void * val);
