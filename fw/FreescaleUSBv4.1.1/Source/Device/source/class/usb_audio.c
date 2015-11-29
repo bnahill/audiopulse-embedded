@@ -173,16 +173,16 @@ void USB_Service_Audio_Status_Interrupt(PTR_USB_DEV_EVENT_STRUCT event)
 void USB_Service_Audio_Isochronous_IN(PTR_USB_DEV_EVENT_STRUCT event)
 {
 	APP_DATA_STRUCT iso_in_recv;
+	iso_in_recv.data_ptr  = event->buffer_ptr;
+    iso_in_recv.data_size = event->len;
+#if IMPLEMENT_QUEUING
+    uint_8 index;
+    uint_8 producer, consumer;
+    
 
     USB_ENDPOINTS *usb_ep_data = (USB_ENDPOINTS *)
         USB_Desc_Get_Endpoints(event->controller_ID);
         
-    iso_in_recv.data_ptr  = event->buffer_ptr;
-    iso_in_recv.data_size = event->len;
-	
-#if IMPLEMENT_QUEUING
-    uint_8 index;
-    uint_8 producer, consumer;
     
 
 	/* map the endpoint num to the index of the endpoint structure */
@@ -233,10 +233,8 @@ void USB_Service_Audio_Isochronous_IN(PTR_USB_DEV_EVENT_STRUCT event)
 		{
 			event_type = USB_APP_ERROR;
 		}
-
 		g_audio_class_callback(event->controller_ID, event_type,
-		                       (uint_8*)(&iso_in_recv));
-
+				(uint_8*)(&iso_in_recv));
 	}
 }
 
@@ -603,6 +601,31 @@ static uint_8 USB_Get_Cur_Audio_Clock(
     }
     return status;
 }
+
+static uint_8 USB_Get_Range_Audio_Clock(
+        uint_8 controller_ID,               /* [IN] Controller ID */
+        uint_8 interface,                   /* [IN] interface */
+        uint_8 control_selector,            /* [IN] control selector */
+        uint_8_ptr *data,                   /* [OUT] Pointer to Data */
+        USB_PACKET_SIZE *size               /* [OUT] Pointer to Size of Data */
+)
+{
+    uint_8 status = USBERR_INVALID_REQ_TYPE;
+    /* check control selector */
+    switch(control_selector)
+    {
+    case CS_SAM_FREQ_CONTROL:
+        status = USB_Desc_Get_Range_Sampling_Frequency(controller_ID,interface,data,size);
+        break;
+    case CS_CLOCK_VALID_CONTROL:
+        status = USB_Desc_Get_Cur_Clock_Validity(controller_ID,interface,data,size);
+        break;
+    default:
+        break;
+    }
+    return status;
+}
+
 
 /**************************************************************************//*!
  *
@@ -1486,6 +1509,11 @@ static uint_8 USB_Audio_Get_Control_Clock(
     /* Select GET request Control Feature Unit Module */
     switch(setup_packet->request)
     {
+		case AUDIO_CS_REQ_RANGE:
+			status = USB_Get_Range_Audio_Clock(controller_ID,interface,control_selector,data,size);
+			break;
+		case AUDIO_CS_REQ_CUR:
+			// Fallthrough to "GET_CUR"
         case GET_CUR:
             status = USB_Get_Cur_Audio_Clock(controller_ID,interface,control_selector,data,size);
             break;

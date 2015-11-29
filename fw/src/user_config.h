@@ -28,6 +28,7 @@
 #define USE_HID_CLASS     (1)
 #define USE_AUDIO_CLASS   (1)
 #define COMPOSITE_DEV     (1)
+#define AUDIO_CLASS_2_0   (1)
 
 /* Below two MACROS are required for Keyboard Application to execute */
 #define LONG_SEND_TRANSACTION       /* support to send large data pkts */

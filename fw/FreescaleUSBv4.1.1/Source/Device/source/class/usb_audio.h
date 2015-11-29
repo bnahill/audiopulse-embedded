@@ -81,6 +81,10 @@ extern "C" {
 #define GET_MEM                     (0x85)
 #define GET_STAT                    (0xFF)
 
+#define AUDIO_CS_REQ_CUR            (0x01)
+#define AUDIO_CS_REQ_RANGE          (0x02)
+#define AUDIO_CS_REQ_MEM            (0x03)
+
 
 #define MUTE_CONTROL                (0x01)
 #define VOLUME_CONTROL              (0x02)

@@ -122,10 +122,11 @@ uint_8 usb_audio_class_info[] =
     USB_uint_16_high(AUDIO_ENDPOINT_PACKET_SIZE),
     USB_uint_16_low(AUDIO_ENDPOINT_PACKET_SIZE),
     /* Interface count */
-    2,
-    /* Interface number */
-    2,
     3,
+    /* Interface number */
+    1,
+    2,
+	3
 };
 
 DEV_ARCHITECTURE_STRUCT usb_dev_arc =
@@ -134,7 +135,6 @@ DEV_ARCHITECTURE_STRUCT usb_dev_arc =
     COMPOSITE_DESC_ENDPOINT_COUNT,
     {
         (uint_8 *)&usb_hid_class_info,
-
         (uint_8 *)&usb_audio_class_info,
     }
 
@@ -147,161 +147,169 @@ USB_DESC_CONST USB_AUDIO_UNITS usb_audio_unit =
 {
     AUDIO_UNIT_COUNT,
     {
-        {0x01,AUDIO_CONTROL_INPUT_TERMINAL},
-        {0x02,AUDIO_CONTROL_FEATURE_UNIT},
-        {0x03,AUDIO_CONTROL_OUTPUT_TERMINAL},
+        //{0x01,AUDIO_CONTROL_INPUT_TERMINAL},
+        //{0x02,AUDIO_CONTROL_FEATURE_UNIT},
+        //{0x03,AUDIO_CONTROL_OUTPUT_TERMINAL},
+		{AUDIO_CONTROL_CLOCK_SOURCE_ID,   AUDIO_CONTROL_CLOCK_SOURCE},
+        {AUDIO_CONTROL_INPUT_TERMINAL_ID, AUDIO_CONTROL_INPUT_TERMINAL}, 
+        {AUDIO_CONTROL_FEATURE_UNIT_ID,   AUDIO_CONTROL_FEATURE_UNIT},
     }
 };
 
 uint_8 USB_DESC_CONST g_config_descriptor[] =
 {
-    /* Configuration Descriptor */
-    CONFIG_ONLY_DESC_SIZE,               /* Size of this desciptor in bytes */
-    USB_CONFIG_DESCRIPTOR,               /* DEVICE descriptor */
-    /* Length of total configuration block */
-    USB_uint_16_low(CONFIG_DESC_SIZE), USB_uint_16_high(CONFIG_DESC_SIZE),
-    3, //USB_MAX_SUPPORTED_INTERFACES,                                /* This device has two interface */
-    // 4 total: audio ctl, audio stream, alt (unused) audio stream, and HID, but only 3 used
-    0x01,                                /* ID of this configuration */
-    0x00,                                /* Unused */
-    0x80,                                /* Bus-powered device, no remote wakeup */
-    0xFA,                                /* 500mA maximum power consumption */
-    
-    // This part looks pretty good!
+	/* Configuration Descriptor */
+	CONFIG_ONLY_DESC_SIZE,               /* Size of this desciptor in bytes */
+	USB_CONFIG_DESCRIPTOR,               /* DEVICE descriptor */
+	/* Length of total configuration block */
+	USB_uint_16_low(CONFIG_DESC_SIZE), USB_uint_16_high(CONFIG_DESC_SIZE),
+	USB_MAX_SUPPORTED_INTERFACES,                                /* This device has two interface */
+	// 4 total: audio ctl, audio stream, alt (unused) audio stream, and HID, but only 3 used
+	0x01,                                /* ID of this configuration */
+	0x00,                                /* Unused */
+	0x80,                                /* Bus-powered device, no remote wakeup */
+	0xFA,                                /* 500mA maximum power consumption */
+
+	// This part looks pretty good!
 
 
 
 
-    /*****************************************************************
-    *            AUDIO FUNCTION DESCRIPTOR                           *
-    ******************************************************************/
-    /* Interface Association Descriptor */
-    //IAD_DESC_SIZE,                       /* Size of this descriptor -  bLength (8) */
-    //USB_IFACE_ASSOCIATION_DESCRIPTOR,    /* INTERFACE ASSOCIATION Descriptor */
-    //0x02,                                /* Interface number ofthe VideoControl
-                                        //interface that is associated with this function */
-    //0x02,                                /* Number of contiguous Video interfaces
-                                          //  that are associated with this function */
-    //USB_DEVICE_CLASS_AUDIO,              /* VIDEO_CC */
-    //0x00,                                /* SC_VIDEO_INTERFACE_COLLECTION */
-    //0x00,                                /* Not used */
-    //0x00,                                /* Index to string descriptor */
+	/*****************************************************************
+	*            AUDIO FUNCTION DESCRIPTOR                           *
+	******************************************************************/
+	/* Standard Interface Association Descriptor */
+	0x08,                      /* bLength(0x08) */
+	0x0B,                      /* bDescriptorType(0x0B) */
+	0x00,                      /* bFirstInterface(0x00) */
+	0x02,                      /* bInterfaceCount(0x02) */
+	0x01,                      /* bFunctionClass(0x01): AUDIO */
+	0x00,                      /* bFunctionSubClass(0x00) */
+	0x20,                      /* bFunctionProtocol(0x2000): 2.0 AF_VERSION_02_00 */
+	0x00,                      /* iFunction(0x00) */
+	
+	/* AUDIO CONTROL INTERFACE DISCRIPTOR */
+	IFACE_ONLY_DESC_SIZE,      /* Size of this descriptor - bLength (9) */
+	USB_IFACE_DESCRIPTOR,      /* INTERFACE descriptor */
+	0x00,                      /* Index of this interface */
+	0x00,                      /* Index of this setting */
+	0x00,                      /* 0 endpoint */
+	USB_DEVICE_CLASS_AUDIO,    /* AUDIO */
+	USB_SUBCLASS_AUDIOCONTROL, /* AUDIO_CONTROL */
+	0x20,                      /* bInterfaceProtocol(0x20): IP 2.0 IP_VERSION_02_00 */
+	0x07,                      /* iInterface(0x07): Not Requested */
 
-    /* AUDIO CONTROL INTERFACE DISCRIPTOR */
-    IFACE_ONLY_DESC_SIZE,      /* Size of this descriptor - bLength (9) */
-    USB_IFACE_DESCRIPTOR,      /* INTERFACE descriptor */
-    0x00,                      /* Index of this interface */
-    0x00,                      /* Index of this setting */
-    0x00,                      /* 0 endpoint */
-    USB_DEVICE_CLASS_AUDIO,    /* AUDIO */
-    USB_SUBCLASS_AUDIOCONTROL, /* AUDIO_CONTROL */
-    0x00,                      /* Unused */
-    0x00,                      /* Unused */
+	/* Audio class-specific interface header */
+	HEADER_ONLY_DESC_SIZE,           /* bLength (9) */
+	AUDIO_INTERFACE_DESCRIPTOR_TYPE, /* bDescriptorType (CS_INTERFACE) */
+	AUDIO_CONTROL_HEADER,            /* bDescriptorSubtype (HEADER) */
+	0x00,0x02,                       /* bcdADC (2.0) */
+	0x03,                            /* bCategory(0x03): Microphone */
+	0x3C,0x00,                       /* wTotalLength (60)  STARTING WITH HEADER */
+	0x00,                            /* bmControls(0b00000000) */
+	
+	/* Clock Source Descriptor(4.7.2.1) */
+	0x08, /* bLength(0x08) */
+	0x24, /* bDescriptorType(0x24): CS_INTERFACE */
+	AUDIO_CONTROL_CLOCK_SOURCE, /* bDescriptorSubType(0x0A): CLOCK_SOURCE */
+	AUDIO_CONTROL_CLOCK_SOURCE_ID, /* bClockID(0x10): CLOCK_SOURCE_ID */
+	0x01, /* bmAttributes(0x01): internal fixed clock */
+	0x05, /* bmControls(0x07):
+	         clock frequency control: 0b01 - host read only;
+	         clock validity control: 0b01 - host read only */
+	0x00, /* bAssocTerminal(0x00) */
+	0x01, /* iClockSource(0x01): Not requested */
 
-    /* Audio class-specific interface header */
-    HEADER_ONLY_DESC_SIZE,           /* bLength (9) */
-    AUDIO_INTERFACE_DESCRIPTOR_TYPE, /* bDescriptorType (CS_INTERFACE) */
-    AUDIO_CONTROL_HEADER,            /* bDescriptorSubtype (HEADER) */
-    0x00,0x01,                       /* bcdADC (1.0) */
-    0x27,0x00,                       /* wTotalLength (43) */
-    0x01,                            /* bInCollection (1 streaming interface) */
-    0x01,                            /* baInterfaceNr (interface 1 is stream) */
+	// Ben says check that size!
 
-    // Ben says check that size!
-    
-    /* Audio class-specific input terminal */
-    INPUT_TERMINAL_ONLY_DESC_SIZE_A,   /* bLength (12) */
-    AUDIO_INTERFACE_DESCRIPTOR_TYPE, /* bDescriptorType (CS_INTERFACE) */
-    AUDIO_CONTROL_INPUT_TERMINAL,    /* bDescriptorSubtype (INPUT_TERMINAL) */
-    0x01,                            /* bTerminalID (1) */
-    0x07,0x01,                       /* wTerminalType (radio receiver) */
-    0x00,                            /* bAssocTerminal (none) */
-    0x02,                            /* bNrChannels (2) */
-    0x00,0x01,                       /* wChannelConfig (left, right) */
-    0x00,                            /* iChannelNames (none) */
-    0x00,                            /* iTerminal (none) */
-    
-    // Channel config should be 0x03 for stereo
+	/* Audio class-specific input terminal */
+	0x11,                            /* bLength (17) */
+	AUDIO_INTERFACE_DESCRIPTOR_TYPE, /* bDescriptorType (CS_INTERFACE) */
+	AUDIO_CONTROL_INPUT_TERMINAL,    /* bDescriptorSubtype (INPUT_TERMINAL) */
+	AUDIO_CONTROL_INPUT_TERMINAL_ID, /* bTerminalID (0x20): INPUT_TERMINAL_ID */
+	0x01,0x01,                       /* wTerminalType (USB streaming) */
+	0x00,                            /* bAssocTerminal (none) */
+	AUDIO_CONTROL_CLOCK_SOURCE_ID,   /* bCSouceID(0x10): CLOCK_SOURCE_ID */
+	0x01,                            /* bNrChannels (2) */
+	0x00,0x00,0x00,0x00,             /* bmChannelConfig (0x00): Mono, no spatial */
+	0x00,                            /* iChannelNames (none) */
+	0x00, 0x00,                      /* bmControls (0x0000) */
+	0x02,                            /* iTerminal(0x02): not requested */
 
-    /* Audio class-specific feature unit */
-    FEATURE_UNIT_ONLY_DESC_SIZE,     /* bLength (9) */
-    AUDIO_INTERFACE_DESCRIPTOR_TYPE, /* bDescriptorType (CS_INTERFACE) */
-    AUDIO_CONTROL_FEATURE_UNIT,      /* bDescriptorSubtype (FEATURE_UNIT) */
-    0x02,                            /* bUnitID (2) */
-    0x01,                            /* bSourceID (input terminal 1) */
-    0x02,                            /* bControlSize (2 bytes) */
-    /* Audio speaker feature */
-    (//AUDIO_AUTOMATIC_GAIN_CONTROL |  /* Controls enabled: AGC, TREBLE, BASS, VOLUME, MUTE */
-    //AUDIO_TREBLE_CONTROL         |
-    //AUDIO_BASS_CONTROL           |
-    AUDIO_VOLUME_CONTROL         |
-    AUDIO_MUTE_CONTROL
-    ),
 
-    0x00, 0x01,                       /* Master controls */
-    0x00, 0x00,                      /* Channel 0 controls */
-    0x00, 0x00,                      /* Channel 1 controls */
+	/* Audio class-specific feature unit */
+	0x0E,                            /* bLength (0x0E): 6 + (ch + 1) * 4, 1 channel */
+	AUDIO_INTERFACE_DESCRIPTOR_TYPE, /* bDescriptorType (CS_INTERFACE) */
+	0x06,                            /* bDescriptorSubtype (FEATURE_UNIT) */
+	AUDIO_CONTROL_FEATURE_UNIT_ID,   /* bUnitID (0x30): FEATURE_UNIT_ID */
+	AUDIO_CONTROL_INPUT_TERMINAL_ID, /* bSourceID (INPUT_TERMINAL_ID) */
+	0x0F, 0x00, 0x00, 0x00, /* bmaControls(0)(0x0000000F): Master Channel 0
+	                           0b11: Mute read/write
+	                           0b11: Volume read/write */
+	0x00, 0x00, 0x00, 0x00, /* bmaControls(1)(0x00000000): Logical Channel 1 */
+	0x00,                   /* iFeature(0x00) */
 
-    /* Audio class-specific output terminal */
-    OUTPUT_TERMINAL_ONLY_DESC_SIZE_A,  /* bLength (9) */
-    AUDIO_INTERFACE_DESCRIPTOR_TYPE, /* bDescriptorType (CS_INTERFACE) */
-    AUDIO_CONTROL_OUTPUT_TERMINAL,   /* bDescriptorSubtype (OUTPUT_TERMINAL) */
-    0x03,                            /* bTerminalID (3) */
-    0x01,0x01,                       /* wTerminalType (USB streaming) */
-    0x00,                            /* bAssocTerminal (none) */
-    0x02,                            /* bSourceID (feature unit 2) */
-    0x00,                            /* iTerminal (none) */
-    
-    // Up to here looks good for 2-channel!
+	/* Audio class-specific output terminal */
+	0x0C,                            /* bLength (12) */
+	AUDIO_INTERFACE_DESCRIPTOR_TYPE, /* bDescriptorType (CS_INTERFACE) */
+	AUDIO_CONTROL_OUTPUT_TERMINAL,   /* bDescriptorSubtype (OUTPUT_TERMINAL) */
+	0x40,                            /* bTerminalID (0x40) */
+	0x01,0x01,                       /* wTerminalType (USB streaming) */
+	0x00,                            /* bAssocTerminal (None) */
+	AUDIO_CONTROL_FEATURE_UNIT_ID,   /* bSourceID(0x30): FEATURE_UNIT_ID */
+	AUDIO_CONTROL_CLOCK_SOURCE_ID,   /* bCSouceID(0x10): CLOCK_SOURCE_ID */
+	0x00, 0x00,                      /* bmControls(0x0000) */
+	0x00,                            /* iTerminal(0x00) */
 
-    /* USB speaker standard AS interface descriptor - audio streaming operational
-    (Interface 3, Alternate Setting 0) */
-    IFACE_ONLY_DESC_SIZE,            /* bLength (9) */
-    USB_IFACE_DESCRIPTOR,            /* bDescriptorType (CS_INTERFACE) */
-    0x01,                            /* interface Number: 1 */
-    0x00,                            /* Alternate Setting: 0 */
-    0x00,                            /* not used (Zero Bandwidth) */
-    USB_DEVICE_CLASS_AUDIO,          /* USB DEVICE CLASS AUDIO */
-    USB_SUBCLASS_AUDIOSTREAM,        /* AUDIO SUBCLASS AUDIOSTREAMING */
-    0x00,                            /* AUDIO PROTOCOL UNDEFINED */
-    0x00,                            /* Unused */
+	/* USB speaker standard AS interface descriptor - audio streaming operational
+	   (Interface 3, Alternate Setting 0) */
+	IFACE_ONLY_DESC_SIZE,            /* bLength (9) */
+	USB_IFACE_DESCRIPTOR,            /* bDescriptorType (CS_INTERFACE) */
+	0x01,                            /* interface Number: 1 */
+	0x00,                            /* Alternate Setting: 0 */
+	0x00,                            /* not used (Zero Bandwidth) */
+	USB_DEVICE_CLASS_AUDIO,          /* USB DEVICE CLASS AUDIO */
+	USB_SUBCLASS_AUDIOSTREAM,        /* AUDIO SUBCLASS AUDIOSTREAMING */
+	0x20,                            /* AUDIO PROTOCOL IP 2.0 */
+	0x08,                            /* iInterface */
 
-    /* USB speaker standard AS interface descriptor - audio streaming operational
-(Interface 3, Alternate Setting 1) */
-    IFACE_ONLY_DESC_SIZE,            /* bLength (9) */
-    USB_IFACE_DESCRIPTOR,            /* bDescriptorType (CS_INTERFACE) */
-    0x01,                            /* interface Number: 1 */
-    0x01,                            /* Alternate Setting: 1 */
-    0x01,                            /* One Endpoint. */
-    USB_DEVICE_CLASS_AUDIO,          /* USB DEVICE CLASS AUDIO */
-    USB_SUBCLASS_AUDIOSTREAM,        /* AUDIO SUBCLASS AUDIOSTREAMING */
-    0x00,                            /* AUDIO PROTOCOL UNDEFINED */
-    0x00,                            /* Unused */
+	/* USB speaker standard AS interface descriptor - audio streaming operational
+	   (Interface 3, Alternate Setting 1) */
+	IFACE_ONLY_DESC_SIZE,            /* bLength (9) */
+	USB_IFACE_DESCRIPTOR,            /* bDescriptorType (CS_INTERFACE) */
+	0x01,                            /* interface Number: 1 */
+	0x01,                            /* Alternate Setting: 1 */
+	0x01,                            /* One Endpoint. */
+	USB_DEVICE_CLASS_AUDIO,          /* USB DEVICE CLASS AUDIO */
+	USB_SUBCLASS_AUDIOSTREAM,        /* AUDIO SUBCLASS AUDIOSTREAMING */
+	0x20,                            /* AUDIO PROTOCOL IP 2.0 */
+	0x09,                            /* iInterface */
 
-    /* USB speaker standard General AS interface descriptor */
-    AUDIO_STREAMING_IFACE_DESC_SIZE, /* bLength (7) */
-    AUDIO_INTERFACE_DESCRIPTOR_TYPE, /* bDescriptorType (CS_INTERFACE) */
-    AUDIO_STREAMING_GENERAL,         /* GENERAL subtype  */
-    0x03,                            /* Unit ID of output terminal */
-    0x00,                            /* Interface delay */
-    0x01,0x00,                       /* PCM format */
+	/* USB speaker standard General AS interface descriptor */
+	0x10,                            /* bLength (16) */
+	AUDIO_INTERFACE_DESCRIPTOR_TYPE, /* bDescriptorType (CS_INTERFACE) */
+	AUDIO_STREAMING_GENERAL,         /* GENERAL subtype  */
+	AUDIO_CONTROL_INPUT_TERMINAL_ID, /* bTerminalLink(0x20): INPUT_TERMINAL_ID */
+	0x00,                            /* bmControls(0x00) */
+	0x01,                            /* bFormatType(0x01): FORMAT_TYPE_I */
+	0x01, 0x00, 0x00, 0x00,          /* bmFormats(0x00000001): PCM */
+	0x01,                            /* bNrChannels(0x01): NB_CHANNELS */
+	0x01, 0x00, 0x00, 0x00,          /* bmChannelConfig(0x00000001) */
+	0x00,                            /* iChannelNames(0x00): None */
 
-    /* USB speaker audio type I format interface descriptor */
-    AUDIO_INTERFACE_DESC_TYPE_I_SIZE, /* bLength (11) */
-    AUDIO_INTERFACE_DESCRIPTOR_TYPE, /* bDescriptorType (CS_INTERFACE) */
-    AUDIO_STREAMING_FORMAT_TYPE,     /* DescriptorSubtype: AUDIO STREAMING FORMAT TYPE */
-    AUDIO_FORMAT_TYPE_I,             /* Format Type: Type I */
-    0x01,                            /* Number of Channels: one channel */
-    0x04,                            /* SubFrame Size: 4 bytes per audio subframe */
-    0x20,                            /* Bit Resolution: 32 bits per sample */
-    0x01,                            /* One frequency supported */
-    0x80,0x3e,0x00,                  /* 16 kHz */
+	/* USB speaker audio type I format interface descriptor */
+	0x06,                            /* bLength (6) */
+	AUDIO_INTERFACE_DESCRIPTOR_TYPE, /* bDescriptorType (CS_INTERFACE) */
+	AUDIO_STREAMING_FORMAT_TYPE,     /* DescriptorSubtype: AUDIO STREAMING FORMAT TYPE */
+	AUDIO_FORMAT_TYPE_I,             /* Format Type: Type I */
+	0x04,                            /* SubFrame Size: 4 bytes per audio subframe */
+	0x20,                            /* Bit Resolution: 32 bits per sample */
 
-    /*Endpoint 1 - standard descriptor*/
-    AUDIO_ENDP_ONLY_DESC_SIZE,       /* bLength (9) */
-    USB_ENDPOINT_DESCRIPTOR,         /* Descriptor type (endpoint descriptor) */
-    AUDIO_ENDPOINT|(USB_SEND << 7),  /* OUT endpoint address 1 */
-    0x05,                            /* Asynchronous endpoint */
+	/*Endpoint 1 - standard descriptor*/
+	0x07,                            /* bLength (7) */
+	USB_ENDPOINT_DESCRIPTOR,         /* Descriptor type (endpoint descriptor) */
+	AUDIO_ENDPOINT|(USB_SEND << 7),  /* OUT endpoint address 1 */
+	0x05,                            /* Asynchronous endpoint */
 #if AUDIO_ENDPOINT_PACKET_SIZE==512
     0x00,0x02,                       /* 512 bytes */
 #elif AUDIO_ENDPOINT_PACKET_SIZE==256
@@ -314,17 +322,14 @@ uint_8 USB_DESC_CONST g_config_descriptor[] =
 	#error "dumb endpoint size"
 #endif
     0x01,                            /* 1 ms */
-    0x00,
-    0x00,
-    
-    // Not sure about the packet size
 
     /* Endpoint 1 - Audio streaming descriptor */
-    AUDIO_STREAMING_ENDP_DESC_SIZE,  /* bLength (7) */
+    0x08,                            /* bLength (8) */
     USB_AUDIO_DESCRIPTOR,            /* AUDIO ENDPOINT DESCRIPTOR TYPE */
     AUDIO_ENDPOINT_GENERAL,          /* AUDIO ENDPOINT GENERAL */
-    0x00,                            /* bmAttributes: 0x80 */
-    0x02,                            /* bLockDelayUnits (samples) */
+    0x00,                            /* bmAttributes: 0x00 */
+	0x00,                            /* bmControls: 0x00 */
+    0x00,                            /* bLockDelayUnits (samples) */
     0x00,0x00,                       /* wLockDelay (0) */
 
     /* HID FUNCTION DESCRIPTION */
@@ -366,49 +371,6 @@ uint_8 USB_DESC_CONST g_config_descriptor[] =
     //0x34,0x00
 };
 
-
-uint_8 USB_DESC_CONST g_config_descriptor_old[CONFIG_DESC_SIZE] =
-{
-   CONFIG_ONLY_DESC_SIZE,  /*  Configuration Descriptor Size - always 9 bytes*/
-   USB_CONFIG_DESCRIPTOR,  /* "Configuration" type of descriptor */
-   CONFIG_DESC_SIZE, 0x00, /*  Total length of the Configuration descriptor */
-   1,                      /*  NumInterfaces */
-   1,                      /*  Configuration Value */
-   0,                      /*  Configuration Description String Index*/
-   BUS_POWERED|SELF_POWERED|(REMOTE_WAKEUP_SUPPORT<<REMOTE_WAKEUP_SHIFT),
-   /* S08/CFv1 are both self powered (its compulsory to set bus powered)*/
-   /* Attributes.support RemoteWakeup and self power */
-   0x32,                   /*  Current draw from bus */
-
-   /* Interface Descriptor */
-   IFACE_ONLY_DESC_SIZE,
-   USB_IFACE_DESCRIPTOR,
-   0x00,
-   0x00,
-   HID_DESC_ENDPOINT_COUNT,
-   0x03,
-   0x00,
-   0x00,
-   0x00,
-
-   /* HID descriptor */
-   HID_ONLY_DESC_SIZE,
-   USB_HID_DESCRIPTOR,
-   0x00,0x01,
-   0x00,
-   0x01,
-   0x22,
-   0x3F,0x00, /* report descriptor size to follow */
-
-
-   /*Endpoint descriptor */
-   ENDP_ONLY_DESC_SIZE,
-   USB_ENDPOINT_DESCRIPTOR,
-   HID_ENDPOINT_IN|(USB_SEND << 7),
-   USB_INTERRUPT_PIPE,
-   HID_ENDPOINT_PACKET_SIZE, 0x00,
-   0x0A
-};
 
 uint_8 USB_DESC_CONST g_report_descriptor[REPORT_DESC_SIZE] =
 {
@@ -623,6 +585,14 @@ uint_8 USB_Desc_Get_Descriptor (
           type = USB_MAX_STD_DESCRIPTORS;
           *descriptor = (uint_8_ptr)g_std_descriptors [type];
           *size = g_std_desc_size[type];
+        }
+        break;
+      case USB_AUDIO_DESCRIPTOR:
+        {
+          type = USB_CONFIG_DESCRIPTOR ;
+          *descriptor = (uint_8_ptr)(g_std_descriptors [type]+
+                               CONFIG_ONLY_DESC_SIZE+IFACE_ONLY_DESC_SIZE);
+          *size = HID_ONLY_DESC_SIZE;
         }
         break;
       case USB_HID_DESCRIPTOR:
@@ -864,9 +834,7 @@ boolean USB_Desc_Remote_Wakeup (
 * This function returns the information about all the non control endpoints
 * implemented
 *****************************************************************************/
-typedef uint8_t ep_buffer_t[sizeof(USB_ENDPOINTS)];
-
-static ep_buffer_t desc_ep_buffer[4];
+static USB_ENDPOINTS desc_ep_buffer[4];
 
 USB_ENDPOINTS_PTR usb_desc_ep = NULL;
 void* USB_Desc_Get_Endpoints(
@@ -883,7 +851,7 @@ uint_8 controller_ID      /* [IN] Controller ID */
     if(usb_desc_ep == NULL)
     {
         //usb_desc_ep = (USB_ENDPOINTS_PTR)malloc(sizeof(USB_ENDPOINTS));
-	usb_desc_ep = desc_ep_buffer[buffer_count];
+	usb_desc_ep = &desc_ep_buffer[buffer_count];
 	
 	buffer_count = (buffer_count + 1) & 3;
 	if(!usb_desc_ep){
@@ -1294,263 +1262,6 @@ USB_PACKET_SIZE *size               /* [OUT] Pointer to Size of Data */
     return USB_OK;
 }
 
-uint_8 g_cur_video_probe[26] = {0x00,0x00,0x01,0x01,0x15,0x16,
-    0x05,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
-    0x00,0x00,0x00,0x58,0x02,0x00,0x5C,0x02,0x00,0x00
-};
-
-/**************************************************************************//*!
-*
-* @name  USB_Desc_Set_Cur_Video_Probe
-*
-* @brief The function sets current probe value
-*
-* @param controller_ID : Controller ID
-* @param data          : Pointer to data
-* @param size          : Pointer to Size of Data
-*
-* @return USB_OK                              When Successfull
-*         USBERR_INVALID_REQ_TYPE             when Error
-*****************************************************************************
-*Set current probe value specified by the Host
-*****************************************************************************/
-uint_8 USB_Desc_Set_Cur_Video_Probe(
-uint_8 controller_ID,               /* [IN] Controller ID */
-uint_8_ptr *data,                   /* [OUT] Pointer to Data */
-USB_PACKET_SIZE *size               /* [OUT] Pointer to Size of Data */
-)
-{
-    uint_8 i;
-
-    UNUSED(controller_ID);
-    UNUSED(size);
-
-    for(i=0;i<26;i++){
-        g_cur_video_probe[i]=*(*data+i);
-    }
-
-    return USB_OK;
-}
-/**************************************************************************//*!
-*
-* @name  USB_Desc_Get_Cur_Video_Probe
-*
-* @brief The function gets the current probe value
-*
-* @param controller_ID : Controller ID
-* @param data          : Pointer to Data
-* @param size          : Pointer to Size of Data
-*
-* @return USB_OK                              When Successfull
-*         USBERR_INVALID_REQ_TYPE             when Error
-*****************************************************************************
-* Return current probe value to the Host
-*****************************************************************************/
-uint_8 USB_Desc_Get_Cur_Video_Probe(
-uint_8 controller_ID,               /* [IN] Controller ID */
-uint_8_ptr *data,                   /* [OUT] Pointer to Data */
-USB_PACKET_SIZE *size               /* [OUT] Pointer to Size of Data */
-)
-{
-    UNUSED(controller_ID);
-
-    *size=26;
-    *data=g_cur_video_probe;
-
-    return USB_OK;
-}
-
-uint_8 g_len_video_probe[26] = {0x1a,0x00,0x01,0x01,0x15,0x16,
-    0x05,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
-    0x00,0x00,0x00,0x58,0x02,0x00,0x5C,0x02,0x00,0x00
-};
-/**************************************************************************//*!
-*
-* @name  USB_Desc_Get_Len_Video_Probe
-*
-* @brief The function gets the length probe value
-*
-* @param controller_ID : Controller ID
-* @param data          : Pointer to Data
-* @param size          : Pointer to Size of Data
-*
-* @return USB_OK                              When Successfull
-*         USBERR_INVALID_REQ_TYPE             when Error
-*****************************************************************************
-* Return lengh probe value to the Host
-*****************************************************************************/
-uint_8 USB_Desc_Get_Len_Video_Probe(
-uint_8 controller_ID,               /* [IN] Controller ID */
-uint_8_ptr *data,                   /* [OUT] Pointer to Data */
-USB_PACKET_SIZE *size               /* [OUT] Pointer to Size of Data */
-)
-{
-    UNUSED(controller_ID);
-
-    *size=26;
-    *data=g_len_video_probe;
-
-    return USB_OK;
-}
-
-uint_8 g_info_video_probe[1] = {0x03};
-/**************************************************************************//*!
-*
-* @name  USB_Desc_Get_Info_Video_Probe
-*
-* @brief The function gets the information probe value
-*
-* @param controller_ID : Controller ID
-* @param data          : Pointer to Data
-* @param size          : Pointer to Size of Data
-*
-* @return USB_OK                              When Successfull
-*         USBERR_INVALID_REQ_TYPE             when Error
-*****************************************************************************
-* Return information probe value to the Host
-*****************************************************************************/
-uint_8 USB_Desc_Get_Info_Video_Probe(
-uint_8 controller_ID,               /* [IN] Controller ID */
-uint_8_ptr *data,                   /* [OUT] Pointer to Data */
-USB_PACKET_SIZE *size               /* [OUT] Pointer to Size of Data */
-)
-{
-    UNUSED(controller_ID);
-
-    *size=1;
-    *data=g_info_video_probe;
-
-    return USB_OK;
-}
-
-uint_8 g_cur_video_commit[26] = {0x00,0x00,0x01,0x01,0x15,0x16,
-    0x05,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
-    0x00,0x00,0x00,0x58,0x02,0x00,0x5C,0x02,0x00,0x00
-};
-/**************************************************************************//*!
-*
-* @name  USB_Desc_Set_Cur_Video_Commit
-*
-* @brief The function sets current commit value
-*
-* @param controller_ID : Controller ID
-* @param data          : Pointer to data
-* @param size          : Pointer to Size of Data
-*
-* @return USB_OK                              When Successfull
-*         USBERR_INVALID_REQ_TYPE             when Error
-*****************************************************************************
-*Set current commit value specified by the Host
-*****************************************************************************/
-uint_8 USB_Desc_Set_Cur_Video_Commit(
-uint_8 controller_ID,               /* [IN] Controller ID */
-uint_8_ptr *data,                   /* [OUT] Pointer to Data */
-USB_PACKET_SIZE *size               /* [OUT] Pointer to Size of Data */
-)
-{
-    uint_8 i;
-
-    UNUSED(controller_ID);
-    UNUSED(size);
-
-    for(i=0;i<26;i++)
-    {
-        g_cur_video_commit[i]=*(*data+i);
-    }
-
-    return USB_OK;
-}
-/**************************************************************************//*!
-*
-* @name  USB_Desc_Get_Cur_Video_Commit
-*
-* @brief The function gets the current commit value
-*
-* @param controller_ID : Controller ID
-* @param data          : Pointer to Data
-* @param size          : Pointer to Size of Data
-*
-* @return USB_OK                              When Successfull
-*         USBERR_INVALID_REQ_TYPE             when Error
-*****************************************************************************
-* Return current commit value to the Host
-*****************************************************************************/
-uint_8 USB_Desc_Get_Cur_Video_Commit(
-uint_8 controller_ID,               /* [IN] Controller ID */
-uint_8_ptr *data,                   /* [OUT] Pointer to Data */
-USB_PACKET_SIZE *size               /* [OUT] Pointer to Size of Data */
-)
-{
-    UNUSED(controller_ID);
-
-    *size=26;
-    *data=g_cur_video_commit;
-
-    return USB_OK;
-}
-
-uint_8 g_len_video_commit[26] = {0x1a,0x00,0x01,0x01,0x15,0x16,
-    0x05,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
-    0x00,0x00,0x00,0x58,0x02,0x00,0x5C,0x02,0x00,0x00
-};
-/**************************************************************************//*!
-*
-* @name  USB_Desc_Get_Len_Video_Commit
-*
-* @brief The function gets the length Commit value
-*
-* @param controller_ID : Controller ID
-* @param data          : Pointer to Data
-* @param size          : Pointer to Size of Data
-*
-* @return USB_OK                              When Successfull
-*         USBERR_INVALID_REQ_TYPE             when Error
-*****************************************************************************
-* Return length commit value to the Host
-*****************************************************************************/
-uint_8 USB_Desc_Get_Len_Video_Commit(
-uint_8 controller_ID,               /* [IN] Controller ID */
-uint_8_ptr *data,                   /* [OUT] Pointer to Data */
-USB_PACKET_SIZE *size               /* [OUT] Pointer to Size of Data */
-)
-{
-    UNUSED(controller_ID);
-
-    *size=26;
-    *data=g_len_video_commit;
-
-    return USB_OK;
-}
-
-uint_8 g_info_video_commit[1] = {0x03};
-/**************************************************************************//*!
-*
-* @name  USB_Desc_Get_Info_Video_Commit
-*
-* @brief The function gets the information commit value
-*
-* @param controller_ID : Controller ID
-* @param data          : Pointer to Data
-* @param size          : Pointer to Size of Data
-*
-* @return USB_OK                              When Successfull
-*         USBERR_INVALID_REQ_TYPE             when Error
-*****************************************************************************
-* Return information commit value to the Host
-*****************************************************************************/
-uint_8 USB_Desc_Get_Info_Video_Commit(
-uint_8 controller_ID,               /* [IN] Controller ID */
-uint_8_ptr *data,                   /* [OUT] Pointer to Data */
-USB_PACKET_SIZE *size               /* [OUT] Pointer to Size of Data */
-)
-{
-    UNUSED(controller_ID);
-
-    *size=1;
-    *data=g_info_video_commit;
-
-    return USB_OK;
-}
 /*************************************************************************
 ********************     AUDIO         **********************************
 **************************************************************************/
@@ -3739,70 +3450,91 @@ USB_PACKET_SIZE *size               /* [OUT] Pointer to Size of Data */
     return USBERR_INVALID_REQ_TYPE;
 }
 
+
+
+
+#if AUDIO_CLASS_2_0
+uint_8 g_range_sampling_frequency[14] = {
+	0x01, 0x00,
+	0x80,0x3e,0x00,0x00,
+	0x80,0x3e,0x00,0x00,
+	0x00,0x00,0x01,0x00
+};
+uint_8 g_cur_sampling_frequency[4] = {0x80,0x3e,0x00,0x00};
+uint_8 g_min_sampling_frequency[4] = {0x80,0x3e,0x00,0x00};
+uint_8 g_max_sampling_frequency[4] = {0x80,0x3e,0x00,0x00};
+uint_8 g_res_sampling_frequency[4] = {0x00,0x00,0x01,0x00};
+#else
 uint_8 g_cur_sampling_frequency[3] = {0x00,0x00,0x01};
 uint_8 g_min_sampling_frequency[3] = {0x00,0x00,0x00};
 uint_8 g_max_sampling_frequency[3] = {0x7F,0xFF,0xFF};
 uint_8 g_res_sampling_frequency[3] = {0x00,0x01,0x00};
+#endif /* AUDIO_CLASS_2_0 */
 
 /**************************************************************************//*!
-*
-* @name  USB_Desc_Set_Cur_Sampling_Frequency
-*
-* @brief  The function sets Current Sampling Frequency value
-*
-* @param controller_ID   : Controller ID
-* @param interface       : Interface
-* @param data            : Pointer to Data to be send
-* @param size            : Pointer to Size of Data
-*
-* @return :
-*      USB_OK                  : When Successfull
-*      USBERR_INVALID_REQ_TYPE : When  request for invalid
-*                                Interface is presented
-******************************************************************************
-* Sets Current Sampling Frequency value specified by the Host
-*****************************************************************************/
+ *
+ * @name  USB_Desc_Set_Cur_Sampling_Frequency
+ *
+ * @brief  The function sets Current Sampling Frequency value
+ *
+ * @param controller_ID   : Controller ID
+ * @param interface       : Interface
+ * @param data            : Pointer to Data to be send
+ * @param size            : Pointer to Size of Data
+ *
+ * @return :
+ *      USB_OK                  : When Successfull
+ *      USBERR_INVALID_REQ_TYPE : When  request for invalid
+ *                                Interface is presented
+ ******************************************************************************
+ * Sets Current Sampling Frequency value specified by the Host
+ *****************************************************************************/
 uint_8 USB_Desc_Set_Cur_Sampling_Frequency(
-uint_8 controller_ID,               /* [IN] Controller ID */
-uint_8 interface,                   /* [IN] Interface */
-uint_8_ptr *data,                   /* [IN] Pointer to Data */
-USB_PACKET_SIZE *size               /* [IN] Pointer to Size of Data */
-)
+    uint_8 controller_ID,               /* [IN] Controller ID */
+    uint_8 interface,                   /* [IN] Interface */
+    uint_8_ptr *data,                   /* [IN] Pointer to Data */
+    USB_PACKET_SIZE *size               /* [IN] Pointer to Size of Data */
+) 
 {
     UNUSED (controller_ID);
     UNUSED (size);
     UNUSED (interface);
+
     /* set current sampling fequency data*/
     g_cur_sampling_frequency[0] = **data;
     g_cur_sampling_frequency[1] = *(*data+1);
     g_cur_sampling_frequency[2] = *(*data+2);
+#if AUDIO_CLASS_2_0
+    g_cur_sampling_frequency[3] = *(*data+3);
+#endif /* AUDIO_CLASS_2_0 */
+
     return USB_OK;
 }
 
 /**************************************************************************//*!
-*
-* @name  USB_Desc_Set_Min_Sampling_Frequency
-*
-* @brief  The function sets Minimum Sampling Frequency value
-*
-* @param controller_ID   : Controller ID
-* @param interface       : Interface
-* @param data            : Pointer to Data to be send
-* @param size            : Pointer to Size of Data
-*
-* @return :
-*      USB_OK                  : When Successfull
-*      USBERR_INVALID_REQ_TYPE : When  request for invalid
-*                                Interface is presented
-******************************************************************************
-* Sets Minimum Sampling Frequency value specified by the Host
-*****************************************************************************/
+ *
+ * @name  USB_Desc_Set_Min_Sampling_Frequency
+ *
+ * @brief  The function sets Minimum Sampling Frequency value
+ *
+ * @param controller_ID   : Controller ID
+ * @param interface       : Interface
+ * @param data            : Pointer to Data to be send
+ * @param size            : Pointer to Size of Data
+ *
+ * @return :
+ *      USB_OK                  : When Successfull
+ *      USBERR_INVALID_REQ_TYPE : When  request for invalid
+ *                                Interface is presented
+ ******************************************************************************
+ * Sets Minimum Sampling Frequency value specified by the Host
+ *****************************************************************************/
 uint_8 USB_Desc_Set_Min_Sampling_Frequency(
-uint_8 controller_ID,               /* [IN] Controller ID */
-uint_8 interface,                   /* [IN] Interface */
-uint_8_ptr *data,                   /* [IN] Pointer to Data */
-USB_PACKET_SIZE *size               /* [IN] Pointer to Size of Data */
-)
+    uint_8 controller_ID,               /* [IN] Controller ID */
+    uint_8 interface,                   /* [IN] Interface */
+    uint_8_ptr *data,                   /* [IN] Pointer to Data */
+    USB_PACKET_SIZE *size               /* [IN] Pointer to Size of Data */
+) 
 {
     UNUSED (controller_ID);
     UNUSED (size);
@@ -3811,33 +3543,37 @@ USB_PACKET_SIZE *size               /* [IN] Pointer to Size of Data */
     g_min_sampling_frequency[0] = **data;
     g_min_sampling_frequency[1] = *(*data+1);
     g_min_sampling_frequency[2] = *(*data+2);
+#if AUDIO_CLASS_2_0
+    g_min_sampling_frequency[3] = *(*data+3);
+#endif /* AUDIO_CLASS_2_0 */
+
     return USB_OK;
 }
 
 /**************************************************************************//*!
-*
-* @name  USB_Desc_Set_Max_Sampling_Frequency
-*
-* @brief  The function sets Maximum Sampling Frequency value
-*
-* @param controller_ID   : Controller ID
-* @param interface       : Interface
-* @param data            : Pointer to Data to be send
-* @param size            : Pointer to Size of Data
-*
-* @return :
-*      USB_OK                  : When Successfull
-*      USBERR_INVALID_REQ_TYPE : When  request for invalid
-*                                Interface is presented
-******************************************************************************
-* Sets Maximum Sampling Frequency value specified by the Host
-*****************************************************************************/
+ *
+ * @name  USB_Desc_Set_Max_Sampling_Frequency
+ *
+ * @brief  The function sets Maximum Sampling Frequency value
+ *
+ * @param controller_ID   : Controller ID
+ * @param interface       : Interface
+ * @param data            : Pointer to Data to be send
+ * @param size            : Pointer to Size of Data
+ *
+ * @return :
+ *      USB_OK                  : When Successfull
+ *      USBERR_INVALID_REQ_TYPE : When  request for invalid
+ *                                Interface is presented
+ ******************************************************************************
+ * Sets Maximum Sampling Frequency value specified by the Host
+ *****************************************************************************/
 uint_8 USB_Desc_Set_Max_Sampling_Frequency(
-uint_8 controller_ID,               /* [IN] Controller ID */
-uint_8 interface,                   /* [IN] Interface */
-uint_8_ptr *data,                   /* [IN] Pointer to Data */
-USB_PACKET_SIZE *size               /* [IN] Pointer to Size of Data */
-)
+    uint_8 controller_ID,               /* [IN] Controller ID */
+    uint_8 interface,                   /* [IN] Interface */
+    uint_8_ptr *data,                   /* [IN] Pointer to Data */
+    USB_PACKET_SIZE *size               /* [IN] Pointer to Size of Data */
+) 
 {
     UNUSED (controller_ID);
     UNUSED (size);
@@ -3846,33 +3582,37 @@ USB_PACKET_SIZE *size               /* [IN] Pointer to Size of Data */
     g_max_sampling_frequency[0] = **data;
     g_max_sampling_frequency[1] = *(*data+1);
     g_max_sampling_frequency[2] = *(*data+2);
+#if AUDIO_CLASS_2_0
+    g_max_sampling_frequency[3] = *(*data+3);
+#endif /* AUDIO_CLASS_2_0 */
+
     return USB_OK;
 }
 
 /**************************************************************************//*!
-*
-* @name  USB_Desc_Set_Res_Sampling_Frequency
-*
-* @brief  The function sets Resolution Sampling Frequency value
-*
-* @param controller_ID   : Controller ID
-* @param interface       : Interface
-* @param data            : Pointer to Data to be send
-* @param size            : Pointer to Size of Data
-*
-* @return :
-*      USB_OK                  : When Successfull
-*      USBERR_INVALID_REQ_TYPE : When  request for invalid
-*                                Interface is presented
-******************************************************************************
-* Sets Resolution Sampling Frequency value specified by the Host
-*****************************************************************************/
+ *
+ * @name  USB_Desc_Set_Res_Sampling_Frequency
+ *
+ * @brief  The function sets Resolution Sampling Frequency value
+ *
+ * @param controller_ID   : Controller ID
+ * @param interface       : Interface
+ * @param data            : Pointer to Data to be send
+ * @param size            : Pointer to Size of Data
+ *
+ * @return :
+ *      USB_OK                  : When Successfull
+ *      USBERR_INVALID_REQ_TYPE : When  request for invalid
+ *                                Interface is presented
+ ******************************************************************************
+ * Sets Resolution Sampling Frequency value specified by the Host
+ *****************************************************************************/
 uint_8 USB_Desc_Set_Res_Sampling_Frequency(
-uint_8 controller_ID,               /* [IN] Controller ID */
-uint_8 interface,                   /* [IN] Interface */
-uint_8_ptr *data,                   /* [IN] Pointer to Data */
-USB_PACKET_SIZE *size               /* [IN] Pointer to Size of Data */
-)
+    uint_8 controller_ID,               /* [IN] Controller ID */
+    uint_8 interface,                   /* [IN] Interface */
+    uint_8_ptr *data,                   /* [IN] Pointer to Data */
+    USB_PACKET_SIZE *size               /* [IN] Pointer to Size of Data */
+) 
 {
     UNUSED (controller_ID);
     UNUSED (size);
@@ -3881,140 +3621,200 @@ USB_PACKET_SIZE *size               /* [IN] Pointer to Size of Data */
     g_res_sampling_frequency[0] = **data;
     g_res_sampling_frequency[1] = *(*data+1);
     g_res_sampling_frequency[2] = *(*data+2);
+#if AUDIO_CLASS_2_0
+    g_cur_sampling_frequency[3] = *(*data+3);
+#endif /* AUDIO_CLASS_2_0 */
+
     return USB_OK;
 }
 
 /**************************************************************************//*!
-*
-* @name  USB_Desc_Get_Cur_Sampling_Frequency
-*
-* @brief  The function gets Current Sampling Frequency value
-*
-* @param controller_ID   : Controller ID
-* @param interface       : Interface
-* @param data            : Pointer to Data to be send
-* @param size            : Pointer to Size of Data
-*
-* @return :
-*      USB_OK                  : When Successfull
-*      USBERR_INVALID_REQ_TYPE : When  request for invalid
-*                                Interface is presented
-******************************************************************************
-* Returns Current Sampling Frequency value to the Host
-*****************************************************************************/
+ *
+ * @name  USB_Desc_Get_Cur_Sampling_Frequency
+ *
+ * @brief  The function gets Current Sampling Frequency value
+ *
+ * @param controller_ID   : Controller ID
+ * @param interface       : Interface
+ * @param data            : Pointer to Data to be send
+ * @param size            : Pointer to Size of Data
+ *
+ * @return :
+ *      USB_OK                  : When Successfull
+ *      USBERR_INVALID_REQ_TYPE : When  request for invalid
+ *                                Interface is presented
+ ******************************************************************************
+ * Returns Current Sampling Frequency value to the Host
+ *****************************************************************************/
 uint_8 USB_Desc_Get_Cur_Sampling_Frequency(
-uint_8 controller_ID,               /* [IN] Controller ID */
-uint_8 interface,                   /* [IN] Interface */
-uint_8_ptr *data,                   /* [OUT] Pointer to Data */
-USB_PACKET_SIZE *size               /* [OUT] Pointer to Size of Data */
-)
+    uint_8 controller_ID,               /* [IN] Controller ID */
+    uint_8 interface,                   /* [IN] Interface */
+    uint_8_ptr *data,                   /* [OUT] Pointer to Data */
+    USB_PACKET_SIZE *size               /* [OUT] Pointer to Size of Data */
+) 
 {
     UNUSED (controller_ID);
     UNUSED (interface);
     /* get current sampling frequency data*/
+#if AUDIO_CLASS_2_0
+    *size=4;
+#else
     *size=3;
+#endif /* AUDIO_CLASS_2_0 */
     *data=g_cur_sampling_frequency;
     return USB_OK;
 }
 
+uint_8 USB_Desc_Get_Range_Sampling_Frequency(
+    uint_8 controller_ID,               /* [IN] Controller ID */
+    uint_8 interface,                   /* [IN] Interface */
+    uint_8_ptr *data,                   /* [OUT] Pointer to Data */
+    USB_PACKET_SIZE *size               /* [OUT] Pointer to Size of Data */
+) 
+{
+    UNUSED (controller_ID);
+    UNUSED (interface);
+    /* get current sampling frequency data*/
+#if AUDIO_CLASS_2_0
+    *size=sizeof(g_range_sampling_frequency);
+#else
+    *size=3;
+#endif /* AUDIO_CLASS_2_0 */
+    *data=g_range_sampling_frequency;
+    return USB_OK;
+}
+
 /**************************************************************************//*!
-*
-* @name  USB_Desc_Get_Min_Sampling_Frequency
-*
-* @brief  The function gets Minimum Sampling Frequency value
-*
-* @param controller_ID   : Controller ID
-* @param interface       : Interface
-* @param data            : Pointer to Data to be send
-* @param size            : Pointer to Size of Data
-*
-* @return :
-*      USB_OK                  : When Successfull
-*      USBERR_INVALID_REQ_TYPE : When  request for invalid
-*                                Interface is presented
-******************************************************************************
-* Returns Minimum Sampling Frequency value to the Host
-*****************************************************************************/
+ *
+ * @name  USB_Desc_Get_Min_Sampling_Frequency
+ *
+ * @brief  The function gets Minimum Sampling Frequency value
+ *
+ * @param controller_ID   : Controller ID
+ * @param interface       : Interface
+ * @param data            : Pointer to Data to be send
+ * @param size            : Pointer to Size of Data
+ *
+ * @return :
+ *      USB_OK                  : When Successfull
+ *      USBERR_INVALID_REQ_TYPE : When  request for invalid
+ *                                Interface is presented
+ ******************************************************************************
+ * Returns Minimum Sampling Frequency value to the Host
+ *****************************************************************************/
 uint_8 USB_Desc_Get_Min_Sampling_Frequency(
-uint_8 controller_ID,               /* [IN] Controller ID */
-uint_8 interface,                   /* [IN] Interface */
-uint_8_ptr *data,                   /* [OUT] Pointer to Data */
-USB_PACKET_SIZE *size               /* [OUT] Pointer to Size of Data */
-)
+    uint_8 controller_ID,               /* [IN] Controller ID */
+    uint_8 interface,                   /* [IN] Interface */
+    uint_8_ptr *data,                   /* [OUT] Pointer to Data */
+    USB_PACKET_SIZE *size               /* [OUT] Pointer to Size of Data */
+) 
 {
     UNUSED (controller_ID);
     UNUSED (interface);
     /* get min sampling frequency data*/
+#if AUDIO_CLASS_2_0
+    *size=4;
+#else
     *size=3;
+#endif /* AUDIO_CLASS_2_0 */
     *data=g_min_sampling_frequency;
     return USB_OK;
 }
 
 /**************************************************************************//*!
-*
-* @name  USB_Desc_Get_Max_Sampling_Frequency
-*
-* @brief  The function gets Maximum Sampling Frequency value
-*
-* @param controller_ID   : Controller ID
-* @param interface       : Interface
-* @param data            : Pointer to Data to be send
-* @param size            : Pointer to Size of Data
-*
-* @return :
-*      USB_OK                  : When Successfull
-*      USBERR_INVALID_REQ_TYPE : When  request for invalid
-*                                Interface is presented
-******************************************************************************
-* Returns Maximum Sampling Frequency value to the Host
-*****************************************************************************/
+ *
+ * @name  USB_Desc_Get_Max_Sampling_Frequency
+ *
+ * @brief  The function gets Maximum Sampling Frequency value
+ *
+ * @param controller_ID   : Controller ID
+ * @param interface       : Interface
+ * @param data            : Pointer to Data to be send
+ * @param size            : Pointer to Size of Data
+ *
+ * @return :
+ *      USB_OK                  : When Successfull
+ *      USBERR_INVALID_REQ_TYPE : When  request for invalid
+ *                                Interface is presented
+ ******************************************************************************
+ * Returns Maximum Sampling Frequency value to the Host
+ *****************************************************************************/
 uint_8 USB_Desc_Get_Max_Sampling_Frequency(
-uint_8 controller_ID,               /* [IN] Controller ID */
-uint_8 interface,                   /* [IN] Interface */
-uint_8_ptr *data,                   /* [OUT] Pointer to Data */
-USB_PACKET_SIZE *size               /* [OUT] Pointer to Size of Data */
-)
+    uint_8 controller_ID,               /* [IN] Controller ID */
+    uint_8 interface,                   /* [IN] Interface */
+    uint_8_ptr *data,                   /* [OUT] Pointer to Data */
+    USB_PACKET_SIZE *size               /* [OUT] Pointer to Size of Data */
+) 
 {
     UNUSED (controller_ID);
     UNUSED (interface);
     /* get max sampling frequency data*/
+#if AUDIO_CLASS_2_0
+    *size=4;
+#else
     *size=3;
+#endif /* AUDIO_CLASS_2_0 */
     *data=g_max_sampling_frequency;
     return USB_OK;
 }
 
 /**************************************************************************//*!
-*
-* @name  USB_Desc_Get_Res_Sampling_Frequency
-*
-* @brief  The function gets Resolution Sampling Frequency value
-*
-* @param controller_ID   : Controller ID
-* @param interface       : Interface
-* @param data            : Pointer to Data to be send
-* @param size            : Pointer to Size of Data
-*
-* @return :
-*      USB_OK                  : When Successfull
-*      USBERR_INVALID_REQ_TYPE : When  request for invalid
-*                                Interface is presented
-******************************************************************************
-* Returns Resolution Sampling Frequency value to the Host
-*****************************************************************************/
+ *
+ * @name  USB_Desc_Get_Res_Sampling_Frequency
+ *
+ * @brief  The function gets Resolution Sampling Frequency value
+ *
+ * @param controller_ID   : Controller ID
+ * @param interface       : Interface
+ * @param data            : Pointer to Data to be send
+ * @param size            : Pointer to Size of Data
+ *
+ * @return :
+ *      USB_OK                  : When Successfull
+ *      USBERR_INVALID_REQ_TYPE : When  request for invalid
+ *                                Interface is presented
+ ******************************************************************************
+ * Returns Resolution Sampling Frequency value to the Host
+ *****************************************************************************/
 uint_8 USB_Desc_Get_Res_Sampling_Frequency(
-uint_8 controller_ID,               /* [IN] Controller ID */
-uint_8 interface,                   /* [IN] Interface */
-uint_8_ptr *data,                   /* [OUT] Pointer to Data */
-USB_PACKET_SIZE *size               /* [OUT] Pointer to Size of Data */
-)
+    uint_8 controller_ID,               /* [IN] Controller ID */
+    uint_8 interface,                   /* [IN] Interface */
+    uint_8_ptr *data,                   /* [OUT] Pointer to Data */
+    USB_PACKET_SIZE *size               /* [OUT] Pointer to Size of Data */
+) 
 {
     UNUSED (controller_ID);
     UNUSED (interface);
     /* get resolution sampling frequency data*/
+#if AUDIO_CLASS_2_0
+    *size=4;
+#else
     *size=3;
+#endif /* AUDIO_CLASS_2_0 */
     *data=g_res_sampling_frequency;
     return USB_OK;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 uint_8 g_cur_pitch = 0x01;
 
@@ -4160,6 +3960,46 @@ USB_PACKET_SIZE *size               /* [IN] Pointer to Size of Data */
     *data = &status_endpoint_data[offset];
     return USB_OK;
 }
+
+
+#if AUDIO_CLASS_2_0
+/**************************************************************************//*!
+ *
+ * @name  USB_Desc_Get_Cur_Clock_Validity
+ *
+ * @brief  The function gets Current Sampling Frequency value
+ *
+ * @param controller_ID   : Controller ID
+ * @param interface       : Interface
+ * @param data            : Pointer to Data to be send
+ * @param size            : Pointer to Size of Data
+ *
+ * @return :
+ *      USB_OK                  : When Successfull
+ *      USBERR_INVALID_REQ_TYPE : When  request for invalid
+ *                                Interface is presented
+ ******************************************************************************
+ * Returns Current Clock state to the Host
+ *****************************************************************************/
+uint_8 USB_Desc_Get_Cur_Clock_Validity(
+    uint_8 controller_ID,               /* [IN] Controller ID */
+    uint_8 interface,                   /* [IN] Interface */
+    uint_8_ptr *data,                   /* [OUT] Pointer to Data */
+    USB_PACKET_SIZE *size               /* [OUT] Pointer to Size of Data */
+)
+{
+    static uint_8 val = TRUE;
+
+    UNUSED (controller_ID);
+    UNUSED (interface);
+
+    *size = 1;
+    *data = &val;
+    return USB_OK;
+}
+#endif /* AUDIO_CLASS_2_0 */
+
+
 
 /**************************************************************************//*!
 *

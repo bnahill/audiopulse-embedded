@@ -46,7 +46,7 @@ extern "C" {
 /* Various descriptor sizes */
 #define DEVICE_DESCRIPTOR_SIZE            (18)
 //#define CONFIG_DESC_SIZE                  (34)
-#define CONFIG_DESC_SIZE                  (136)
+#define CONFIG_DESC_SIZE                  (164)
 //-8)
 #define DEVICE_QUALIFIER_DESCRIPTOR_SIZE  (10)
 #define REPORT_DESC_SIZE                  (38)
@@ -98,10 +98,26 @@ extern "C" {
 
 #define AUDIO_INTERFACE_DESCRIPTOR_TYPE   (0x24)
 
-#define AUDIO_CONTROL_HEADER              (0x01)
-#define AUDIO_CONTROL_INPUT_TERMINAL      (0x02)
+
+#define AUDIO_CONTROL_HEADER                        (0x01)
+#define AUDIO_CONTROL_INPUT_TERMINAL                (0x02)
+#define AUDIO_CONTROL_OUTPUT_TERMINAL               (0x03)
+#define AUDIO_CONTROL_MIXER_UNIT                    (0x04)
+#define AUDIO_CONTROL_SELECTOR_UNIT                 (0x05)
+#define AUDIO_CONTROL_FEATURE_UNIT                  (0x06)
+#define AUDIO_CONTROL_EFFECT_UNIT                   (0x07)
+#define AUDIO_CONTROL_PROCESSING_UNIT               (0x08)
+#define AUDIO_CONTROL_EXTENSION_UNIT                (0x09)
+#define AUDIO_CONTROL_CLOCK_SOURCE                  (0x0A)
+#define AUDIO_CONTROL_CLOCK_SELECTOR                (0x0B)
+#define AUDIO_CONTROL_CLOCK_MULTIPLIER              (0x0C)
+#define AUDIO_CONTROL_SAMPLE_RATE_CONVERTER         (0x0D)
+
+#define AUDIO_CONTROL_CLOCK_SOURCE_ID     (0x10)
+#define AUDIO_CONTROL_INPUT_TERMINAL_ID   (0x20)
+#define AUDIO_CONTROL_FEATURE_UNIT_ID     (0x30)
+
 #define AUDIO_CONTROL_OUTPUT_TERMINAL     (0x03)
-#define AUDIO_CONTROL_FEATURE_UNIT        (0x06)
 #define AUDIO_STREAMING_GENERAL           (0x01)
 #define AUDIO_STREAMING_FORMAT_TYPE       (0x02)
 #define AUDIO_FORMAT_TYPE_I               (0x01)
@@ -120,7 +136,7 @@ extern "C" {
 
 #define AUDIO_DESC_ENDPOINT_COUNT       (1)
 #define AUDIO_UNIT_COUNT                (3)
-#define AUDIO_ENDPOINT_PACKET_SIZE      (128)
+#define AUDIO_ENDPOINT_PACKET_SIZE      (256)
 
 #define SPEAKER_CTRL_INTF               (2)
 
@@ -621,6 +637,12 @@ uint_8 interface,
 uint_8_ptr *data,
 USB_PACKET_SIZE *size
 );
+extern uint_8 USB_Desc_Get_Range_Sampling_Frequency(
+uint_8 controller_ID,
+uint_8 interface,
+uint_8_ptr *data,
+USB_PACKET_SIZE *size
+);
 extern uint_8 USB_Desc_Get_Min_Sampling_Frequency(
 uint_8 controller_ID,
 uint_8 interface,
@@ -664,6 +686,12 @@ uint_16 offset,
 uint_8 interface,
 uint_8_ptr *data,
 USB_PACKET_SIZE *size
+);
+extern uint_8 USB_Desc_Get_Cur_Clock_Validity(
+    uint_8 controller_ID,               /* [IN] Controller ID */
+    uint_8 interface,                   /* [IN] Interface */
+    uint_8_ptr *data,                   /* [OUT] Pointer to Data */
+    USB_PACKET_SIZE *size               /* [OUT] Pointer to Size of Data */
 );
 
 #ifdef __cplusplus

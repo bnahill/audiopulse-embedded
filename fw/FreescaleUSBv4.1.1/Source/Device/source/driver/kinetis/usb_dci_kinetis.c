@@ -1496,6 +1496,7 @@ void USB_Bus_Token_Cpl_Handler (
 
     bdt_elem = &g_bdt_elem[TRANSFER_INDEX(bdt_index)];
 
+	
     /* Get address from BDT */
     event->buffer_ptr = (uint_8_ptr)SWAP32(buffer_dsc->addr);
 

@@ -79,7 +79,7 @@ static SPI_slave volatile	test_slave = SPI_slave(
     0
 );
 //#undef AUDIO_ENDPOINT_SIZE
-//#define AUDIO_ENDPOINT_SIZE 512
+//#define AUDIO_ENDPOINT_SIZE 64
 static __attribute__((aligned(512))) uint32_t audio_test[AUDIO_ENDPOINT_SIZE/4];
 static uint32_t audio_ones[AUDIO_ENDPOINT_SIZE/4];
 static uint32_t audio_zeros[AUDIO_ENDPOINT_SIZE/4];
@@ -128,15 +128,17 @@ void main(){
 		//WaveGen::pt_wavegen(&pt_wavegen);
 		//APulseController::pt_controller(&pt_controller);
 		if(USB::audioReady() and USB::audioEmpty()){
-			for(int j = 0; j < AUDIO_ENDPOINT_SIZE/4; j++){
-				audio_test[j] = (i+j) * 1000000;
+			for(int k = 0; k < 2; k++){
+				for(int j = 0; j < AUDIO_ENDPOINT_SIZE/4; j++){
+					audio_test[j] = (i+j) * 1000000;
+				}
+				USB::audioSend((uint8_t*)audio_test, AUDIO_ENDPOINT_SIZE);
+				i += AUDIO_ENDPOINT_SIZE/4;
+				//if(i++ & 1)
+				//	USB::audioSend((uint8_t*)audio_zeros, AUDIO_ENDPOINT_SIZE);
+				//else
+				//	USB::audioSend((uint8_t*)audio_ones, AUDIO_ENDPOINT_SIZE);
 			}
-			USB::audioSend((uint8_t*)audio_test, AUDIO_ENDPOINT_SIZE);
-			i += AUDIO_ENDPOINT_SIZE/4;
-			//if(i++ & 1)
-			//	USB::audioSend((uint8_t*)audio_zeros, AUDIO_ENDPOINT_SIZE);
-			//else
-			//	USB::audioSend((uint8_t*)audio_ones, AUDIO_ENDPOINT_SIZE);
 		}
 	}
 }
