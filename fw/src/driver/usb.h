@@ -126,6 +126,32 @@ private:
 			}
 		}
 		
+		bool push(int32_t const * data, uint32_t nsamples){
+			queue_elem_t &store = mem[wr_ptr];
+			int32_t * iter = (int32_t*)store.data;
+			if(nsamples > audioMaxSamples)
+				return false;
+			if(isFull())
+				return false;
+			if(AUDIO_ENDPOINT_SAMPLE_SIZE == 4){
+				arm_copy_q31((int32_t*)data, store.data, nsamples);
+			} else {
+				for(auto i = 0; i < nsamples; i++){
+					if(AUDIO_ENDPOINT_SAMPLE_SIZE == 3){
+						*iter = (*data >> 8) & 0x00FFFFFF;
+					} else {
+						return false;
+					}
+					iter += 1;
+					data += 1;
+				}
+			}
+			wr_ptr = (wr_ptr == num_elem - 1) ? 0 : (wr_ptr + 1);
+			count += 1;
+			store.len = nsamples * AUDIO_ENDPOINT_SAMPLE_SIZE;
+			return true;
+		}
+		
 		bool push(float const * data, uint32_t nsamples){
 			queue_elem_t &store = mem[wr_ptr];
 			uint8_t * iter = store.data;

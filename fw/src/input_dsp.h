@@ -153,11 +153,6 @@ protected:
 		//! The size of the buffer containing decimated samples
 		//! This is big enough to perform a transform while writing new decimated data
 		static constexpr uint32_t decimated_frame_buffer_size = 3 * transform_len / 2;
-		
-		size_t getSamples(){
-			
-		}
-		
 	
 		void InputDSP::decimate(sampleFractional const * src,
 		                        sampleFractional * dst,
