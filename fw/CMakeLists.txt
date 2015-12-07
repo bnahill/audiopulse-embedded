@@ -231,6 +231,7 @@ set(APP_SOURCES
 	src/main.cpp
 	src/controller.cpp
 	src/input_dsp.cpp
+	src/filter_constants.cpp
 	src/wavegen.cpp
 	src/driver/platform.cpp
 	src/driver/codec.cpp

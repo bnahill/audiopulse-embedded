@@ -80,7 +80,7 @@ static SPI_slave volatile	test_slave = SPI_slave(
 );
 //#undef AUDIO_ENDPOINT_SIZE
 //#define AUDIO_ENDPOINT_SIZE 64
-static __attribute__((aligned(512))) float audio_test[USB::audioMaxSamples];
+//static __attribute__((aligned(512))) float audio_test[USB::audioMaxSamples];
 /*!
  * @brief Application entry point
  */
@@ -114,7 +114,6 @@ void main(){
 // 	swo_sendchar('c');
 // 	swo_sendchar('d');
 
-	uint32_t i = 0;
     while(true){
 		InputDSP::pt_capture_decimate(&pt_capture_decimate);
 		InputDSP::pt_dsp(&pt_dsp);

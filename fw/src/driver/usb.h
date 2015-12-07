@@ -89,6 +89,11 @@ private:
 	
 	static void audioSendData(uint8_t const * buffer, uint16_t n);
 	
+	/*!
+	 * A class to represent a queue of audio sample sets to be pushed over USB
+	 * when required. Deals with sample conversion and provides buffering
+	 * for samples.
+	 */
 	class AudioQueue {
 	public:
 		AudioQueue() :
@@ -134,7 +139,7 @@ private:
 			if(isFull())
 				return false;
 			if(AUDIO_ENDPOINT_SAMPLE_SIZE == 4){
-				arm_copy_q31((int32_t*)data, store.data, nsamples);
+				arm_copy_q31((int32_t*)data, (int32_t*)store.data, nsamples);
 			} else {
 				for(auto i = 0; i < nsamples; i++){
 					if(AUDIO_ENDPOINT_SAMPLE_SIZE == 3){

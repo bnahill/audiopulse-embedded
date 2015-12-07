@@ -85,7 +85,9 @@ public:
 		pending_reset_capture = true;
 	}
 
-	static inline bool is_resetI(){return is_reset;}
+	static inline bool isResetI(){return flags.is_reset_capture and flags.is_reset_dsp;}
+	static inline bool isResetDspI(){return flags.is_reset_dsp;}
+	static inline bool isResetCaptureI(){return flags.is_reset_capture;}
 
 	static inline bool is_ready(){
 		return state == ST_READY;
@@ -121,27 +123,43 @@ protected:
 	
 	class Decimator {
 	public:
-		Decimator() :
-		{
-			Decimator::reset();
+		Decimator() {
+			reset_priv();
 		}
 		
-		void reset(){
-			if(do_filter){
-				if(use_iir) {
-					arm_biquad_cascade_df1_init_f32(&biquad_cascade, biquad_stages,
-					                                (float32_t *)biquad_coeffs, biquad_state);
-				} else {
-					auto result =
-					arm_fir_decimate_init_f32(&decimate_inst, decimate_fir_order, 3,
-					                          (float32_t*)decimate_coeffs,
-					                          (float32_t*)decimate_buffer,
-					                          decimate_block_size);
-
-					while(result != ARM_MATH_SUCCESS);
-				}
-			}
+		void reset(){do_reset = true;}
+			
+		bool is_reset(){return (do_reset == false);}
+		
+		/*!
+		 * \brief getDecimatedPtr
+		 * \param offset
+		 * \return A pointer into the decimated buffer containing numConsecutiveAvailable
+		 * samples
+		 */
+		sampleFractional * getDecimatedPtr(size_t offset=0);
+		/*!
+		 * \brief getDecimatedPtrUSB
+		 * \param offset
+		 * \return A pointer into the decimated buffer containing numConsecutiveAvailableUSB
+		 * samples
+		 */
+		sampleFractional * getDecimatedPtrUSB(size_t offset=0);
+		
+		sampleFractional * decimate(sampleFractional const * src, size_t n_in);
+		
+		uint32_t numAvailable(){return decimated_count_proc;}
+		uint32_t numConsecutiveAvailable(){
+			return ::min(decimated_count_proc, decimated_frame_buffer_size - decimated_proc_read_head);
 		}
+		uint32_t numConsecutiveAvailableUSB(){
+			return ::min(decimated_count_proc, decimated_frame_buffer_size - decimated_usb_read_head);
+		}
+		void advance(size_t n);
+		void advanceUSB(size_t n);
+		
+		uint32_t decimated_count_proc;
+		uint32_t decimated_count_usb;
 		
 		static constexpr uint32_t decimate_factor = 3;
 		//! The filter order for FIR decimation
@@ -153,35 +171,17 @@ protected:
 		//! The size of the buffer containing decimated samples
 		//! This is big enough to perform a transform while writing new decimated data
 		static constexpr uint32_t decimated_frame_buffer_size = 3 * transform_len / 2;
-	
-		void InputDSP::decimate(sampleFractional const * src,
-		                        sampleFractional * dst,
-		                        size_t n_in){
-			sampleFractional const * iter_in;
-			iter_in = src;
-			if(do_filter){
-				for(auto i = 0; i < (n_in / decimate_block_size); i++){
-					//arm_shift_q31((q31_t*)iter_in, -6, (q31_t*)iter_in, decimate_block_size);
-					if(use_iir) {
-						biquad_cascade_f32_decimate<decimate_block_size / decimate_factor, decimate_factor>(
-						    biquad_cascade, (float32_t *)iter_in, (float32_t *)dst);
-					} else {
-						arm_fir_decimate_f32(&decimate_inst, (float32_t*)iter_in,
-									(float32_t*)dst, decimate_block_size);
-					}
-					iter_in += decimate_block_size;
-					dst += decimate_block_size / decimate_factor;
-				}
-			} else {
-				for(auto i = 0; i < n_in / decimate_factor; i++){
-					*dst = *iter_in;
-
-					iter_in += decimate_factor;
-					dst += 1;
-				}
-			}
-		}
+		static constexpr size_t biquad_stages = 4;
+		
+		//! Use a low-pass filter in decimation
+		static constexpr bool do_filter = true;
+		//! Use the IIR decimation routines instead of FIR
+		static constexpr bool use_iir = false;
 	protected:
+		void reset_priv();
+		
+		bool do_reset;
+		
 		sampleFractional decimate_buffer[decimate_block_size + decimate_fir_order - 1];
 		
 		static sampleFractional const decimate_coeffs[decimate_fir_order];
@@ -195,6 +195,16 @@ protected:
 		arm_biquad_casd_df1_inst_f32 biquad_cascade;
 		float32_t biquad_state[4 * biquad_stages];
 		static coeffFractional biquad_coeffs[5 * biquad_stages];
+		
+		//! An iterator for writing to the decimation buffer
+		uint32_t decimated_write_head;
+
+		//! An iterator through the decimated buffer
+		//! Incremented every transform/averaging frame
+		uint32_t decimated_proc_read_head;
+
+		//! An iterator for dumping audio data over USB
+		uint32_t decimated_usb_read_head;
 	};
 	
 	static Decimator decimator;
@@ -204,8 +214,26 @@ protected:
 	//! The current state in the test state machine
 	static state_t state;
 
+	typedef struct {
+		sampleFractional const * samples;
+		size_t count;
+	} input_t;
+
 	//! A pointer to new samples
-	static sampleFractional const * volatile new_samples;
+	static input_t volatile input;
+	
+
+	typedef struct {
+		bool pending_reset_capture;
+		bool pending_reset_dsp;
+		bool go_capture;
+		bool go_dsp;
+		bool is_reset_capture;
+		bool is_reset_dsp;
+	} flags_t;
+
+	static flags_t volatile flags;
+	
 	//! Number of raw samples provided
 	static uint32_t volatile num_received;
 	// MUST HAVE PROTECTED ACCESS
@@ -226,24 +254,13 @@ protected:
 	//! @{
 
 	
-	
-	//! Perform the decimation
-	static void do_decimate(sampleFractional const * src,
-							sampleFractional * dst,
-							size_t n_in);
-	//! An iterator for writing to the decimation buffer
-	static uint32_t decimation_write_head;
-
-	//! An iterator through the decimated buffer
-	//! Incremented every transform/averaging frame
-	static uint32_t decimation_read_head;
 	//! Since inputs are of fixed sizes, they are placed sequentially in three
 	//! buffers. This selects between them.
-	static uint8_t buffer_sel;
+	//static uint8_t buffer_sel;
 
 	//! A buffer used internally by the decimation process
-	static sampleFractional decimate_buffer[decimate_block_size +
-											decimate_fir_order - 1];
+	//static sampleFractional decimate_buffer[decimate_block_size +
+	//                                        decimate_fir_order - 1];
 	//! @}
 
 	//! @name Windowing and FFT variables and configuration
@@ -311,14 +328,8 @@ protected:
 	
 	//! Apply calibration coefficients to input spectrum
 	static constexpr bool calibrate_mic = false;
-	
-    static constexpr bool do_filter = true;
-
-	//! Use the IIR decimation routines instead of FIR
-	static constexpr bool use_iir = false;
 	//! @}
 	
-	static constexpr size_t biquad_stages = 4;
 #if CFG_TARGET_K20
 	static constexpr size_t biquad_shift = coeffFractional::bits_i;
 #endif

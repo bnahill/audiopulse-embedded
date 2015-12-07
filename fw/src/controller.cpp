@@ -154,7 +154,7 @@ PT_THREAD(APulseController::pt_controller)(struct pt * pt){
 				InputDSP::request_resetI();
 				WaveGen::request_resetI();
 
-				PT_WAIT_UNTIL(pt, InputDSP::is_resetI());
+				PT_WAIT_UNTIL(pt, InputDSP::isResetI());
 				PT_WAIT_UNTIL(pt, WaveGen::get_state() == WaveGen::ST_RESET);
 
 				WaveGen::set_tone(0, 0, f, 0, 500, calib_tone_level);
