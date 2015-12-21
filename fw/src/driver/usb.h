@@ -74,19 +74,26 @@ public:
 
 	static void hidClassInit();
 	static void audioClassInit();
-	static void audioSend(float const * buffer, uint16_t n);
+    static bool audioSend(float const * buffer, uint16_t n);
 	static constexpr size_t audioMaxSamples = AUDIO_ENDPOINT_PACKET_SIZE / AUDIO_ENDPOINT_SAMPLE_SIZE;
 	
 	static bool audioQueueFull(){return queue.isFull();}
 	static bool audioReady(){return audio_ready;}
-	static bool audioEmpty(){return audio_empty;}
+    static bool audioReadyForData(){return audio_ready && !queue.isFull();}
+    static bool audioEmpty(){return audio_empty;}
 	static bool hidReady(){return hid_ready;}
 	
 private:
+    static uint32_t audio_packets_in_flight;
 	static bool audio_ready;
 	static bool hid_ready;
 	static bool audio_empty;
 	
+    /*!
+     * \brief Send a packet to the USB driver--no size checks performed
+     * \param buffer
+     * \param n
+     */
 	static void audioSendData(uint8_t const * buffer, uint16_t n);
 	
 	/*!
@@ -97,7 +104,8 @@ private:
 	class AudioQueue {
 	public:
 		AudioQueue() :
-			count(0), rd_ptr(0), wr_ptr(0)
+            count(0), rd_ptr(0), wr_ptr(0),
+            push_count(0), push_sample_count(0), pop_count(0)
 		{}
 		bool isFull(){
 			return count == num_elem;
@@ -111,6 +119,9 @@ private:
 		 * Look at the first element to use it
 		 */
 		uint32_t peek(uint8_t ** ptr){
+            if(isEmpty())
+                return 0;
+
 			*ptr = mem[rd_ptr].data;
 			return mem[rd_ptr].len;
 		}
@@ -120,24 +131,27 @@ private:
 		 */
 		bool pop(){
 			__disable_irq();
-			if(!isEmpty()){
-				count -= 1;
-				rd_ptr = (rd_ptr == num_elem - 1) ? 0 : (rd_ptr + 1);
-				__enable_irq();
-				return true;
+            if(isEmpty()){
+                __enable_irq();
+                return false;
 			} else {
-				__enable_irq();
-				return false;
+                count -= 1;
+                rd_ptr = (rd_ptr == num_elem - 1) ? 0 : (rd_ptr + 1);
+                pop_count += 1;
+                __enable_irq();
+                return true;
 			}
 		}
-		
+        /*
 		bool push(int32_t const * data, uint32_t nsamples){
+            __disable_irq();
 			queue_elem_t &store = mem[wr_ptr];
 			int32_t * iter = (int32_t*)store.data;
-			if(nsamples > audioMaxSamples)
+            if((nsamples > audioMaxSamples) ||
+               isFull()){
+                __enable_irq();
 				return false;
-			if(isFull())
-				return false;
+            }
 			if(AUDIO_ENDPOINT_SAMPLE_SIZE == 4){
 				arm_copy_q31((int32_t*)data, (int32_t*)store.data, nsamples);
 			} else {
@@ -154,47 +168,78 @@ private:
 			wr_ptr = (wr_ptr == num_elem - 1) ? 0 : (wr_ptr + 1);
 			count += 1;
 			store.len = nsamples * AUDIO_ENDPOINT_SAMPLE_SIZE;
+            __enable_irq();
 			return true;
 		}
+        */
 		
 		bool push(float const * data, uint32_t nsamples){
+            if((nsamples > audioMaxSamples) ||
+               isFull()){
+                while(true);
+                return false;
+            }
+
+            __disable_irq();
 			queue_elem_t &store = mem[wr_ptr];
 			uint8_t * iter = store.data;
-			int32_t sample;
 			float fsample;
-			if(nsamples > audioMaxSamples)
-				return false;
-			if(isFull())
-				return false;
-			for(auto i = 0; i < nsamples; i++){
-				if(AUDIO_ENDPOINT_SAMPLE_SIZE == 4){
-					fsample = (*data * 2147483648.0f);
-					// Round it
-					fsample += fsample > 0.0f ? 0.5f : -0.5f;
-					*((uint32_t *)iter) = clip_q63_to_q31((q63_t) (fsample));
-					iter += 4;
-				} else if(AUDIO_ENDPOINT_SAMPLE_SIZE == 3){
-					fsample = (*data * 2147483648.0f / 256.0f);
-					// Round it
-					fsample += fsample > 0.0f ? 0.5f : -0.5f;
-					sample = clip_q63_to_q31((q63_t) (fsample));
-					*((uint32_t *)iter) = sample & 0x00FFFFFF;
-					iter += 3;
-				} else {
-					return false;
-				}
-				data += 1;
-			}
+
+
+
+#if AUDIO_ENDPOINT_SAMPLE_SIZE == 4
+            for(auto i = 0; i < nsamples; i++){
+                fsample = data[i] * 2147483648.0f;
+                // Round it
+                fsample += fsample > 0.0f ? 0.5f : -0.5f;
+                *((int32_t *)iter) = clip_q63_to_q31((q63_t) (fsample));
+                iter += 4;
+            }
+#elif AUDIO_ENDPOINT_SAMPLE_SIZE == 3
+            for(auto i = 0; i < nsamples; i++){
+                fsample = data[i] * (2147483648.0f / 256.0f);
+                // Round it
+                fsample += fsample > 0.0f ? 0.5f : -0.5f;
+                sample = clip_q63_to_q31((q63_t) (fsample));
+                *((int32_t *)iter) = sample & 0x00FFFFFF;
+                iter += 3;
+            }
+#elif AUDIO_ENDPOINT_SAMPLE_SIZE == 2
+            for(auto i = 0; i < nsamples; i++){
+                fsample = data[i] * 32768.0f;
+                // Round it
+                fsample += fsample > 0.0f ? 0.5f : -0.5f;
+                *((int16_t *)iter) = clip_q31_to_q15((q31_t) (fsample));
+                iter += 2;
+            }
+#elif AUDIO_ENDPOINT_SAMPLE_SIZE == 1
+            for(auto i = 0; i < nsamples; i++){
+                fsample = data[i] * 128.0f;
+                // Round it
+                fsample += fsample > 0.0f ? 0.5f : -0.5f;
+                *(iter) = clip_q31_to_q7((q31_t) (fsample));
+                iter += 1;
+            }
+#else
+#error "Wrong"
+#endif
+            if(iter > (store.data + AUDIO_ENDPOINT_PACKET_SIZE)){
+                while(true);
+            }
+
 			wr_ptr = (wr_ptr == num_elem - 1) ? 0 : (wr_ptr + 1);
 			count += 1;
 			store.len = nsamples * AUDIO_ENDPOINT_SAMPLE_SIZE;
+            push_count += 1;
+            push_sample_count += nsamples;
+            __enable_irq();
 			return true;
 		}
 		
 		
 	protected:
-		static constexpr uint32_t num_elem = 5;
-		static constexpr uint32_t sample_size = 3;
+        static constexpr uint32_t num_elem = 256;
+
 		typedef struct {
 			uint16_t len;
 			uint8_t data[AUDIO_ENDPOINT_PACKET_SIZE];
@@ -202,9 +247,12 @@ private:
 		} queue_elem_t;
 		queue_elem_t mem[num_elem];
 		
-		uint8_t count;
-		uint8_t rd_ptr;
-		uint8_t wr_ptr;
+        uint16_t count;
+        uint16_t rd_ptr;
+        uint16_t wr_ptr;
+        uint32_t push_count;
+        uint32_t pop_count;
+        uint32_t push_sample_count;
 	};
 	
 	static AudioQueue queue;

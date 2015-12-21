@@ -98,6 +98,9 @@ void main(){
 	USB::hidClassInit();
 
     Platform::codec.init();
+    Platform::codec.start();
+
+    InputDSP::beginCapture();
 
     /*
     Platform::spi0.register_slave(flash_slave);

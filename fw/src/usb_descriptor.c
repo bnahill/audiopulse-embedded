@@ -308,6 +308,12 @@ uint_8 USB_DESC_CONST g_config_descriptor[] =
 #elif AUDIO_ENDPOINT_SAMPLE_SIZE==3
 	0x03,                            /* SubFrame Size: 3 bytes per audio subframe */
 	0x18,                            /* Bit Resolution: 24 bits per sample */
+#elif AUDIO_ENDPOINT_SAMPLE_SIZE==2
+    0x02,                            /* SubFrame Size: 2 bytes per audio subframe */
+    0x10,                            /* Bit Resolution: 16 bits per sample */
+#elif AUDIO_ENDPOINT_SAMPLE_SIZE==1
+    0x01,                            /* SubFrame Size: 1 byte per audio subframe */
+    0x08,                            /* Bit Resolution: 8 bits per sample */
 #else
 	#error "dumb sample size"
 #endif
@@ -317,7 +323,9 @@ uint_8 USB_DESC_CONST g_config_descriptor[] =
 	USB_ENDPOINT_DESCRIPTOR,         /* Descriptor type (endpoint descriptor) */
 	AUDIO_ENDPOINT|(USB_SEND << 7),  /* OUT endpoint address 1 */
 	0x05,                            /* Asynchronous endpoint */
-#if AUDIO_ENDPOINT_PACKET_SIZE==512
+#if AUDIO_ENDPOINT_PACKET_SIZE==768
+    0x00,0x03,                       /* 512 bytes */
+#elif AUDIO_ENDPOINT_PACKET_SIZE==512
     0x00,0x02,                       /* 512 bytes */
 #elif AUDIO_ENDPOINT_PACKET_SIZE==256
 	0x00,0x01,                       /* 256 bytes */

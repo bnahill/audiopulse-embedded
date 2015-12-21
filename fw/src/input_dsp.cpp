@@ -125,32 +125,40 @@ PT_THREAD(InputDSP::pt_capture_decimate(struct pt * pt)){
 		
 		while(true){
 			PT_WAIT_UNTIL(pt, flags.pending_reset_capture or input.count);
-			
-			
+				
 			if(flags.pending_reset_capture)
 				break;
 
-			num_samples += num_received;
+            auto n_going_to_decimate = input.count;
+            auto samples_going_to_decimated = input.samples;
+
+            input.count = 0;
+
+            num_samples += n_going_to_decimate;
 			old_new_samples = input.samples;
 
-			decimator.decimate(old_new_samples, num_received);
+            decimator.decimate(samples_going_to_decimated, n_going_to_decimate);
 
-			if(USB::audioReady()){
+            if(n_going_to_decimate / decimator.decimate_factor != 512)
+                while(true);
+
+            while(USB::audioReadyForData() && decimator.numConsecutiveAvailableUSB()){
 				// Take however many samples there are and send them over USB
-				auto nsamples = decimator.numConsecutiveAvailableUSB();
+                auto nsamples = decimator.numConsecutiveAvailableUSB();
+                //auto nsamples = n_going_to_decimate / decimator.decimate_factor;
 				nsamples = ::min(nsamples, USB::audioMaxSamples);
-				USB::audioSend(decimator.getDecimatedPtrUSB(), nsamples);
-				decimator.advanceUSB(nsamples);
-			}
+
+                if(USB::audioSend(decimator.getDecimatedPtrUSB(), nsamples)){
+                    decimator.advanceUSB(nsamples);
+                } else {
+                    break;
+                }
+
+            }
 			
 			// This is all if we don't need to process the samples
 			if(state != ST_CAPTURING)
-				continue;
-			
-			// Break if we are to reset
-			if(flags.pending_reset_capture)
-				break;
-		}
+				continue;		}
 	}
 	PT_END(pt);
 }
@@ -381,6 +389,7 @@ void InputDSP::do_reset(){
 
 
 	is_reset = true;
+    pending_reset_dsp = false;
 
 	state = ST_RESET;
 }
@@ -389,7 +398,7 @@ void InputDSP::put_samplesI(sample_t * samples, size_t n){
 	arm_q31_to_float(reinterpret_cast<q31_t*>(samples), reinterpret_cast<float*>(samples), n);
 	
 	input.samples = reinterpret_cast<sampleFractional *>(samples);
-	num_received = n;
+    //num_received = n;
 	//for(uint32_t i = 0; i < n; i++){
 	//	range_in.check(new_samples[i]);
 	//}
@@ -423,10 +432,15 @@ void InputDSP::Decimator::reset_priv(){
 InputDSP::sampleFractional *
 InputDSP::Decimator::decimate(sampleFractional const * src,
 	                          size_t n_in){
+
+    static float tmp_val = 0.0;
+
 	sampleFractional const * iter_in;
 	sampleFractional * dst = &decimate_buffer[decimated_write_head];
 	auto retval = dst;
 	iter_in = src;
+    uint32_t n_out = n_in / decimate_factor;
+
 	if(do_filter){
 		for(auto i = 0; i < (n_in / decimate_block_size); i++){
 			//arm_shift_q31((q31_t*)iter_in, -6, (q31_t*)iter_in, decimate_block_size);
@@ -440,15 +454,23 @@ InputDSP::Decimator::decimate(sampleFractional const * src,
 			iter_in += decimate_block_size;
 			dst += decimate_block_size / decimate_factor;
 		}
-	} else {
-		for(auto i = 0; i < n_in / decimate_factor; i++){
+    } else if (true) {
+        for(uint32_t i = 0; i < n_out; i++){
+            dst[i] = tmp_val;
+            tmp_val += (1.0 / 16000.0);
+            if(tmp_val >= 0.5){
+                tmp_val = -0.5;
+            }
+        }
+    } else {
+        for(auto i = 0; i < n_out; i++){
 			*dst = *iter_in;
 
 			iter_in += decimate_factor;
 			dst += 1;
 		}
 	}
-	uint32_t n_out = n_in / decimate_factor;
+
 	uint32_t space_left = decimated_frame_buffer_size - decimated_count_proc;
 	if(space_left < n_out){
 		// Push the read head forward if we overwrite it.
@@ -463,18 +485,18 @@ InputDSP::Decimator::decimate(sampleFractional const * src,
 
 	uint32_t space_left_usb = decimated_frame_buffer_size - decimated_count_usb;
 	if(space_left_usb < n_out){
-		// Push the read head forward if we overwrite it.
+        // Push the read head forward if we overwrite it.
 		decimated_usb_read_head += n_out - space_left_usb;
 		if(decimated_usb_read_head >= decimated_frame_buffer_size)
 			decimated_usb_read_head -= decimated_frame_buffer_size;
 		// Limit the count at the buffer size;
-		decimated_count_proc = decimated_frame_buffer_size;
+        decimated_count_usb = decimated_frame_buffer_size;
 	} else {
-		decimated_count_proc += n_out;
+        decimated_count_usb += n_out;
 	}
 
 	// Always shift the write pointer by the same amount
-	decimated_write_head += n_in / decimate_factor;
+    decimated_write_head += n_out;
 	static_assert(decimated_frame_buffer_size == 1536, "Decimation size has changed");
 	if(decimated_write_head >= decimated_frame_buffer_size)
 		decimated_write_head -= decimated_frame_buffer_size;
@@ -502,14 +524,14 @@ InputDSP::sampleFractional * InputDSP::Decimator::getDecimatedPtrUSB(size_t offs
 
 void InputDSP::Decimator::advance(size_t n){
 	decimated_proc_read_head += n;
-	if(decimated_proc_read_head == decimated_frame_buffer_size)
-		decimated_proc_read_head = 0;
+    if(decimated_proc_read_head >= decimated_frame_buffer_size)
+        decimated_proc_read_head -= decimated_frame_buffer_size;
 	decimated_count_proc -=  n;
 }
 
 void InputDSP::Decimator::advanceUSB(size_t n){
 	decimated_usb_read_head += n;
-	if(decimated_usb_read_head == decimated_frame_buffer_size)
-		decimated_usb_read_head = 0;
+    if(decimated_usb_read_head >= decimated_frame_buffer_size)
+        decimated_usb_read_head -= decimated_frame_buffer_size;
 	decimated_count_usb -=  n;
 }

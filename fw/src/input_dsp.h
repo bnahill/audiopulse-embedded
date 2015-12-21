@@ -62,6 +62,10 @@ public:
 						  sampleFractional scale_mic,
 						  sampleFractional scale_ext);
 
+    static void beginCapture(){
+        flags.go_capture = true;
+    }
+
 	/*!
 	 @brief Callback to receive new samples
 
@@ -153,7 +157,7 @@ protected:
 			return ::min(decimated_count_proc, decimated_frame_buffer_size - decimated_proc_read_head);
 		}
 		uint32_t numConsecutiveAvailableUSB(){
-			return ::min(decimated_count_proc, decimated_frame_buffer_size - decimated_usb_read_head);
+            return ::min(decimated_count_usb, decimated_frame_buffer_size - decimated_usb_read_head);
 		}
 		void advance(size_t n);
 		void advanceUSB(size_t n);
@@ -174,7 +178,7 @@ protected:
 		static constexpr size_t biquad_stages = 4;
 		
 		//! Use a low-pass filter in decimation
-		static constexpr bool do_filter = true;
+        static constexpr bool do_filter = false;
 		//! Use the IIR decimation routines instead of FIR
 		static constexpr bool use_iir = false;
 	protected:

@@ -32,10 +32,10 @@
 
 /* Below two MACROS are required for Keyboard Application to execute */
 #define LONG_SEND_TRANSACTION       /* support to send large data pkts */
-#define LONG_RECEIVE_TRANSACTION    /* support to receive large data pkts */
+//#define LONG_RECEIVE_TRANSACTION    /* support to receive large data pkts */
 
-#define USB_IN_PKT_SIZE 64			/* Define the maximum data length received from the host */
-#define USB_OUT_PKT_SIZE 64			/* Define the maximum data length received from the host */
+//#define USB_IN_PKT_SIZE 64			/* Define the maximum data length received from the host */
+#define USB_OUT_PKT_SIZE 512			/* Define the maximum data length received from the host */
 
 /* User Defined MACRO to set number of Timer Objects */
 #define MAX_TIMER_OBJECTS		    5

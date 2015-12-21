@@ -58,6 +58,7 @@ COMPOSITE_CALLBACK_STRUCT USB::usb_composite_callback ={
 bool USB::audio_ready = false;
 bool USB::audio_empty = true;
 bool USB::hid_ready   = false;
+uint32_t USB::audio_packets_in_flight = 0;
 USB::AudioQueue USB::queue;
 
 void USB::HIDcallback(uint8_t controller_ID,
@@ -109,7 +110,8 @@ void USB::AudioCallback(uint8_t controller_ID,
 		audio_ready = true;
 		break;
 	case USB_APP_SEND_COMPLETE:  // 3
-		audio_empty = true;
+        audio_packets_in_flight -= 1;
+        audio_empty = (audio_packets_in_flight == 0);
 		queue.pop();
 		len = queue.peek(&ptr);
 		if(len){
@@ -122,8 +124,10 @@ void USB::AudioCallback(uint8_t controller_ID,
 	case USB_APP_ERROR:          // 5
 		while(true);
 	case USB_APP_BUS_SUSPEND:    // 10
+        audio_ready = false;
 		break;
 	case USB_APP_BUS_RESUME:     // 12
+        audio_ready = true;
 		break;
 	default:
 		while(true);
@@ -136,19 +140,21 @@ void USB::audioSendData(uint8_t const * buffer, uint16_t n){
 	//USB_Class_Send_Data(CONTROLLER_ID, AUDIO_ENDPOINT, buffer, n);
 	if(audio_ready){
 		USB_Class_Audio_Send_Data(CONTROLLER_ID, AUDIO_ENDPOINT, (uint8_t *)buffer, n);
-		audio_empty = false;
+        audio_packets_in_flight += 1;
+        audio_empty = false;
 	}
 }
 
-void USB::audioSend(float const * buffer, uint16_t n){
+bool USB::audioSend(float const * buffer, uint16_t n){
 	uint8_t * ptr;
 	uint16_t len;
-	queue.push(buffer, n);
-	if(audio_empty == true){
+    auto result = queue.push(buffer, n);
+    if(audio_packets_in_flight < 1){
 		len = queue.peek(&ptr);
 		if(len)
 			audioSendData(ptr, len);
 	}
+    return result;
 }
 
 

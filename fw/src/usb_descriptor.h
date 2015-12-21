@@ -135,8 +135,8 @@ extern "C" {
 
 #define AUDIO_DESC_ENDPOINT_COUNT       (1)
 #define AUDIO_UNIT_COUNT                (3)
-#define AUDIO_ENDPOINT_PACKET_SIZE      (128)
-#define AUDIO_ENDPOINT_SAMPLE_SIZE      (4)
+#define AUDIO_ENDPOINT_PACKET_SIZE      (64)
+#define AUDIO_ENDPOINT_SAMPLE_SIZE      (1)
 
 #define SPEAKER_CTRL_INTF               (2)
 
