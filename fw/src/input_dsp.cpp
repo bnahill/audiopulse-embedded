@@ -158,7 +158,8 @@ PT_THREAD(InputDSP::pt_capture_decimate(struct pt * pt)){
 			
 			// This is all if we don't need to process the samples
 			if(state != ST_CAPTURING)
-				continue;		}
+				continue;
+		}
 	}
 	PT_END(pt);
 }
@@ -229,11 +230,11 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 					// Split in two
 
 					if(use_rectangular){
-						arm_copy_f32(decimator.getDecimatedPtr(),
+						arm_copy_f32(const_cast<sampleFractional *>(decimator.getDecimatedPtr()),
 						             (float32_t*)transform_buffer,
 									 num_before_end);
 					} else {
-						arm_mult_f32(decimator.getDecimatedPtr(),
+						arm_mult_f32(const_cast<sampleFractional *>(decimator.getDecimatedPtr()),
 									(float32_t*)hamming_window, (float32_t*)transform_buffer,
 									 num_before_end);
 					}
@@ -247,11 +248,11 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 					);
 					// Do second half
 					if(use_rectangular){
-						arm_copy_f32(decimator.getDecimatedPtr(num_before_end),
+						arm_copy_f32(const_cast<sampleFractional *>(decimator.getDecimatedPtr(num_before_end)),
 									 (float32_t*)&transform_buffer[num_before_end],
 									 transform_len - num_before_end);
 					} else {
-						arm_mult_f32(decimator.getDecimatedPtr(num_before_end),
+						arm_mult_f32(const_cast<sampleFractional *>(decimator.getDecimatedPtr(num_before_end)),
 									 (float32_t*)&hamming_window[num_before_end],
 									 (float32_t*)&transform_buffer[num_before_end],
 									 transform_len - num_before_end);
@@ -268,13 +269,13 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 					// All in one shot
 					if(use_rectangular){
 						arm_copy_f32(
-							decimator.getDecimatedPtr(),
+							const_cast<sampleFractional *>(decimator.getDecimatedPtr()),
 							(float32_t*)transform_buffer,
 							transform_len
 						);
 					} else {
 						arm_mult_f32(
-							decimator.getDecimatedPtr(),
+							const_cast<sampleFractional *>(decimator.getDecimatedPtr()),
 							(float32_t*)hamming_window,
 							(float32_t*)transform_buffer,
 							transform_len
@@ -436,12 +437,20 @@ InputDSP::Decimator::decimate(sampleFractional const * src,
     static float tmp_val = 0.0;
 
 	sampleFractional const * iter_in;
-	sampleFractional * dst = &decimate_buffer[decimated_write_head];
+	sampleFractional * dst = &decimated_frame_buffer[decimated_write_head];
 	auto retval = dst;
 	iter_in = src;
     uint32_t n_out = n_in / decimate_factor;
 
-	if(do_filter){
+	if(fake_ramp_input){
+		for(uint32_t i = 0; i < n_out; i++){
+			dst[i] = tmp_val;
+			tmp_val += (1.0 / 16000.0);
+			if(tmp_val >= 0.5){
+				tmp_val = -0.5;
+			}
+		}
+	} else if(do_filter){
 		for(auto i = 0; i < (n_in / decimate_block_size); i++){
 			//arm_shift_q31((q31_t*)iter_in, -6, (q31_t*)iter_in, decimate_block_size);
 			if(use_iir) {
@@ -454,18 +463,9 @@ InputDSP::Decimator::decimate(sampleFractional const * src,
 			iter_in += decimate_block_size;
 			dst += decimate_block_size / decimate_factor;
 		}
-    } else if (true) {
-        for(uint32_t i = 0; i < n_out; i++){
-            dst[i] = tmp_val;
-            tmp_val += (1.0 / 16000.0);
-            if(tmp_val >= 0.5){
-                tmp_val = -0.5;
-            }
-        }
-    } else {
-        for(auto i = 0; i < n_out; i++){
+	} else {
+		for(uint32_t i = 0; i < n_out; i++){
 			*dst = *iter_in;
-
 			iter_in += decimate_factor;
 			dst += 1;
 		}
@@ -504,8 +504,9 @@ InputDSP::Decimator::decimate(sampleFractional const * src,
 	return retval;
 }
 
-InputDSP::sampleFractional * InputDSP::Decimator::getDecimatedPtr(size_t offset){
+InputDSP::sampleFractional const * InputDSP::Decimator::getDecimatedPtr(size_t offset){
 	// Get the return values
+	offset = 0;
 	if(numConsecutiveAvailable() >= offset){
 		return &decimated_frame_buffer[decimated_proc_read_head + offset];
 	} else {
@@ -513,8 +514,12 @@ InputDSP::sampleFractional * InputDSP::Decimator::getDecimatedPtr(size_t offset)
 	}
 }
 
-InputDSP::sampleFractional * InputDSP::Decimator::getDecimatedPtrUSB(size_t offset){
+
+InputDSP::sampleFractional const * InputDSP::Decimator::getDecimatedPtrUSB(size_t offset){
 	// Get the return values
+	offset = 0;
+	//if(&decimated_frame_buffer[decimated_usb_read_head] == (sampleFractional*)0x1fff2050)
+	//	while(true);
 	if(numConsecutiveAvailableUSB() >= offset){
 		return &decimated_frame_buffer[decimated_usb_read_head + offset];
 	} else {

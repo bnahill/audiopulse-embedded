@@ -271,7 +271,8 @@ uint_8 USB_DESC_CONST g_config_descriptor[] =
 	USB_DEVICE_CLASS_AUDIO,          /* USB DEVICE CLASS AUDIO */
 	USB_SUBCLASS_AUDIOSTREAM,        /* AUDIO SUBCLASS AUDIOSTREAMING */
 	0x20,                            /* AUDIO PROTOCOL IP 2.0 */
-	0x08,                            /* iInterface */
+	//0x00,                            // bInterfaceProtocol should be 0x00 according to USB
+	0x00,                            /* iInterface */
 
 	/* USB speaker standard AS interface descriptor - audio streaming operational
 	   (Interface 3, Alternate Setting 1) */
@@ -283,7 +284,8 @@ uint_8 USB_DESC_CONST g_config_descriptor[] =
 	USB_DEVICE_CLASS_AUDIO,          /* USB DEVICE CLASS AUDIO */
 	USB_SUBCLASS_AUDIOSTREAM,        /* AUDIO SUBCLASS AUDIOSTREAMING */
 	0x20,                            /* AUDIO PROTOCOL IP 2.0 */
-	0x09,                            /* iInterface */
+	//0x00,                            // bInterfaceProtocol should be 0x00 according to USB
+	0x00,                            /* iInterface */
 
 	/* USB speaker standard General AS interface descriptor */
 	0x10,                            /* bLength (16) */
@@ -323,6 +325,7 @@ uint_8 USB_DESC_CONST g_config_descriptor[] =
 	USB_ENDPOINT_DESCRIPTOR,         /* Descriptor type (endpoint descriptor) */
 	AUDIO_ENDPOINT|(USB_SEND << 7),  /* OUT endpoint address 1 */
 	0x05,                            /* Asynchronous endpoint */
+	//0x0D,                            // Synchronous endpoint
 #if AUDIO_ENDPOINT_PACKET_SIZE==768
     0x00,0x03,                       /* 512 bytes */
 #elif AUDIO_ENDPOINT_PACKET_SIZE==512
@@ -336,16 +339,16 @@ uint_8 USB_DESC_CONST g_config_descriptor[] =
 #else
 	#error "dumb endpoint size"
 #endif
-    0x01,                            /* 1 ms */
+	AUDIO_ENDPOINT_PACKET_PERIOD,    // in 2^x ms
 
     /* Endpoint 1 - Audio streaming descriptor */
     0x08,                            /* bLength (8) */
     USB_AUDIO_DESCRIPTOR,            /* AUDIO ENDPOINT DESCRIPTOR TYPE */
     AUDIO_ENDPOINT_GENERAL,          /* AUDIO ENDPOINT GENERAL */
-    0x00,                            /* bmAttributes: 0x00 */
+	0x80,                            /* bmAttributes: 0x00 */
 	0x00,                            /* bmControls: 0x00 */
-    0x00,                            /* bLockDelayUnits (samples) */
-    0x00,0x00,                       /* wLockDelay (0) */
+	0x01,                            /* bLockDelayUnits (ms) */
+	0x80,0x00,                       /* wLockDelay (128) */
 
     /* HID FUNCTION DESCRIPTION */
 
@@ -374,7 +377,7 @@ uint_8 USB_DESC_CONST g_config_descriptor[] =
     HID_ENDPOINT_OUT | (USB_RECV << 7),   // bEndpointAddress (EP2 out)
     USB_INTERRUPT_PIPE,             // bmAttributes (interrupt)
     HID_ENDPOINT_PACKET_SIZE, 0x00,           // wMaxPacketSize (64)
-    0x01              // bInterval (1 millisecond)
+	0x0A              // bInterval (1 millisecond)
 
     /* HID descriptor */
     //HID_ONLY_DESC_SIZE,
@@ -489,6 +492,14 @@ uint_8 USB_DESC_CONST USB_STR_n[USB_STR_n_SIZE+USB_STR_DESC_SIZE]
                                'X',0
                           };
 
+uint8_t USB_DESC_CONST USB_STR_3[USB_STR_3_SIZE+USB_STR_DESC_SIZE] = {
+	sizeof(USB_STR_3),
+	USB_STRING_DESCRIPTOR,
+	'A', 0,
+	'B', 0,
+	'c', 0
+};
+
 
 USB_PACKET_SIZE const g_std_desc_size[USB_MAX_STD_DESCRIPTORS+1] =
                                     {0,
@@ -519,7 +530,8 @@ uint_8 const g_string_desc_size[USB_MAX_STRING_DESCRIPTORS+1] =
                                     {sizeof(USB_STR_0),
                                      sizeof(USB_STR_1),
                                      sizeof(USB_STR_2),
-                                     sizeof(USB_STR_n)
+									 sizeof(USB_STR_3),
+									 sizeof(USB_STR_n)
                                     };
 
 uint_8_ptr const g_string_descriptors[USB_MAX_STRING_DESCRIPTORS+1] =
@@ -3480,6 +3492,12 @@ uint_8 g_min_sampling_frequency[4] = {0x80,0x3e,0x00,0x00};
 uint_8 g_max_sampling_frequency[4] = {0x80,0x3e,0x00,0x00};
 uint_8 g_res_sampling_frequency[4] = {0x00,0x00,0x01,0x00};
 #else
+uint_8 g_range_sampling_frequency[11] = {
+	0x01, 0x00,
+	0x80,0x3e,0x00,
+	0x80,0x3e,0x00,
+	0x00,0x00,0x01
+};
 uint_8 g_cur_sampling_frequency[3] = {0x00,0x00,0x01};
 uint_8 g_min_sampling_frequency[3] = {0x00,0x00,0x00};
 uint_8 g_max_sampling_frequency[3] = {0x7F,0xFF,0xFF};

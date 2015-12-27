@@ -178,13 +178,12 @@ private:
                isFull()){
                 while(true);
                 return false;
-            }
+			}
 
             __disable_irq();
 			queue_elem_t &store = mem[wr_ptr];
 			uint8_t * iter = store.data;
 			float fsample;
-
 
 
 #if AUDIO_ENDPOINT_SAMPLE_SIZE == 4
@@ -236,9 +235,8 @@ private:
 			return true;
 		}
 		
-		
 	protected:
-        static constexpr uint32_t num_elem = 256;
+		static constexpr uint32_t num_elem = 16384/AUDIO_ENDPOINT_PACKET_SIZE;
 
 		typedef struct {
 			uint16_t len;

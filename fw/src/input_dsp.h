@@ -141,14 +141,14 @@ protected:
 		 * \return A pointer into the decimated buffer containing numConsecutiveAvailable
 		 * samples
 		 */
-		sampleFractional * getDecimatedPtr(size_t offset=0);
+		sampleFractional const * getDecimatedPtr(size_t offset=0);
 		/*!
 		 * \brief getDecimatedPtrUSB
 		 * \param offset
 		 * \return A pointer into the decimated buffer containing numConsecutiveAvailableUSB
 		 * samples
 		 */
-		sampleFractional * getDecimatedPtrUSB(size_t offset=0);
+		sampleFractional const * getDecimatedPtrUSB(size_t offset=0);
 		
 		sampleFractional * decimate(sampleFractional const * src, size_t n_in);
 		
@@ -181,6 +181,7 @@ protected:
         static constexpr bool do_filter = false;
 		//! Use the IIR decimation routines instead of FIR
 		static constexpr bool use_iir = false;
+		static constexpr bool fake_ramp_input = false;
 	protected:
 		void reset_priv();
 		

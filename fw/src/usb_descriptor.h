@@ -68,7 +68,7 @@ extern "C" {
 #define USB_MAX_CONFIG_SUPPORTED            (1)
 
 /* Max string descriptors supported by the Application */
-#define USB_MAX_STRING_DESCRIPTORS        (3)
+#define USB_MAX_STRING_DESCRIPTORS        (4)
 
 /* Max language codes supported by the USB */
 #define USB_MAX_LANGUAGES_SUPPORTED       (1)
@@ -135,8 +135,9 @@ extern "C" {
 
 #define AUDIO_DESC_ENDPOINT_COUNT       (1)
 #define AUDIO_UNIT_COUNT                (3)
-#define AUDIO_ENDPOINT_PACKET_SIZE      (64)
-#define AUDIO_ENDPOINT_SAMPLE_SIZE      (1)
+#define AUDIO_ENDPOINT_PACKET_SIZE      (256)
+#define AUDIO_ENDPOINT_SAMPLE_SIZE      (4)
+#define AUDIO_ENDPOINT_PACKET_PERIOD    (1 + 1)
 
 #define SPEAKER_CTRL_INTF               (2)
 
@@ -148,7 +149,9 @@ extern "C" {
 #define USB_STR_0_SIZE                  (2)
 #define USB_STR_1_SIZE                  (38)
 #define USB_STR_2_SIZE                  (34)
+#define USB_STR_3_SIZE                  (6)
 #define USB_STR_n_SIZE                  (32)
+
 
 /* descriptors codes */
 #define USB_DEVICE_DESCRIPTOR     (1)
