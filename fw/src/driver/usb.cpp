@@ -36,7 +36,7 @@ static uint8_t test[64];
 CLASS_APP_CALLBACK_STRUCT USB::hid_class_callback_struct = {
 	HIDcallback,
 	nullptr,
-	nullptr,
+	HIDcallback,
 	HIDParamCallback
 };
 

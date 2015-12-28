@@ -103,10 +103,11 @@ uint_8 usb_hid_class_info[] =
     USB_RECV,
     USB_uint_16_high(HID_ENDPOINT_PACKET_SIZE),
     USB_uint_16_low(HID_ENDPOINT_PACKET_SIZE),
+	// As far as I can tell, the below is never accessed
     /* Interface count */
     1,
     /* Interface number */
-    4,
+	2,
 };
 
 uint_8 usb_audio_class_info[] =
@@ -121,6 +122,7 @@ uint_8 usb_audio_class_info[] =
     USB_SEND,
     USB_uint_16_high(AUDIO_ENDPOINT_PACKET_SIZE),
     USB_uint_16_low(AUDIO_ENDPOINT_PACKET_SIZE),
+	// As far as I can tell, the below is never accessed
     /* Interface count */
     3,
     /* Interface number */
