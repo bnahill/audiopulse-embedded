@@ -191,27 +191,49 @@ class APulseIface(object):
             if dev is None:
                 raise ValueError("No device found")
 
-            if dev.is_kernel_driver_active(0) is True:
+            inum = 2 # Should be the HID interface
+            if dev.is_kernel_driver_active(inum) is True:
                 sys.stderr.write("Releasing kernel driver\n")
-                dev.detach_kernel_driver(0)
+                dev.detach_kernel_driver(inum)
+            else:
+                sys.stderr.write("Interface not tied to driver\n")
 
-            dev.set_configuration()
+            #dev.set_configuration()
+            #sys.stderr.write("Set configuration\n")
 
             cfg = dev.get_active_configuration()
-            intf = cfg[(0, 0)]
+            hid_intf = usb.util.find_descriptor(cfg, bInterfaceClass=3)
+            assert hid_intf is not None, "No HID interface found in device"
+   
+            sys.stderr.write("Found Interface:\n{}\n".format(hid_intf))
+            usb.util.claim_interface(dev, hid_intf)
+            sys.stderr.write("Claimed Interface\n")
 
-            ep = usb.util.find_descriptor(
-                intf,
-                # match the first IN endpoint (no OUT currently...)
+
+            in_ep = usb.util.find_descriptor(
+                hid_intf,
+                # match the first IN endpoint
                 custom_match=lambda e:
                     usb.util.endpoint_direction(e.bEndpointAddress) ==
                     usb.util.ENDPOINT_IN
             )
 
-            assert ep is not None
+            out_ep = usb.util.find_descriptor(
+                hid_intf,
+                # match the first OUT endpoint
+                custom_match=lambda e:
+                    usb.util.endpoint_direction(e.bEndpointAddress) ==
+                    usb.util.ENDPOINT_OUT
+            )
 
-            self.in_ep = ep
-            self.out_ep = ep
+            assert in_ep is not None
+            assert out_ep is not None
+
+            sys.stderr.write("Found IN EP: \n{}\n".format(in_ep))
+            sys.stderr.write("Found OUT EP: \n{}\n".format(out_ep))
+
+            self.in_ep = in_ep
+            self.out_ep = out_ep
             self.dev = dev
 
     def reset(self):
@@ -324,6 +346,8 @@ class APulseIface(object):
         return (psd, avg)
 
     def _write(self, data):
+        self.out_ep.write(data)
+        """
         self.dev.ctrl_transfer(ReqConstants.DIR_OUT |
                                ReqConstants.RECIPIENT_DEVICE |
                                ReqConstants.TYPE_CLASS,
@@ -331,8 +355,11 @@ class APulseIface(object):
                                (HidReportConstants.OUTPUT << 8) | 0x00,
                                0,
                                data)
+        """
 
     def _read(self, n):
+        return self.in_ep.read(n)
+        """
         return self.dev.ctrl_transfer(ReqConstants.DIR_IN |
                                       ReqConstants.RECIPIENT_INTERFACE |
                                       ReqConstants.TYPE_CLASS,
@@ -340,6 +367,7 @@ class APulseIface(object):
                                       (HidReportConstants.INPUT << 8) | 0x00,
                                       0,
                                       n)
+        """
 
 
 
