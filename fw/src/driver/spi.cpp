@@ -120,9 +120,9 @@ bool SPI::transfer(SPI_slave &slave,
     current_tx_ptr = tx_buf + 1;
     __enable_irq();
 
-	//if(current_cb){
-	//    while(busy);
-	//}
+    if(!current_cb){
+        while(busy);
+    }
 
     return true;
 }
