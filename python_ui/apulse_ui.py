@@ -536,7 +536,8 @@ class UIWindow(QtGui.QMainWindow):
     def connect(self):
         try:
             self.iface.connect()
-            self.iface.reset()
+            sys.stderr.write("Not resetting. Fix this later\n")
+            #self.iface.reset()
             self.buttonpanel.connbutton.setText("Disconnect")
             self.buttonpanel.connbutton.clicked.connect(self.disconnect)
             for b in [self.buttonpanel.statbutton, self.buttonpanel.rstbutton,

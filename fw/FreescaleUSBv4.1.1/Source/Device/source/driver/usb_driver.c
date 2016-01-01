@@ -604,10 +604,13 @@ uint_8 USB_Device_Call_Service(
     PTR_USB_DEV_EVENT_STRUCT  event    /* [IN] Pointer to event structure  */
 )
 {
-	if(log_service_callback_count < 1024){
-		log_service_callback_events[log_service_callback_count] = type;
-	}
-	log_service_callback_count += 1;
+    if((type != 18) && (type != 3)){
+        if(log_service_callback_count < 1024){
+            log_service_callback_events[log_service_callback_count] = type;
+        }
+        log_service_callback_count += 1;
+    }
+
 
     if(type == USB_SERVICE_BUS_RESET)
     {    /* if it is an reset interrupt then reset all status structures */

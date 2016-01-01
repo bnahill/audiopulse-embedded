@@ -46,7 +46,7 @@ extern "C" {
 /* Various descriptor sizes */
 #define DEVICE_DESCRIPTOR_SIZE            (18)
 //#define CONFIG_DESC_SIZE                  (34)
-#define CONFIG_DESC_SIZE                  (164)
+#define CONFIG_DESC_SIZE                  (164 + 9)
 //-8)
 #define DEVICE_QUALIFIER_DESCRIPTOR_SIZE  (10)
 #define REPORT_DESC_SIZE                  (38)

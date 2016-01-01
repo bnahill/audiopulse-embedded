@@ -57,7 +57,7 @@
 /* location for BDT Table and buff */
 #if (defined(__CWCC__)||defined(__GNUC__))
 	__attribute__((__aligned__(512)))
-	__attribute__((section (".usb_bdt")))
+    __attribute__((section (".usb_bdt")))
 #elif defined(__IAR_SYSTEMS_ICC__)
 	#pragma data_alignment = 512
 #endif
@@ -563,6 +563,17 @@ uint_8 USB_DCI_DeInit(void)
 	 return USB_OK;
 }
 
+static volatile uint32_t afff = 0;
+static volatile void the_hid_init_function(){
+
+    afff += 1;
+}
+static volatile uint32_t bfff = 0;
+static volatile void the_hid_deinit_function(){
+
+    bfff += 1;
+}
+
 /**************************************************************************//*!
  *
  * @name  USB_DCI_Init_EndPoint
@@ -642,6 +653,10 @@ uint_8 USB_DCI_Init_EndPoint (
     bdt_elem->addr = g_bdt_address;
     bdt_elem->type = ep_ptr->type;
     bdt_elem->direction = direction;
+
+    if(ep_num == 2){
+        the_hid_init_function();
+    }
 
     temp = &g_bdtmap->ep_dsc[bdt_elem->bdtmap_index];
 
@@ -807,6 +822,9 @@ uint_8 USB_DCI_Deinit_EndPoint (
 
     /* Disable endpoint */
     *((&USB0_ENDPT0) + (4 * ep_num)) = EP_DISABLE;
+
+    if(ep_num == 3)
+        the_hid_deinit_function();
 
     /* un-initialize the bdt_elem structure for this endpoint */
     g_bdt_elem[bdtelem_index].len = (uint_16)UNINITIALISED_VAL;

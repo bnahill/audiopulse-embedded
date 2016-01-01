@@ -124,11 +124,9 @@ uint_8 usb_audio_class_info[] =
     USB_uint_16_low(AUDIO_ENDPOINT_PACKET_SIZE),
 	// As far as I can tell, the below is never accessed
     /* Interface count */
-    3,
+    1,
     /* Interface number */
     1,
-    2,
-	3
 };
 
 DEV_ARCHITECTURE_STRUCT usb_dev_arc =
@@ -365,6 +363,15 @@ uint_8 USB_DESC_CONST g_config_descriptor[] =
     0x00,
     0x00,
 
+    /* HID descriptor */
+    HID_ONLY_DESC_SIZE,
+    USB_HID_DESCRIPTOR,
+    0x00,0x01,
+    0x00,
+    0x01,
+    0x22,
+    USB_uint_16_low(REPORT_DESC_SIZE),USB_uint_16_high(REPORT_DESC_SIZE),
+
     // HID IN Endpoint descriptor
     ENDP_ONLY_DESC_SIZE,               // bLength (7)
     USB_ENDPOINT_DESCRIPTOR,           // bDescriptorType (ENDPOINT)
@@ -379,16 +386,7 @@ uint_8 USB_DESC_CONST g_config_descriptor[] =
     HID_ENDPOINT_OUT | (USB_RECV << 7),   // bEndpointAddress (EP2 out)
     USB_INTERRUPT_PIPE,             // bmAttributes (interrupt)
     HID_ENDPOINT_PACKET_SIZE, 0x00,           // wMaxPacketSize (64)
-	0x0A              // bInterval (1 millisecond)
-
-    /* HID descriptor */
-    //HID_ONLY_DESC_SIZE,
-    //USB_HID_DESCRIPTOR,
-    //0x10,0x11,
-    //0x00,
-    //0x01,
-    //0x22,
-    //0x34,0x00
+    0x0A,              // bInterval (1 millisecond)
 };
 
 
@@ -611,9 +609,11 @@ uint_8 USB_Desc_Get_Descriptor (
     {
       case USB_REPORT_DESCRIPTOR:
         {
+          //__BKPT();
           type = USB_MAX_STD_DESCRIPTORS;
-          *descriptor = (uint_8_ptr)g_std_descriptors [type];
-          *size = g_std_desc_size[type];
+          *descriptor = g_report_descriptor;//(uint_8_ptr)g_std_descriptors [type];
+          *size = REPORT_DESC_SIZE;// g_std_desc_size[type];
+
         }
         break;
       case USB_AUDIO_DESCRIPTOR:

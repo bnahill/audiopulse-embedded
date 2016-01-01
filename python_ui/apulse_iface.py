@@ -169,6 +169,7 @@ class DummyTone(ToneConfig):
     def __init__(self):
         super(DummyTone, self).__init__(ToneConfig.TONE_OFF, 0, 0, 0, 0, 0, 0)
 
+inum = 2 # Should be the HID interface
 
 class APulseIface(object):
     dev = None
@@ -182,7 +183,8 @@ class APulseIface(object):
 
     def disconnect(self):
         if self.dev:
-            self.dev.reset()
+            usb.util.release_interface(self.dev, inum)
+            #self.dev.reset()
 
     def connect(self):
         with self.lock:
@@ -191,7 +193,7 @@ class APulseIface(object):
             if dev is None:
                 raise ValueError("No device found")
 
-            inum = 2 # Should be the HID interface
+
             if dev.is_kernel_driver_active(inum) is True:
                 sys.stderr.write("Releasing kernel driver\n")
                 dev.detach_kernel_driver(inum)
@@ -204,7 +206,7 @@ class APulseIface(object):
             cfg = dev.get_active_configuration()
             hid_intf = usb.util.find_descriptor(cfg, bInterfaceClass=3)
             assert hid_intf is not None, "No HID interface found in device"
-   
+            
             sys.stderr.write("Found Interface:\n{}\n".format(hid_intf))
             usb.util.claim_interface(dev, hid_intf)
             sys.stderr.write("Claimed Interface\n")
@@ -232,14 +234,17 @@ class APulseIface(object):
             sys.stderr.write("Found IN EP: \n{}\n".format(in_ep))
             sys.stderr.write("Found OUT EP: \n{}\n".format(out_ep))
 
+            self.hid_intf = hid_intf
             self.in_ep = in_ep
             self.out_ep = out_ep
             self.dev = dev
 
     def reset(self):
         with self.lock:
-            data = struct.pack("B", Constants.CMD_RESET)
-            self._write(data)
+            buf = self._read(53)
+            
+            #data = struct.pack("B", Constants.CMD_RESET)
+            #self._write(data)
 
     def get_status(self):
         with self.lock:
@@ -358,7 +363,9 @@ class APulseIface(object):
         """
 
     def _read(self, n):
-        return self.in_ep.read(n)
+        #return self.in_ep.read(n)
+        return self.dev.read(self.in_ep.bEndpointAddress,
+                             self.in_ep.wMaxPacketSize)
         """
         return self.dev.ctrl_transfer(ReqConstants.DIR_IN |
                                       ReqConstants.RECIPIENT_INTERFACE |
