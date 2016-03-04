@@ -129,13 +129,13 @@
 /******************************************************************************
  * Types
  *****************************************************************************/
-#ifndef COMPOSITE_DEV
+//#ifndef COMPOSITE_DEV
 typedef struct _app_data_struct
 {
     uint_8_ptr      data_ptr;       /* pointer to buffer */
     USB_PACKET_SIZE data_size;      /* buffer size of endpoint */
 }APP_DATA_STRUCT;
-#endif
+//#endif
 
 /* structure to hold a request in the endpoint queue */
 typedef struct _usb_class_cdc_queue

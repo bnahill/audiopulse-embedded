@@ -118,10 +118,12 @@ void main(){
 // 	swo_sendchar('d');
 
     while(true){
+		USB::periodicTask();
 		InputDSP::pt_capture_decimate(&pt_capture_decimate);
 		InputDSP::pt_dsp(&pt_dsp);
 		WaveGen::pt_wavegen(&pt_wavegen);
 		APulseController::pt_controller(&pt_controller);
+
 		/*
 		if(USB::audioReady() and !USB::audioQueueFull()){
 			for(int j = 0; j < USB::audioMaxSamples; j++){

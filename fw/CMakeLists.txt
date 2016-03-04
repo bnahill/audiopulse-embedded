@@ -189,7 +189,7 @@ include_directories(
 	.
 	src
 	src/freescale
-        FLogFS/inc
+	FLogFS/inc
 	${CMSIS_DIR}/Include
 	${CMSIS_DIR}/Include/device/MK22F51212
 	Device/ARM/ARMCM4/Include
@@ -225,6 +225,7 @@ set(FREESCALE_SOURCES
 	${USB_DIR}/Source/Device/source/class/usb_composite.c
 	${USB_DIR}/Source/Device/source/class/usb_audio.c
 	${USB_DIR}/Source/Device/source/class/usb_hid.c
+	${USB_DIR}/Source/Device/source/class/usb_cdc.c
 )
 
 set(APP_SOURCES

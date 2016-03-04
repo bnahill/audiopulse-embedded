@@ -27,13 +27,22 @@
 
 extern "C" {
 	#include "usb_hid.h"
+	#include "usb_cdc.h"
 };
 
 
 static uint8_t test[64];
 
 
+CLASS_APP_CALLBACK_STRUCT USB::cdc_class_callback_struct = {
+	USB::CDCAppCallback,
+	nullptr,
+	USB::CDCNotifyCallback,
+	nullptr,
+};
+
 CLASS_APP_CALLBACK_STRUCT USB::hid_class_callback_struct = {
+
 	HIDcallback,
 	nullptr,
 	HIDcallback,
@@ -51,7 +60,8 @@ COMPOSITE_CALLBACK_STRUCT USB::usb_composite_callback ={
     COMP_CLASS_UNIT_COUNT,
     {
         &audio_class_callback_struct,
-        &hid_class_callback_struct,
+		//&hid_class_callback_struct,
+		&cdc_class_callback_struct,
 	}
 };
 
@@ -108,7 +118,7 @@ void USB::AudioCallback(uint8_t controller_ID,
 	if(log_audio_callback_count < 64){
 		log_audio_callback_events[log_audio_callback_count++] = event_type;
 	}
-	uint8_t * ptr;
+	uint8_t * ptr = nullptr;
 	uint16_t len;
 	
 	switch(event_type){
@@ -157,7 +167,7 @@ void USB::audioSendData(uint8_t const * buffer, uint16_t n){
 }
 
 bool USB::audioSend(float const * buffer, uint16_t n){
-	uint8_t * ptr;
+	uint8_t * ptr = nullptr;
 	uint16_t len;
     auto result = queue.push(buffer, n);
     if(audio_packets_in_flight < 1){
@@ -278,3 +288,15 @@ void USB::hidClassInit(){
 	for(auto &a : test) a = 'p';
 }
 
+
+void USB::CDCNotifyCallback(uint_8 controller_ID, uint_8 event_type, void * val){
+
+}
+
+
+
+void USB::CDCAppCallback(uint_8 controller_ID,   /* [IN] Controller ID */
+						 uint_8 event_type,      /* [IN] value of the event */
+						 void * val){
+
+}

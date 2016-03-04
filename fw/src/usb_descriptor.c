@@ -110,6 +110,40 @@ uint_8 usb_hid_class_info[] =
 	2,
 };
 
+#define CDC_DESC_ENDPOINT_COUNT       (2)
+#define DIC_BULK_IN_ENDPOINT          (1)
+#define DIC_BULK_OUT_ENDPOINT         (2)
+#define DIC_BULK_IN_ENDP_PACKET_SIZE  (64)
+#define DIC_BULK_OUT_ENDP_PACKET_SIZE (DIC_BULK_IN_ENDP_PACKET_SIZE)
+
+uint_8 usb_cdc_class_info[] =
+{
+	/* Class type */
+	CDC_CC,
+	/* Endpoint count */
+	CDC_DESC_ENDPOINT_COUNT,
+	/* Cdc endpoint */
+	DIC_BULK_IN_ENDPOINT,
+	USB_BULK_PIPE,
+	USB_SEND,
+	0,
+	0,
+	USB_uint_16_high(DIC_BULK_IN_ENDP_PACKET_SIZE),
+	USB_uint_16_low(DIC_BULK_IN_ENDP_PACKET_SIZE),
+	DIC_BULK_OUT_ENDPOINT,
+	USB_BULK_PIPE,
+	USB_RECV,
+	0,
+	0,
+	USB_uint_16_high(DIC_BULK_OUT_ENDP_PACKET_SIZE),
+	USB_uint_16_low(DIC_BULK_OUT_ENDP_PACKET_SIZE),
+	/* Interface count */
+	2,
+	/* Interface number */
+	0,
+	2,
+};
+
 uint_8 usb_audio_class_info[] =
 {
     /* Class type */
@@ -134,7 +168,8 @@ DEV_ARCHITECTURE_STRUCT usb_dev_arc =
     COMP_CLASS_UNIT_COUNT,
     COMPOSITE_DESC_ENDPOINT_COUNT,
     {
-        (uint_8 *)&usb_hid_class_info,
+		//(uint_8 *)&usb_hid_class_info,
+		(uint_8 *)&usb_cdc_class_info,
         (uint_8 *)&usb_audio_class_info,
     }
 
@@ -350,9 +385,40 @@ uint_8 USB_DESC_CONST g_config_descriptor[] =
 	0x01,                            /* bLockDelayUnits (ms) */
 	0x80,0x00,                       /* wLockDelay (128) */
 
-    /* HID FUNCTION DESCRIPTION */
 
-    /* Interface Descriptor */
+	// CDC Function Descriptor
+
+	IFACE_ONLY_DESC_SIZE,
+	USB_IFACE_DESCRIPTOR,
+	2,    // bInterfaceNumber
+	0x00, // bAlternateSetting
+	2,    // Number of endpoints
+	0x0A, // DATA Interface Class
+	0x00, // Data Interface SubClass Code
+	NO_CLASS_SPECIFIC_PROTOCOL,
+	0x00, // Interface Description String Index
+
+	// Endpoint descriptor
+	ENDP_ONLY_DESC_SIZE,
+	USB_ENDPOINT_DESCRIPTOR,
+	DIC_BULK_IN_ENDPOINT|(USB_SEND << 7),
+	USB_BULK_PIPE,
+	DIC_BULK_IN_ENDP_PACKET_SIZE, 0x00,
+	0x00, // This value is ignored for Bulk ENDPOINT
+
+	// Endpoint descriptor
+	ENDP_ONLY_DESC_SIZE,
+	USB_ENDPOINT_DESCRIPTOR,
+	DIC_BULK_OUT_ENDPOINT|(USB_RECV << 7),
+	USB_BULK_PIPE,
+	DIC_BULK_OUT_ENDP_PACKET_SIZE, 0x00,
+	0x00, // This value is ignored for Bulk ENDPOINT
+
+
+/*
+	// HID FUNCTION DESCRIPTION
+
+	// Interface Descriptor
     IFACE_ONLY_DESC_SIZE,
     USB_IFACE_DESCRIPTOR,
     0x02,
@@ -363,7 +429,7 @@ uint_8 USB_DESC_CONST g_config_descriptor[] =
     0x00,
     0x00,
 
-    /* HID descriptor */
+	// HID descriptor
     HID_ONLY_DESC_SIZE,
     USB_HID_DESCRIPTOR,
     0x00,0x01,
@@ -387,6 +453,7 @@ uint_8 USB_DESC_CONST g_config_descriptor[] =
     USB_INTERRUPT_PIPE,             // bmAttributes (interrupt)
     HID_ENDPOINT_PACKET_SIZE, 0x00,           // wMaxPacketSize (64)
     0x0A,              // bInterval (1 millisecond)
+*/
 };
 
 

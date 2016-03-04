@@ -23,11 +23,16 @@
 #define __APULSE_USB_H_
 
 #include <derivative.h>
-#include <usb_class.h>
+
 #include <driver/clocks.h>
-#include <usb_composite.h>
-#include <usb_audio.h>
-#include <arm_math.h>
+
+extern "C" {
+	#include <usb_class.h>
+	#include <usb_composite.h>
+	#include <usb_audio.h>
+	#include <arm_math.h>
+	#include <usb_cdc.h>
+};
 
 class USB {
 public:
@@ -82,6 +87,11 @@ public:
     static bool audioReadyForData(){return audio_ready && !queue.isFull();}
     static bool audioEmpty(){return audio_empty;}
 	static bool hidReady(){return hid_ready;}
+
+	static void periodicTask(){
+		USB_Class_CDC_Periodic_Task();
+		USB_Class_Audio_Periodic_Task();
+	}
 	
 private:
     static uint32_t audio_packets_in_flight;
@@ -262,6 +272,12 @@ private:
 	                                uint_16 wIndex,
 	                                uint8_t ** data,
 	                                USB_PACKET_SIZE * size);
+	static void CDCAppCallback(uint_8 controller_ID,   /* [IN] Controller ID */
+							   uint_8 event_type,      /* [IN] value of the event */
+							   void * val);
+	static void CDCNotifyCallback(uint_8 controller_ID,   /* [IN] Controller ID */
+								  uint_8 event_type,      /* [IN] value of the event */
+								  void * val);
 	static void AudioCallback(uint8_t controller_ID,
 	                          uint8_t event_type, void * val);
 	static uint8_t AudioParamCallback(uint_8 request,
@@ -273,6 +289,7 @@ private:
 	
 	
 	static CLASS_APP_CALLBACK_STRUCT hid_class_callback_struct;
+	static CLASS_APP_CALLBACK_STRUCT cdc_class_callback_struct;
 	static CLASS_APP_CALLBACK_STRUCT audio_class_callback_struct;
 	static COMPOSITE_CALLBACK_STRUCT usb_composite_callback;
 

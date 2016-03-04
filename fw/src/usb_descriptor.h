@@ -46,8 +46,10 @@ extern "C" {
 /* Various descriptor sizes */
 #define DEVICE_DESCRIPTOR_SIZE            (18)
 //#define CONFIG_DESC_SIZE                  (34)
-#define CONFIG_DESC_SIZE                  (164 + 9)
-//-8)
+// Before switch to CDC
+//#define CONFIG_DESC_SIZE                  (164 + 9)
+#define CONFIG_DESC_SIZE                  (164)
+
 #define DEVICE_QUALIFIER_DESCRIPTOR_SIZE  (10)
 #define REPORT_DESC_SIZE                  (38)
 #define CONFIG_ONLY_DESC_SIZE             (9)
@@ -56,7 +58,7 @@ extern "C" {
 #define ENDP_ONLY_DESC_SIZE               (7)
 #define IAD_DESC_SIZE                     (0x08)
 #define USB_IFACE_ASSOCIATION_DESCRIPTOR  (0x0B)
-#define USB_AUDIO_DESCRIPTOR      (0x25)
+#define USB_AUDIO_DESCRIPTOR              (0x25)
 
 
 /* HID buffer size */
@@ -143,6 +145,60 @@ extern "C" {
 
 #define COMP_CLASS_UNIT_COUNT           (2)
 #define COMPOSITE_DESC_ENDPOINT_COUNT   (3)
+
+#define DIRECT_LINE_CONTROL_MODEL           (0x01)
+#define ABSTRACT_CONTROL_MODEL              (0x02)
+#define TELEPHONE_CONTROL_MODEL             (0x03)
+#define MULTI_CHANNEL_CONTROL_MODEL         (0x04)
+#define CAPI_CONTROL_MOPDEL                 (0x05)
+#define ETHERNET_NETWORKING_CONTROL_MODEL   (0x06)
+#define ATM_NETWORKING_CONTROL_MODEL        (0x07)
+#define WIRELESS_HANDSET_CONTROL_MODEL      (0x08)
+#define DEVICE_MANAGEMENT                   (0x09)
+#define MOBILE_DIRECT_LINE_MODEL            (0x0A)
+#define OBEX                                (0x0B)
+#define ETHERNET_EMULATION_MODEL            (0x0C)
+
+/* Communication Class Protocol Codes */
+#define NO_CLASS_SPECIFIC_PROTOCOL  (0x00)
+#define AT_250_PROTOCOL             (0x01)
+#define AT_PCCA_101_PROTOCOL        (0x02)
+#define AT_PCCA_101_ANNEX_O         (0x03)
+#define AT_GSM_7_07                 (0x04)
+#define AT_3GPP_27_007              (0x05)
+#define AT_TIA_CDMA                 (0x06)
+#define ETHERNET_EMULATION_PROTOCOL (0x07)
+#define EXTERNAL_PROTOCOL           (0xFE)
+#define VENDOR_SPECIFIC             (0xFF)
+
+/* Data Class Protocol Codes */
+/* #define NO_CLASS_SPECIFIC_PROTOCOL  (0x00) */
+#define PYHSICAL_INTERFACE_PROTOCOL    (0x30)
+#define HDLC_PROTOCOL                  (0x31)
+#define TRANSPARENT_PROTOCOL           (0x32)
+#define MANAGEMENT_PROTOCOL            (0x50)
+#define DATA_LINK_Q931_PROTOCOL        (0x51)
+#define DATA_LINK_Q921_PROTOCOL        (0x52)
+#define DATA_COMPRESSION_V42BIS        (0x90)
+#define EURO_ISDN_PROTOCOL             (0x91)
+#define RATE_ADAPTION_ISDN_V24         (0x92)
+#define CAPI_COMMANDS                  (0x93)
+#define HOST_BASED_DRIVER              (0xFD)
+#define CDC_UNIT_FUNCTIONAL            (0xFE)
+
+#define LINE_CODING_SIZE              (0x07)
+#define COMM_FEATURE_DATA_SIZE        (0x02)
+
+#define LINE_CODE_DTERATE_IFACE0      (115200) /*e.g 9600 is 0x00002580 */
+#define LINE_CODE_CHARFORMAT_IFACE0   (0x00)   /* 1 stop bit */
+#define LINE_CODE_PARITYTYPE_IFACE0   (0x00)   /* No Parity */
+#define LINE_CODE_DATABITS_IFACE0     (0x08)   /* Data Bits Format */
+
+#define LINE_CODE_DTERATE_IFACE1      (9600)   /*e.g. 115200 is 0x0001C200*/
+#define LINE_CODE_CHARFORMAT_IFACE1   (0x00)   /* 1 stop bit */
+#define LINE_CODE_PARITYTYPE_IFACE1   (0x00)   /* No Parity */
+#define LINE_CODE_DATABITS_IFACE1     (0x08)   /* Data Bits Format */
+
 
 /* string descriptors sizes */
 #define USB_STR_DESC_SIZE               (2)
