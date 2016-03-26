@@ -190,6 +190,7 @@ bool MT29FxG01::page_open_write ( uint16_t block, uint8_t page ) {
         current_addr = address_t(block, page, 0);
         // Next call shouldn't be random
         writes_so_far = 0;
+		return true;
 }
 
 

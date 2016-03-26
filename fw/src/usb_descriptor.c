@@ -110,12 +110,6 @@ uint_8 usb_hid_class_info[] =
 	2,
 };
 
-#define CDC_DESC_ENDPOINT_COUNT       (2)
-#define DIC_BULK_IN_ENDPOINT          (1)
-#define DIC_BULK_OUT_ENDPOINT         (2)
-#define DIC_BULK_IN_ENDP_PACKET_SIZE  (64)
-#define DIC_BULK_OUT_ENDP_PACKET_SIZE (DIC_BULK_IN_ENDP_PACKET_SIZE)
-
 uint_8 usb_cdc_class_info[] =
 {
 	/* Class type */

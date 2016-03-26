@@ -68,6 +68,7 @@ COMPOSITE_CALLBACK_STRUCT USB::usb_composite_callback ={
 bool USB::audio_ready = false;
 bool USB::audio_empty = true;
 bool USB::hid_ready   = false;
+bool USB::cdc_ready   = false;
 uint32_t USB::audio_packets_in_flight = 0;
 USB::AudioQueue USB::queue;
 
@@ -290,7 +291,17 @@ void USB::hidClassInit(){
 
 
 void USB::CDCNotifyCallback(uint_8 controller_ID, uint_8 event_type, void * val){
-
+	switch(event_type){
+	case USB_APP_CDC_CARRIER_ACTIVATED:
+		cdc_ready = true;
+		break;
+	case USB_APP_CDC_CARRIER_DEACTIVATED:
+		cdc_ready = false;
+		break;
+	default:
+		while(true);
+		break;
+	}
 }
 
 
@@ -298,5 +309,29 @@ void USB::CDCNotifyCallback(uint_8 controller_ID, uint_8 event_type, void * val)
 void USB::CDCAppCallback(uint_8 controller_ID,   /* [IN] Controller ID */
 						 uint_8 event_type,      /* [IN] value of the event */
 						 void * val){
+	APP_DATA_STRUCT * dp_rcv;
+	uint32_t data_count;
+	uint8_t * data_ptr;
 
+	switch(event_type){
+	case USB_APP_BUS_RESET:
+		break;
+	case USB_APP_ENUM_COMPLETE:
+		break;
+	case USB_APP_DATA_RECEIVED:
+		dp_rcv = reinterpret_cast<APP_DATA_STRUCT*>(val);
+		data_count = dp_rcv->data_size;
+		data_ptr = dp_rcv->data_ptr;
+		break;
+	case USB_APP_SEND_COMPLETE:
+		//USB_Class_CDC_Interface_DIC_Recv_Data(CONTROLLER_ID, nullptr, 0);
+		break;
+	case USB_APP_ERROR:
+		while(true);
+	case USB_APP_BUS_SUSPEND:
+	case USB_APP_BUS_RESUME:
+		break;
+	default:
+		break;
+	}
 }

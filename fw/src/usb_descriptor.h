@@ -159,6 +159,13 @@ extern "C" {
 #define OBEX                                (0x0B)
 #define ETHERNET_EMULATION_MODEL            (0x0C)
 
+
+#define CDC_DESC_ENDPOINT_COUNT       (2)
+#define DIC_BULK_IN_ENDPOINT          (1)
+#define DIC_BULK_OUT_ENDPOINT         (2)
+#define DIC_BULK_IN_ENDP_PACKET_SIZE  (64)
+#define DIC_BULK_OUT_ENDP_PACKET_SIZE (DIC_BULK_IN_ENDP_PACKET_SIZE)
+
 /* Communication Class Protocol Codes */
 #define NO_CLASS_SPECIFIC_PROTOCOL  (0x00)
 #define AT_250_PROTOCOL             (0x01)

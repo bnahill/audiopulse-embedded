@@ -97,6 +97,7 @@ private:
     static uint32_t audio_packets_in_flight;
 	static bool audio_ready;
 	static bool hid_ready;
+	static bool cdc_ready;
 	static bool audio_empty;
 	
     /*!
