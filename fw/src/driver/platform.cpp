@@ -195,6 +195,8 @@ void Platform::earlyInit(){
     if(SysTick_Config(Clock::config.mcgoutclk / 1000)){
         while(1);
     }
+
+    UART uart = UART(UART0, uart_rx, uart_tx, 4);
 }
 
 extern "C" {

@@ -239,6 +239,7 @@ set(APP_SOURCES
 	src/driver/tpa6130a2.cpp
 	src/driver/spi.cpp
         src/driver/mt29fxg01.cpp
+        src/driver/uart.cpp
 	src/startup.s
 )
 

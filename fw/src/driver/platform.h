@@ -32,6 +32,7 @@
 #include <driver/pwm_gpio.h>
 #include <driver/spi.h>
 #include <driver/mt29fxg01.h>
+#include <driver/uart.h>
 #include <pt.h>
 
 class Platform {
