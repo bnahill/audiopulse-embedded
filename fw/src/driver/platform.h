@@ -55,6 +55,8 @@ public:
 
 		TPA6130A2::init_hw();
 
+        uart.init(1000000);
+
 		leds[0].clear();
 		leds[1].clear();
 		leds[2].clear();
@@ -73,6 +75,8 @@ public:
     static MT29FxG01 flash;
     static SPI_slave flash_slave;
 
+    static UART uart;
+
 	static void power_on(){power_en.set();}
 #if CFG_POWER_ALWAYS_ON
     static void power_off(){}
@@ -81,9 +85,7 @@ public:
 #endif
 
 	//! The external 12.288MHz oscillator
-	static GPIOPin const xtal_ex;
-    static GPIOPin const uart_tx;
-    static GPIOPin const uart_rx;
+    static GPIOPin const xtal_ex;
 
     typedef bool (*tick_cb_t)(void *);
     typedef struct _task_t {

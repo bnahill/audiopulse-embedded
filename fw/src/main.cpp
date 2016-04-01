@@ -84,6 +84,7 @@ static SPI_slave volatile	test_slave = SPI_slave(
  */
 void main(){
 	struct pt pt_dsp, pt_controller, pt_wavegen;
+    static uint8_t test_string[] = "hello!";
 
 	PT_INIT(&pt_dsp);
 	PT_INIT(&pt_controller);
@@ -96,6 +97,7 @@ void main(){
 
     Platform::codec.init();
 
+    Platform::uart.send_data(test_string, sizeof(test_string));
 
     /*
     Platform::spi0.register_slave(flash_slave);
