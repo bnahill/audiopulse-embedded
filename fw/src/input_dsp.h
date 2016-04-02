@@ -179,7 +179,7 @@ protected:
 	static uint16_t overlap;
 	//! The constant Q31 Hamming window
 	static sampleFractional const hamming_window[transform_len];
-	static constexpr bool use_rectangular = false;
+	static constexpr bool use_rectangular = not FFT_WINDOW_NUTTALL;
 	static uint32_t num_before_end;
 	static sampleFractional transform_buffer[transform_len];
 

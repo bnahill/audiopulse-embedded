@@ -30,8 +30,6 @@ public:
     }
 
 private:
-
-
     struct transfer {
         uint8_t const * src;
         uint16_t        len;
@@ -40,11 +38,10 @@ private:
     };
 
 
-
     static constexpr uint32_t queue_len = 16;
-    uint32_t queue_count;
-    uint32_t queue_rd_head;
-    uint32_t queue_wr_head;
+    uint32_t volatile queue_count;
+    uint32_t volatile queue_rd_head;
+    uint32_t volatile queue_wr_head;
     struct transfer queue_data[queue_len];
 
     bool enqueue(uint8_t const * src, uint16_t len, cb_t cb, void * cb_arg);
@@ -56,7 +53,7 @@ private:
     bool tx_busy;
     bool is_init;
     GPIOPin const rx, tx;
-    uint32_t dma_ch_tx;
+    uint32_t const dma_ch_tx;
 
     UART_MemMapPtr const dev;
 };

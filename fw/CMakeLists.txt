@@ -68,13 +68,13 @@ set(PT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/pt-1.4)
 
 option(DEBUG_USE_SVD "Use pycmdebug and an SVD file for debugging" OFF)
 
-option(TARGET_K22 "Target the 120MHz K22 chip with floating point" OFF)
+option(TARGET_K22 "Target the 120MHz K22 chip with floating point" ON)
 option(ENABLE_LOOPBACK "Enable a loopback connection from output to input" OFF)
 option(ENABLE_INPUT_DEBUG "Check for errors in input timing" ON)
 option(ENABLE_INPUT_IIR "Use an IIR filter instead of FIR for decimation" OFF)
 option(ENABLE_INPUT_CALIBRATION "Apply per-frequency calibration to input" OFF)
 option(POWER_ALWAYS_ON "Keep analog power always on" ON)
-
+option(WINDOW_FUNCTION_NUTTALL "Window function either rectangular or Nuttall" ON)
 if(${TARGET_K22})
 	add_definitions(-DCFG_TARGET_K22=true)
 	add_definitions(-DCFG_TARGET_K20=false)
@@ -123,7 +123,13 @@ else()
 	message("Building without input calibration")
 endif()
 
-
+if(${WINDOW_FUNCTION_NUTTALL})
+    add_definitions(-DFFT_WINDOW_NUTTALL=true)
+    message("Using the Nuttall window function")
+else()
+    add_definitions(-DFFT_WINDOW_NUTTALL=false)
+    message("Using a stupid rectangular window")
+endif()
 
 if(${POWER_ALWAYS_ON})
         add_definitions(-DCFG_POWER_ALWAYS_ON=true)

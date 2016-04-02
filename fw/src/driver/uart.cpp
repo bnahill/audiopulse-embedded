@@ -55,6 +55,11 @@ bool UART::init(uint32_t br_target){
     dev->C5 =
         UART_C5_TDMAS_MASK;
 
+    DMA_CSR_REG(DMA0, dma_ch_tx) = 0;
+    // First configure receive channel
+    DMAMUX_CHCFG(dma_ch_tx) = 0;
+    NVIC_EnableIRQ((IRQn_Type)dma_ch_tx);
+
     DMA_DADDR_REG(DMA0, dma_ch_tx) = (uint32_t)&dev->D; // Transmit FIFO
     DMA_SADDR_REG(DMA0, dma_ch_tx) = (uint32_t)0;
     DMA_SOFF_REG(DMA0, dma_ch_tx) = 1; // Increment source!
@@ -93,6 +98,9 @@ bool UART::init(uint32_t br_target){
     } else {
         while(true);
     }
+
+    // TODO: Verify that this line is necessary    
+    DMA_CSR_REG(DMA0, dma_ch_tx) |= DMA_CSR_ACTIVE_MASK; // Set actuve
 
     is_init = true;
     __enable_irq();
