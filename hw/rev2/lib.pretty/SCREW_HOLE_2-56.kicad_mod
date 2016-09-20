@@ -1,0 +1,9 @@
+(module SCREW_HOLE_2-56 (layer F.Cu) (tedit 5060D5E0)
+  (fp_text reference SCREW_HOLE_2-56 (at 0 -6.096) (layer F.SilkS) hide
+    (effects (font (size 1.1 1.1) (thickness 0.17)))
+  )
+  (fp_text value VAL** (at 0 4.572) (layer F.SilkS) hide
+    (effects (font (size 1.1 1.1) (thickness 0.17)))
+  )
+  (pad "" np_thru_hole circle (at 0 0) (size 2.286 2.286) (drill 2.286) (layers *.Cu *.Mask F.SilkS))
+)

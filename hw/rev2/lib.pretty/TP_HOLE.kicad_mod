@@ -1,0 +1,10 @@
+(module TP_HOLE (layer F.Cu) (tedit 52519C71)
+  (fp_text reference TP_HOLE (at 0 -1.5) (layer F.SilkS)
+    (effects (font (size 1.1 1.1) (thickness 0.17)))
+  )
+  (fp_text value VAL** (at 0 1.75) (layer F.SilkS) hide
+    (effects (font (size 1.1 1.1) (thickness 0.17)))
+  )
+  (pad 1 thru_hole circle (at 0 0) (size 1.016 1.016) (drill 0.7112) (layers *.Cu *.Mask F.SilkS)
+    (zone_connect 2))
+)
