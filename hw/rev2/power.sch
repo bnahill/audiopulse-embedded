@@ -536,7 +536,7 @@ Wire Wire Line
 Connection ~ 6000 4250
 Connection ~ 6800 4950
 Wire Wire Line
-	6000 4950 8400 4950
+	6000 4950 8800 4950
 Wire Wire Line
 	4100 1200 4100 1600
 Wire Wire Line
@@ -622,4 +622,18 @@ F 3 "" H 6550 5100 50  0000 C CNN
 $EndComp
 Wire Wire Line
 	1750 2950 2950 2950
+$Comp
+L TP TP7
+U 1 1 57EB7321
+P 8800 4400
+F 0 "TP7" H 8800 4300 60  0000 C CNN
+F 1 "TP" H 8800 4500 60  0000 C CNN
+F 2 "lib:TP_HOLE" H 8800 4400 60  0001 C CNN
+F 3 "~" H 8800 4400 60  0000 C CNN
+	1    8800 4400
+	0    -1   -1   0   
+$EndComp
+Wire Wire Line
+	8800 4950 8800 4500
+Connection ~ 8400 4950
 $EndSCHEMATC
