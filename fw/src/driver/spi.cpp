@@ -29,23 +29,23 @@ void SPI::register_slave(SPI_slave &slave){
 	if(nslaves > 1)
 		return;
 
-    spi->MCR |= SPI_MCR_MDIS_MASK;
+    spi.MCR |= SPI_MCR_MDIS_MASK;
 
 	slave.index = nslaves;
     slave.NCS.configure((GPIOPin::mux_t)slave.mux, true);
     //slave.NCS.configure(GPIOPin::MUX_GPIO);
     //slave.NCS.make_output();
     //slave.NCS.set();
-	spi->CTAR[nslaves] = slave.CTAR;
+	spi.CTAR[nslaves] = slave.CTAR;
 	nslaves += 1;
 
-    spi->MCR &= ~SPI_MCR_MDIS_MASK;
+    spi.MCR &= ~SPI_MCR_MDIS_MASK;
 }
 
 void SPI::non_dma_init(){
-    spi->RSER = SPI_RSER_RFDF_RE_MASK;
+    spi.RSER = SPI_RSER_RFDF_RE_MASK;
 
-    spi->MCR = SPI_MCR_HALT_MASK |
+    spi.MCR = SPI_MCR_HALT_MASK |
             SPI_MCR_MSTR_MASK |    // Master
             SPI_MCR_DCONF(0) |     // SPI mode
             SPI_MCR_PCSIS(0x1F) |  // All nCS idle high
@@ -56,9 +56,9 @@ void SPI::non_dma_init(){
 
 
 
-    if(spi == SPI0_BASE_PTR){
+    if(&spi == SPI0_BASE_PTR){
         NVIC_EnableIRQ((IRQn_Type)26);
-    } else if(spi == SPI1_BASE_PTR){
+    } else if(&spi == SPI1_BASE_PTR){
         NVIC_EnableIRQ((IRQn_Type)27);
     }
 }
@@ -84,7 +84,7 @@ bool SPI::transfer(SPI_slave &slave,
     busy = true;
 
 
-    spi->MCR =
+    spi.MCR =
             SPI_MCR_MSTR_MASK |    // Master
             SPI_MCR_DCONF(0) |     // SPI mode
             SPI_MCR_PCSIS(0x1F) |  // All nCS idle high
@@ -100,7 +100,7 @@ bool SPI::transfer(SPI_slave &slave,
     current_tx_count = count - 1;
     current_hold = hold;
 
-    spi->SR =
+    spi.SR =
             SPI_SR_TCF_MASK |
             SPI_SR_TXRXS_MASK |
             SPI_SR_EOQF_MASK |
@@ -110,7 +110,7 @@ bool SPI::transfer(SPI_slave &slave,
             SPI_SR_RFDF_MASK;
 
     __disable_irq();
-    spi->PUSHR =
+    spi.PUSHR =
             SPI_PUSHR_CTAS(slave.index) |
             (((count > 1) && !hold) ? SPI_PUSHR_CONT_MASK : 0) |
             ((count > 1) ? 0 : SPI_PUSHR_EOQ_MASK) |
@@ -134,7 +134,7 @@ void SPI::dma_init(){
     DMAMUX_CHCFG_REG(DMAMUX, dma_ch_tx) = 0;
     DMAMUX_CHCFG_REG(DMAMUX, dma_ch_rx) = 0;
 
-    spi->RSER = SPI_RSER_RFDF_RE_MASK | SPI_RSER_RFDF_DIRS_MASK |
+    spi.RSER = SPI_RSER_RFDF_RE_MASK | SPI_RSER_RFDF_DIRS_MASK |
                 SPI_RSER_TFFF_RE_MASK | SPI_RSER_TFFF_DIRS_MASK;
 
     //
@@ -142,7 +142,7 @@ void SPI::dma_init(){
     //
 
     DMA_DADDR_REG(DMA0, dma_ch_rx) = (uint32_t)0; // Transmit FIFO
-    DMA_SADDR_REG(DMA0, dma_ch_rx) = (uint32_t)&spi->POPR;
+    DMA_SADDR_REG(DMA0, dma_ch_rx) = (uint32_t)&spi.POPR;
     DMA_SOFF_REG(DMA0, dma_ch_rx) = 1; // Increment source!
     DMA_DOFF_REG(DMA0, dma_ch_rx) = 0; // Don't increment destination!
     DMA_ATTR_REG(DMA0, dma_ch_rx) = DMA_ATTR_SMOD(0) | DMA_ATTR_SSIZE(0) | // 8-bit src
@@ -169,7 +169,7 @@ void SPI::dma_init(){
     // Set up TX channel
     //
 
-    DMA_DADDR_REG(DMA0, dma_ch_tx) = (uint32_t)&spi->PUSHR; // Transmit FIFO
+    DMA_DADDR_REG(DMA0, dma_ch_tx) = (uint32_t)&spi.PUSHR; // Transmit FIFO
     DMA_SADDR_REG(DMA0, dma_ch_tx) = (uint32_t)0;
     DMA_SOFF_REG(DMA0, dma_ch_tx) = 1; // Increment source!
     DMA_DOFF_REG(DMA0, dma_ch_tx) = 0; // Don't increment destination!
@@ -199,12 +199,12 @@ void SPI::dma_init(){
     // Connect the DMA sources
     //
 
-    if(spi == SPI0_BASE_PTR){
+    if(&spi == SPI0_BASE_PTR){
         DMAMUX_CHCFG_REG(DMAMUX, dma_ch_tx) = DMAMUX_CHCFG_SOURCE(15) |
                                               DMAMUX_CHCFG_ENBL_MASK;
         DMAMUX_CHCFG_REG(DMAMUX, dma_ch_rx) = DMAMUX_CHCFG_SOURCE(14) |
                                               DMAMUX_CHCFG_ENBL_MASK;
-    } else if(spi == SPI1_BASE_PTR){
+    } else if(&spi == SPI1_BASE_PTR){
         DMAMUX_CHCFG_REG(DMAMUX, dma_ch_tx) = DMAMUX_CHCFG_SOURCE(16) |
                                               DMAMUX_CHCFG_ENBL_MASK;
         DMAMUX_CHCFG_REG(DMAMUX, dma_ch_rx) = DMAMUX_CHCFG_SOURCE(16) |
@@ -241,7 +241,7 @@ bool SPI::transfer_dma(SPI_slave &slave,
     current_slave = &slave;
 
 
-    spi->MCR = SPI_MCR_HALT_MASK |
+    spi.MCR = SPI_MCR_HALT_MASK |
             SPI_MCR_MSTR_MASK |    // Master
             SPI_MCR_DCONF(0) |     // SPI mode
             SPI_MCR_PCSIS(1) |     // All nCS idle high
@@ -251,7 +251,7 @@ bool SPI::transfer_dma(SPI_slave &slave,
             SPI_MCR_CLR_RXF_MASK |
             SPI_MCR_SMPL_PT(0);    // Sample on clock edge
 
-    spi->PUSHR =
+    spi.PUSHR =
             SPI_PUSHR_CTAS(slave.index) |
             SPI_PUSHR_CONT_MASK |
             SPI_PUSHR_CTCNT_MASK |
@@ -299,7 +299,7 @@ bool SPI::transfer_dma(SPI_slave &slave,
     }
 
     // Clear SPI flags
-    spi->SR =
+    spi.SR =
             SPI_SR_TCF_MASK |
             SPI_SR_TXRXS_MASK |
             SPI_SR_EOQF_MASK |
@@ -309,7 +309,7 @@ bool SPI::transfer_dma(SPI_slave &slave,
             SPI_SR_RFDF_MASK;
 
     // Go SPI!
-    spi->MCR &= ~SPI_MCR_HALT_MASK;
+    spi.MCR &= ~SPI_MCR_HALT_MASK;
 
     NVIC_EnableIRQ((IRQn_Type)dma_ch_rx);
 

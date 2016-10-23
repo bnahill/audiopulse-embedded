@@ -138,7 +138,7 @@ public:
 	static constexpr ClockConfig config = clk120;
 
 private:
-	static constexpr GPIOPin clkout = {PTC_BASE_PTR, 3};
+	static constexpr GPIOPin clkout = {PTC, 3};
 };
 
 #endif // __APULSE_CLOCKS_H_

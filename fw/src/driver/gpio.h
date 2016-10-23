@@ -37,45 +37,45 @@ public:
 		MUX_ALT7   = 7
 	} mux_t;
 
-	constexpr GPIOPin(GPIO_MemMapPtr gpio, uint32_t offset) :
+	constexpr GPIOPin(GPIO_Type &gpio, uint32_t offset) :
 		gpio(gpio),
 		offset(offset)
 	{}
 
 	void set() const {
-		gpio->PSOR = 1 << offset;
+		gpio.PSOR = 1 << offset;
 	}
 
 	void clear() const {
-		gpio->PCOR = 1 << offset;
+		gpio.PCOR = 1 << offset;
 	}
 
 	void toggle() const {
-		gpio->PTOR = 1 << offset;
+		gpio.PTOR = 1 << offset;
 	}
 
 	bool read() const {
-		return gpio->PDIR & (1 << offset);
+		return gpio.PDIR & (1 << offset);
 	}
 
 	void make_input() const {
-		gpio->PDDR &= ~(1 << offset);
+		gpio.PDDR &= ~(1 << offset);
 	}
 
 	void make_output() const {
-		gpio->PDDR |= 1 << offset;
+		gpio.PDDR |= 1 << offset;
 	}
 
 	void set_mux(mux_t mux) const {
-		get_port()->PCR[offset] = (get_port()->PCR[offset] & ~PORT_PCR_MUX_MASK) |
-								  (mux << PORT_PCR_MUX_SHIFT);
+		get_port().PCR[offset] = (get_port().PCR[offset] & ~PORT_PCR_MUX_MASK) |
+		                          (mux << PORT_PCR_MUX_SHIFT);
 	}
 
-	void configure(mux_t mux, bool strong_drive = false,
-				   bool open_drain = false, bool filter = false,
-				   bool slow_slew = false, bool pull_en = false,
-				   bool pull_up = false) const {
-		get_port()->PCR[offset] = (mux << PORT_PCR_MUX_SHIFT) |
+	void inline configure(mux_t mux, bool strong_drive = false,
+	                      bool open_drain = false, bool filter = false,
+	                      bool slow_slew = false, bool pull_en = false,
+	                      bool pull_up = false) const {
+		get_port().PCR[offset] = (mux << PORT_PCR_MUX_SHIFT) |
 				(strong_drive ? PORT_PCR_DSE_MASK : 0) |
 				(open_drain ? PORT_PCR_ODE_MASK : 0) |
 				(filter ? PORT_PCR_PFE_MASK : 0) |
@@ -86,19 +86,19 @@ public:
 
 
 protected:
-	GPIO_MemMapPtr const gpio;
+	GPIO_Type &gpio;
 	uint32_t const offset;
 
-	PORT_MemMapPtr get_port() const {
+	constexpr PORT_Type & get_port() const {
 		return get_port(gpio);
 	}
 
-	static constexpr PORT_MemMapPtr get_port(GPIO_MemMapPtr gpio){
-		return (gpio == PTA_BASE_PTR) ? PORTA_BASE_PTR :
-			   ((gpio == PTB_BASE_PTR) ? PORTB_BASE_PTR :
-			   ((gpio == PTC_BASE_PTR) ? PORTC_BASE_PTR :
-			   ((gpio == PTD_BASE_PTR) ? PORTD_BASE_PTR :
-			   ((gpio == PTE_BASE_PTR) ? PORTE_BASE_PTR : 0))));
+	static constexpr PORT_Type & get_port(GPIO_Type &gpio){
+		return (&gpio == &PTA) ? PORTA :
+			   ((&gpio == &PTB) ? PORTB :
+			   ((&gpio == &PTC) ? PORTC :
+			   ((&gpio == &PTD) ? PORTD :
+			   ((&gpio == &PTE) ? PORTE : PORTA))));
 	}
 };
 

@@ -58,7 +58,7 @@ protected:
  */
 class SPI {
 public:
-    constexpr SPI(SPI_MemMapPtr spi, GPIOPin const MOSI, GPIOPin::mux_t MOSI_mux,
+    constexpr SPI(SPI_Type &spi, GPIOPin const MOSI, GPIOPin::mux_t MOSI_mux,
 	    GPIOPin const MISO, GPIOPin::mux_t MISO_mux,
 	    GPIOPin const SCLK, GPIOPin::mux_t SCLK_mux,
 		uint32_t dma_ch_tx, uint32_t dma_ch_rx) :
@@ -82,9 +82,9 @@ public:
 		if(is_init)
 			return;
 
-		if(spi == SPI0_BASE_PTR){
+		if(&spi == SPI0_BASE_PTR){
 			SIM_SCGC6 |= SIM_SCGC6_SPI0_MASK;
-		} else if(spi == SPI1_BASE_PTR){
+		} else if(&spi == SPI1_BASE_PTR){
 			SIM_SCGC6 |= SIM_SCGC6_SPI1_MASK;
 		} else {
 			while(true);
@@ -94,7 +94,7 @@ public:
 		MISO.configure(MISO_mux, true);
 		MOSI.configure(MOSI_mux, true);
 
-		spi->MCR = SPI_MCR_HALT_MASK;
+		spi.MCR = SPI_MCR_HALT_MASK;
 
 
         if(use_dma)
@@ -153,7 +153,7 @@ public:
         if(current_slave)
             current_slave->NCS.set();
 
-        spi->MCR |= SPI_MCR_HALT_MASK;
+        spi.MCR |= SPI_MCR_HALT_MASK;
 
 		if(current_cb){
 			current_cb(current_arg);
@@ -171,11 +171,11 @@ public:
 
 
 
-        while((spi->SR & SPI_SR_RXCTR_MASK) && current_rx_count){
+        while((spi.SR & SPI_SR_RXCTR_MASK) && current_rx_count){
             if(current_rx_ptr){
-                *(current_rx_ptr++) = spi->POPR;
+                *(current_rx_ptr++) = spi.POPR;
             } else {
-                dummy = spi->POPR;
+                dummy = spi.POPR;
             }
             current_rx_count -= 1;
         }
@@ -190,22 +190,22 @@ public:
                     SPI_PUSHR_CONT_MASK |
                     SPI_PUSHR_CTCNT_MASK |
                     SPI_PUSHR_PCS(1 << current_slave->ncs_index);
-            while(((spi->SR & SPI_SR_TXCTR_MASK) >> SPI_SR_TXCTR_SHIFT < 4) && current_tx_count){
+            while(((spi.SR & SPI_SR_TXCTR_MASK) >> SPI_SR_TXCTR_SHIFT < 4) && current_tx_count){
                 if(current_tx_count == 1){
                     if(!current_hold)
                         tx_mask &= ~SPI_PUSHR_CONT_MASK;
                     tx_mask |= SPI_PUSHR_EOQ_MASK;
                 }
                 if(current_tx_ptr){
-                    spi->PUSHR = tx_mask | *(current_tx_ptr++);
+                    spi.PUSHR = tx_mask | *(current_tx_ptr++);
                 } else {
-                    spi->PUSHR = tx_mask;
+                    spi.PUSHR = tx_mask;
                 }
                 current_tx_count -= 1;
             }
         }
 
-        spi->SR = SPI_SR_RFDF_MASK;
+        spi.SR = SPI_SR_RFDF_MASK;
         NVIC_ClearPendingIRQ((IRQn_Type)26);
     }
 
@@ -228,7 +228,7 @@ protected:
 
     bool use_dma;
 
-	SPI_MemMapPtr const spi;// = SPI0_BASE_PTR;
+	SPI_Type &spi;// = SPI0_BASE_PTR;
 	GPIOPin const MOSI;// = {PTD_BASE_PTR, 2};
 	GPIOPin::mux_t MOSI_mux;// = GPIOPin::MUX_ALT2;
 	GPIOPin const MISO;// = {PTD_BASE_PTR, 2};

@@ -184,7 +184,7 @@ set(C_WARNINGS "-Wall")
 # Flags for both C and C++ compilers
 set(COMMON_FLAGS "${LTO} -ffunction-sections -ffreestanding -fdata-sections ${MCFLAGS}")
 # Eliminate the need for a bunch of extra support code that may not work on the chip anyways
-set(CMAKE_CXX_FLAGS "--std=gnu++11 -fno-rtti -fno-exceptions -fno-threadsafe-statics  ${CXX_WARNINGS} ${COMMON_FLAGS}")
+set(CMAKE_CXX_FLAGS "--std=gnu++14 -fno-rtti -fno-exceptions -fno-threadsafe-statics  ${CXX_WARNINGS} ${COMMON_FLAGS}")
 # Use the new C11 standard
 set(CMAKE_C_FLAGS "--std=gnu11 ${C_WARNINGS} ${COMMON_FLAGS}")
 set(CMAKE_EXE_LINKER_FLAGS "-T${LINKER_SCRIPT} ${LTO} ${OPTIMIZATION} -Wl,-Map=${TARGET}.map,--cref,-static,--gc-sections -nostartfiles --entry=__reset_vector ${MCFLAGS} ${CMAKE_EXE_LINKER_FLAGS}")
@@ -338,6 +338,7 @@ add_custom_target(assembly_output ALL DEPENDS ${TARGET}.lst)
 #endif(${DEBUG_USE_SVD})
 
 configure_file(${CMAKE_SOURCE_DIR}/kinetis.ld.in ${CMAKE_CURRENT_BINARY_DIR}/kinetis.ld)
+configure_file(${CMAKE_SOURCE_DIR}/mk22_periph.ld ${CMAKE_CURRENT_BINARY_DIR}/mk22_periph.ld)
 
 
 if(${DEBUG_USE_SVD})

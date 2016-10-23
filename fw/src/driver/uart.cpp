@@ -37,22 +37,22 @@ bool UART::init(uint32_t br_target){
     uint16_t br_reg = divider / 32;
     uint16_t fine_adjust = ((uint32_t)divider) % 32;
 
-    dev->BDH = UART_BDH_SBR(br_reg >> 5);
-    dev->BDL = UART_BDL_SBR(br_reg);
+    dev.BDH = UART_BDH_SBR(br_reg >> 5);
+    dev.BDL = UART_BDL_SBR(br_reg);
 
 
-    dev->C1 =
+    dev.C1 =
         0;
-    dev->C4 = UART_C4_BRFA(fine_adjust);
-    dev->MA1 = 0;
-    dev->MA2 = 0;
+    dev.C4 = UART_C4_BRFA(fine_adjust);
+    dev.MA1 = 0;
+    dev.MA2 = 0;
 
-    dev->C2 =
+    dev.C2 =
         UART_C2_TIE_MASK |
         UART_C2_TE_MASK;
-    dev->C3 = 0;
-    dev->S2 = 0;
-    dev->C5 =
+    dev.C3 = 0;
+    dev.S2 = 0;
+    dev.C5 =
         UART_C5_TDMAS_MASK;
 
     DMA_CSR_REG(DMA0, dma_ch_tx) = 0;
@@ -60,7 +60,7 @@ bool UART::init(uint32_t br_target){
     DMAMUX_CHCFG(dma_ch_tx) = 0;
     NVIC_EnableIRQ((IRQn_Type)dma_ch_tx);
 
-    DMA_DADDR_REG(DMA0, dma_ch_tx) = (uint32_t)&dev->D; // Transmit FIFO
+    DMA_DADDR_REG(DMA0, dma_ch_tx) = (uint32_t)&dev.D; // Transmit FIFO
     DMA_SADDR_REG(DMA0, dma_ch_tx) = (uint32_t)0;
     DMA_SOFF_REG(DMA0, dma_ch_tx) = 1; // Increment source!
     DMA_DOFF_REG(DMA0, dma_ch_tx) = 0; // Don't increment destination!
@@ -85,12 +85,12 @@ bool UART::init(uint32_t br_target){
 
     DMA_SERQ = DMA_SERQ_SERQ(dma_ch_tx); // Enable requests
 
-    if(dev == UART0_BASE_PTR){
+    if(&dev == UART0_BASE_PTR){
         DMAMUX_CHCFG_REG(DMAMUX, dma_ch_tx) = DMAMUX_CHCFG_SOURCE(3) |
                                               DMAMUX_CHCFG_ENBL_MASK;
         //DMAMUX_CHCFG_REG(DMAMUX, dma_ch_rx) = DMAMUX_CHCFG_SOURCE(2) |
         //                                      DMAMUX_CHCFG_ENBL_MASK;
-    } else if(dev == UART1_BASE_PTR){
+    } else if(&dev == UART1_BASE_PTR){
         DMAMUX_CHCFG_REG(DMAMUX, dma_ch_tx) = DMAMUX_CHCFG_SOURCE(5) |
                                               DMAMUX_CHCFG_ENBL_MASK;
         //DMAMUX_CHCFG_REG(DMAMUX, dma_ch_rx) = DMAMUX_CHCFG_SOURCE(4) |

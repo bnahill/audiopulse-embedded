@@ -24,13 +24,13 @@
 
 Platform::task_t * Platform::head = nullptr;
 
-GPIOPin const Platform::leds[] = {{PTD_BASE_PTR, 4}, {PTD_BASE_PTR, 5}, {PTC_BASE_PTR, 4}};
+GPIOPin const Platform::leds[] = {{PTD, 4}, {PTD, 5}, {PTC, 4}};
 
-GPIOPin const Platform::power_en = {PTD_BASE_PTR, 3};
+GPIOPin const Platform::power_en = {PTD, 3};
 
-UART Platform::uart = UART(UART0, {PTD_BASE_PTR, 6}, {PTD_BASE_PTR, 7}, 4);
+UART Platform::uart = UART(UART0, {PTD, 6}, {PTD, 7}, 4);
 
-PWMFTM const Platform::pwm_ftm = {FTM0_BASE_PTR, GPIOPin::MUX_ALT4};
+PWMFTM const Platform::pwm_ftm = {FTM0, GPIOPin::MUX_ALT4};
 
 PWMGPIOPin const Platform::pwm[] = {
 	PWMGPIOPin(Platform::pwm_ftm, Platform::leds[0], 4),
@@ -39,27 +39,27 @@ PWMGPIOPin const Platform::pwm[] = {
 };
 
 SPI Platform::spi0 = {
-	SPI0_BASE_PTR,
-	{PTD_BASE_PTR, 2}, GPIOPin::MUX_ALT2,
-	{PTC_BASE_PTR, 7}, GPIOPin::MUX_ALT2,
-	{PTD_BASE_PTR, 1}, GPIOPin::MUX_ALT2,
+	SPI0,
+	{PTD, 2}, GPIOPin::MUX_ALT2,
+	{PTC, 7}, GPIOPin::MUX_ALT2,
+	{PTD, 1}, GPIOPin::MUX_ALT2,
 	2, 3 // DMA channels 2 and 3 for TX and RX
 };
 
 AK4621 Platform::codec = {
-    {PTC_BASE_PTR, 6}, GPIOPin::MUX_ALT6, // MCLK
-    {PTC_BASE_PTR, 2}, GPIOPin::MUX_ALT6, // LRCK
-    {PTC_BASE_PTR, 3}, GPIOPin::MUX_ALT6, // BCLK
-    {PTC_BASE_PTR, 1}, GPIOPin::MUX_ALT6, // SDO
-    {PTC_BASE_PTR, 5}, GPIOPin::MUX_ALT4, // SDIN
-    {PTB_BASE_PTR, 18}, // XTAL
-    {PTB_BASE_PTR, 3},  //PDN
+    {PTC, 6}, GPIOPin::MUX_ALT6, // MCLK
+    {PTC, 2}, GPIOPin::MUX_ALT6, // LRCK
+    {PTC, 3}, GPIOPin::MUX_ALT6, // BCLK
+    {PTC, 1}, GPIOPin::MUX_ALT6, // SDO
+    {PTC, 5}, GPIOPin::MUX_ALT4, // SDIN
+    {PTB, 18}, // XTAL
+    {PTB, 3},  //PDN
     I2S0_BASE_PTR,
     1, // RX DMA Channel
     0, // TX DMA Channel
     SPI_slave( // SPI slave
         spi0,
-        {PTD_BASE_PTR, 0}, GPIOPin::MUX_ALT2,
+        {PTD, 0}, GPIOPin::MUX_ALT2,
         (
             SPI_CTAR_FMSZ(7)   |   // 8-bit frames
             SPI_CTAR_CPOL_MASK |   // Clock idle high
@@ -79,7 +79,7 @@ AK4621 Platform::codec = {
 
 SPI_slave Platform::codec_slave = SPI_slave(
 	spi0,
-	{PTD_BASE_PTR, 0}, GPIOPin::MUX_ALT2,
+	{PTD, 0}, GPIOPin::MUX_ALT2,
 	(
 		SPI_CTAR_FMSZ(7)   |   // 8-bit frames
 		SPI_CTAR_CPOL_MASK |   // Clock idle high
@@ -98,7 +98,7 @@ SPI_slave Platform::codec_slave = SPI_slave(
 
 SPI_slave Platform::flash_slave = SPI_slave(
     Platform::spi0,
-    {PTC_BASE_PTR, 0}, GPIOPin::MUX_ALT2,
+    {PTC, 0}, GPIOPin::MUX_ALT2,
     (
         SPI_CTAR_FMSZ(7)   |   // 8-bit frames
         SPI_CTAR_CPOL_MASK |   // Clock idle high

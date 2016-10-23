@@ -7,10 +7,10 @@
 
 class UART {
 public:
-    UART(UART_MemMapPtr dev, GPIOPin const &rx, GPIOPin const &tx,
+    constexpr UART(UART_Type &dev, GPIOPin const &rx, GPIOPin const &tx,
          uint32_t dma_ch_tx) :
         dev(dev), rx(rx), tx(tx), is_init(false), dma_ch_tx(dma_ch_tx),
-        queue_count(0), queue_rd_head(0), queue_wr_head(0)
+        queue_count(0), queue_rd_head(0), queue_wr_head(0), tx_busy(false)
     {
 
     }
@@ -31,6 +31,8 @@ public:
 
 private:
     struct transfer {
+		constexpr transfer() :
+			src(nullptr), len(0), cb(nullptr), cb_arg(nullptr){}
         uint8_t const * src;
         uint16_t        len;
         cb_t            cb;
@@ -55,7 +57,7 @@ private:
     GPIOPin const rx, tx;
     uint32_t const dma_ch_tx;
 
-    UART_MemMapPtr const dev;
+    UART_Type& dev;
 };
 
 #endif // __APULSE_UART_H

@@ -25,9 +25,9 @@ bool TPA6130A2::enabled = false;
 uint8_t TPA6130A2::volume = 40 & 0x3F;
 
 void TPA6130A2::init_hw(){
-	if(I2C == I2C0_BASE_PTR){
+	if(&I2C == I2C0_BASE_PTR){
 		SIM_SCGC4 |= SIM_SCGC4_I2C0_MASK;
-	} else if(I2C == I2C1_BASE_PTR){
+	} else if(&I2C == I2C1_BASE_PTR){
 		SIM_SCGC4 |= SIM_SCGC4_I2C1_MASK;
 	}
 
@@ -40,10 +40,10 @@ void TPA6130A2::init_hw(){
 	SCL.configure(SCL_mux, true, true);
 	SDA.configure(SDA_mux, true, true);
 
-	I2C->F = I2C_F_MULT(0) |  // / 1 = 48MHz
+	I2C.F = I2C_F_MULT(0) |  // / 1 = 48MHz
 			 I2C_F_ICR(0x27); // / 480 = 100kHz
 
-	I2C->C1 = I2C_C1_IICEN_MASK;
+	I2C.C1 = I2C_C1_IICEN_MASK;
 
 #if CFG_POWER_ALWAYS_ON
     enable();
@@ -71,61 +71,61 @@ void TPA6130A2::disable(){
 }
 
 void TPA6130A2::write_reg (uint8_t addr, uint8_t val ) {
-	I2C->C1 |= I2C_C1_TX_MASK;
-	I2C->C1 |= I2C_C1_MST_MASK; // Assert start
-	I2C->D = i2c_addr; // Write bus address
+	I2C.C1 |= I2C_C1_TX_MASK;
+	I2C.C1 |= I2C_C1_MST_MASK; // Assert start
+	I2C.D = i2c_addr; // Write bus address
 
-	while((I2C->S & I2C_S_IICIF_MASK) == 0); // Wait for
-	I2C->S |= I2C_S_IICIF_MASK; // Clear
+	while((I2C.S & I2C_S_IICIF_MASK) == 0); // Wait for
+	I2C.S |= I2C_S_IICIF_MASK; // Clear
 
-	I2C->D = addr; // Write register address
+	I2C.D = addr; // Write register address
 
-	while((I2C->S & I2C_S_IICIF_MASK) == 0); // Wait for
-	I2C->S |= I2C_S_IICIF_MASK; // Clear
+	while((I2C.S & I2C_S_IICIF_MASK) == 0); // Wait for
+	I2C.S |= I2C_S_IICIF_MASK; // Clear
 
-	I2C->D = val; // Write value
+	I2C.D = val; // Write value
 
-	while((I2C->S & I2C_S_IICIF_MASK) == 0); // Wait for
-	I2C->S |= I2C_S_IICIF_MASK; // Clear
+	while((I2C.S & I2C_S_IICIF_MASK) == 0); // Wait for
+	I2C.S |= I2C_S_IICIF_MASK; // Clear
 
-	I2C->C1 &= ~I2C_C1_MST_MASK;
-	I2C->C1 &= ~I2C_C1_TX_MASK;
+	I2C.C1 &= ~I2C_C1_MST_MASK;
+	I2C.C1 &= ~I2C_C1_TX_MASK;
 
-	while(I2C->S & I2C_S_BUSY_MASK); // Wait for STOP
+	while(I2C.S & I2C_S_BUSY_MASK); // Wait for STOP
 }
 
 void TPA6130A2::write_multiple(uint8_t start_addr, uint8_t const * data, uint8_t n){
-	I2C->C1 |= I2C_C1_TX_MASK;
-	I2C->C1 |= I2C_C1_MST_MASK; // Assert start
-	I2C->D = i2c_addr; // Write bus address
+	I2C.C1 |= I2C_C1_TX_MASK;
+	I2C.C1 |= I2C_C1_MST_MASK; // Assert start
+	I2C.D = i2c_addr; // Write bus address
 
-	while((I2C->S & I2C_S_IICIF_MASK) == 0); // Wait for
-	I2C->S |= I2C_S_IICIF_MASK; // Clear
+	while((I2C.S & I2C_S_IICIF_MASK) == 0); // Wait for
+	I2C.S |= I2C_S_IICIF_MASK; // Clear
 
-	I2C->D = start_addr; // Write register address
+	I2C.D = start_addr; // Write register address
 
-	while((I2C->S & I2C_S_IICIF_MASK) == 0); // Wait for
-	I2C->S |= I2C_S_IICIF_MASK; // Clear
+	while((I2C.S & I2C_S_IICIF_MASK) == 0); // Wait for
+	I2C.S |= I2C_S_IICIF_MASK; // Clear
 
 	while(n--){
-		I2C->D = *data++; // Write value
+		I2C.D = *data++; // Write value
 
-		while((I2C->S & I2C_S_IICIF_MASK) == 0); // Wait for
-		I2C->S |= I2C_S_IICIF_MASK; // Clear
+		while((I2C.S & I2C_S_IICIF_MASK) == 0); // Wait for
+		I2C.S |= I2C_S_IICIF_MASK; // Clear
 	}
 
-	I2C->C1 &= ~I2C_C1_MST_MASK;
-	I2C->C1 &= ~I2C_C1_TX_MASK;
+	I2C.C1 &= ~I2C_C1_MST_MASK;
+	I2C.C1 &= ~I2C_C1_TX_MASK;
 
-	while(I2C->S & I2C_S_BUSY_MASK); // Wait for STOP
+	while(I2C.S & I2C_S_BUSY_MASK); // Wait for STOP
 }
 
 uint8_t TPA6130A2::read_reg(uint8_t addr){
-	I2C->C1 |= I2C_C1_MST_MASK; // Assert start
-	I2C->D = i2c_addr | 1;
+	I2C.C1 |= I2C_C1_MST_MASK; // Assert start
+	I2C.D = i2c_addr | 1;
 
-	while((I2C->S & I2C_S_IICIF_MASK) == 0); // Wait for
-	I2C->S |= I2C_S_IICIF_MASK; // Clear
+	while((I2C.S & I2C_S_IICIF_MASK) == 0); // Wait for
+	I2C.S |= I2C_S_IICIF_MASK; // Clear
 
 	return 0;
 }

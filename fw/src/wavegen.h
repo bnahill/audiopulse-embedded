@@ -27,6 +27,7 @@
 #include <arm_math.h>
 #include <derivative.h>
 #include <apulse_math.h>
+#include <math.h>
 
 
 
@@ -301,7 +302,7 @@ protected:
 	 sine wave to achieve the desired gain.
 	 */
     static float db_to_pp(float db){
-        return pow10f((db - 80)/20.0);
+        return std::pow(10.0f, (db - 80)/20.0);
 		//return pow10f(db.asFloat()/20.0) / 4096;
 	}
 

@@ -62,7 +62,7 @@ void swo_setup(){
 
 static SPI_slave volatile	test_slave = SPI_slave(
 	Platform::spi0,
-	{PTD_BASE_PTR, 0}, GPIOPin::MUX_ALT2,
+	{PTD, 0}, GPIOPin::MUX_ALT2,
 	(
 		SPI_CTAR_FMSZ(7)   |   // 8-bit frames
 		SPI_CTAR_CPOL_MASK |   // Clock idle high

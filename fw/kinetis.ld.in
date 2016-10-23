@@ -41,6 +41,7 @@ __stack = _estack; /* For newlib */
 __heap_size = 2k;                 /* required amount of heap  */
 __stack_size = 8k;                 /* required amount of stack */
 
+INCLUDE mk22_periph.ld
 
 MEMORY {
   /* Vector addresses in the first 1K */

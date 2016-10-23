@@ -87,16 +87,16 @@ protected:
 	
 	//! @name Pin configuration
 	//! @{
-	static constexpr GPIOPin nSD = {PTB_BASE_PTR, 2};
-	static constexpr GPIOPin SDA = {PTB_BASE_PTR, 1};
+	static constexpr GPIOPin        nSD = {PTB, 2};
+	static constexpr GPIOPin        SDA = {PTB, 1};
 	static constexpr GPIOPin::mux_t SDA_mux = GPIOPin::MUX_ALT2;
-	static constexpr GPIOPin SCL = {PTB_BASE_PTR, 0};
+	static constexpr GPIOPin        SCL = {PTB, 0};
 	static constexpr GPIOPin::mux_t SCL_mux = GPIOPin::MUX_ALT2;
 	//! @}
 
 	//! @name Hardware configuration
 	//! @{
-	static constexpr I2C_MemMapPtr I2C = I2C0_BASE_PTR;
+	static constexpr I2C_Type& I2C = I2C0;
 	static constexpr uint8_t i2c_addr = 0b1100000 << 1;
 	//! @}
 };
