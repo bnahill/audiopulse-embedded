@@ -7,13 +7,15 @@ import time
 from scipy.io import savemat
 
 import matplotlib
-matplotlib.use('Qt4Agg')
-matplotlib.rcParams['backend.qt4'] = 'PySide'
+matplotlib.use('Qt5Agg')
+#matplotlib.rcParams['backend.qt5'] = 'PySide'
 
-from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
 
-from PySide import QtGui, QtCore
+#from PySide import QtWidgets, QtCore
+from PyQt5 import QtGui, QtCore, QtWidgets
 
 import threading
 
@@ -35,8 +37,8 @@ class DataSeries(object):
 
 class PSDSeries(DataSeries):
     def __init__(self, label, data, f1=None, f2=None):
-        xvals = np.linspace(0, 8000, 513)
-        super(PSDSeries, self).__init__(label, data, "Frequency (Hz)",
+        xvals = np.linspace(0, 8000, 512)
+        super(PSDSeries, self).__init__(label, data[:512], "Frequency (Hz)",
                                         "Power (SPL)", xvals)
         self.f1 = f1
         self.f2 = f2
@@ -50,9 +52,9 @@ class PSDSeries(DataSeries):
 
 class LogPSDSeries(DataSeries):
     def __init__(self, label, data, f1=None, f2=None):
-        xvals = np.linspace(0, 8000, 513)
+        xvals = np.linspace(0, 8000, 512)
         data = 10.0 * np.log10(0.7071 * data)
-        super(LogPSDSeries, self).__init__(label, data, "Frequency (Hz)",
+        super(LogPSDSeries, self).__init__(label, data[:512], "Frequency (Hz)",
                                            "Power (dB SPL)", xvals)
 
         self.f1 = f1
@@ -131,23 +133,23 @@ class PlotFigure(object):
         return self.canvas
 
 
-class SignalListItem(QtGui.QListWidgetItem):
+class SignalListItem(QtWidgets.QListWidgetItem):
     def __init__(self, signal):
         super(SignalListItem, self).__init__(str(signal.label))
         self.signal = signal
 
 
-class GainSlider(QtGui.QWidget):
+class GainSlider(QtWidgets.QWidget):
     def __init__(self, parent=None, label=None):
         super(GainSlider, self).__init__(parent)
-        self.layout = QtGui.QHBoxLayout(self)
-        self.slider = QtGui.QSlider(QtCore.Qt.Horizontal, self)
-        self.label = QtGui.QLineEdit(" 0.0 ", self)
+        self.layout = QtWidgets.QHBoxLayout(self)
+        self.slider = QtWidgets.QSlider(QtCore.Qt.Horizontal, self)
+        self.label = QtWidgets.QLineEdit(" 0.0 ", self)
         self.label.setFixedWidth(42)
         self.setLayout(self.layout)
 
         if label:
-            self.title = QtGui.QLabel(str(label))
+            self.title = QtWidgets.QLabel(str(label))
             self.layout.addWidget(self.title)
 
         self.layout.addWidget(self.slider)
@@ -174,19 +176,22 @@ class GainSlider(QtGui.QWidget):
         return float(self.slider.value()) / 100.0
 
 
-class ButtonPanel(QtGui.QFrame):
+class ButtonPanel(QtWidgets.QFrame):
 
     def __init__(self, parent=None):
         super(ButtonPanel, self).__init__(parent)
-        buttongrid = QtGui.QGridLayout(self)
+        buttongrid = QtWidgets.QGridLayout(self)
 
-        connbutton = QtGui.QPushButton("&Connect", self)
-        rstbutton = QtGui.QPushButton("&Reset", self)
-        statbutton = QtGui.QPushButton("&Get Status", self)
-        startbutton = QtGui.QPushButton("&Start", self)
-        calbutton = QtGui.QPushButton("&Calibrate", self)
-        decalbutton = QtGui.QPushButton("&Decalibrate", self)
-        databutton = QtGui.QPushButton("&Get Data", self)
+        connbutton = QtWidgets.QPushButton("&Connect", self)
+        rstbutton = QtWidgets.QPushButton("&Reset", self)
+        statbutton = QtWidgets.QPushButton("&Get Status", self)
+        startbutton = QtWidgets.QPushButton("&Start", self)
+        calbutton = QtWidgets.QPushButton("&Calibrate", self)
+        decalbutton = QtWidgets.QPushButton("&Decalibrate", self)
+        label_text = QtWidgets.QLineEdit("auto", self)
+        label_label = QtWidgets.QLabel("Label:")
+        label_text.editingFinished.connect(self.correct_label_text)
+        databutton = QtWidgets.QPushButton("&Get Data", self)
 
         buttongrid.addWidget(connbutton, 0, 0, 1, 2, QtCore.Qt.AlignHCenter)
         buttongrid.addWidget(rstbutton, 0, 2, 1, 2, QtCore.Qt.AlignHCenter)
@@ -194,31 +199,33 @@ class ButtonPanel(QtGui.QFrame):
         buttongrid.addWidget(startbutton, 1, 2, 1, 2, QtCore.Qt.AlignHCenter)
         buttongrid.addWidget(calbutton, 2, 0, 1, 2, QtCore.Qt.AlignHCenter)
         buttongrid.addWidget(decalbutton, 2, 2, 1, 2, QtCore.Qt.AlignHCenter)
-        buttongrid.addWidget(databutton, 3, 0, 1, 4, QtCore.Qt.AlignHCenter)
+        buttongrid.addWidget(label_label, 3, 0, 1, 1, QtCore.Qt.AlignHCenter)
+        buttongrid.addWidget(label_text, 3, 1, 1, 3, QtCore.Qt.AlignHCenter)
+        buttongrid.addWidget(databutton, 4, 0, 1, 4, QtCore.Qt.AlignHCenter)
 
-        f_label = QtGui.QLabel("f (Hz)")
-        t1_label = QtGui.QLabel("t1 (ms)")
-        t2_label = QtGui.QLabel("t2 (ms)")
-        db_label = QtGui.QLabel("A (dB SPL)")
+        f_label = QtWidgets.QLabel("f (Hz)")
+        t1_label = QtWidgets.QLabel("t1 (ms)")
+        t2_label = QtWidgets.QLabel("t2 (ms)")
+        db_label = QtWidgets.QLabel("A (dB SPL)")
 
-        f_1 = QtGui.QLineEdit("2000", self)
-        t1_1 = QtGui.QLineEdit("200", self)
-        t2_1 = QtGui.QLineEdit("8000", self)
-        db_1 = QtGui.QLineEdit("65.0", self)
+        f_1 = QtWidgets.QLineEdit("2000", self)
+        t1_1 = QtWidgets.QLineEdit("200", self)
+        t2_1 = QtWidgets.QLineEdit("8000", self)
+        db_1 = QtWidgets.QLineEdit("65.0", self)
 
-        f_2 = QtGui.QLineEdit("2400", self)
-        t1_2 = QtGui.QLineEdit("200", self)
-        t2_2 = QtGui.QLineEdit("8000", self)
-        db_2 = QtGui.QLineEdit("65.0", self)
+        f_2 = QtWidgets.QLineEdit("2400", self)
+        t1_2 = QtWidgets.QLineEdit("200", self)
+        t2_2 = QtWidgets.QLineEdit("8000", self)
+        db_2 = QtWidgets.QLineEdit("65.0", self)
 
-        t1_capture_label = QtGui.QLabel("t1 (ms)")
-        t2_capture_label = QtGui.QLabel("t2 (ms")
-        overlap_label = QtGui.QLabel("Overlap")
-        capture_label = QtGui.QLabel("Capture")
-        t1_capture = QtGui.QLineEdit("300", self)
-        t2_capture = QtGui.QLineEdit("7500", self)
-        overlap = QtGui.QLineEdit("256", self)
-        src = QtGui.QComboBox(self)
+        t1_capture_label = QtWidgets.QLabel("t1 (ms)")
+        t2_capture_label = QtWidgets.QLabel("t2 (ms")
+        overlap_label = QtWidgets.QLabel("Overlap")
+        capture_label = QtWidgets.QLabel("Capture")
+        t1_capture = QtWidgets.QLineEdit("300", self)
+        t2_capture = QtWidgets.QLineEdit("7500", self)
+        overlap = QtWidgets.QLineEdit("256", self)
+        src = QtWidgets.QComboBox(self)
         src.addItem("Mic", userData=InputConfig.SRC_MIC)
         src.addItem("Ext", userData=InputConfig.SRC_EXT)
         src.addItem("Mix", userData=InputConfig.SRC_MIX)
@@ -264,6 +271,7 @@ class ButtonPanel(QtGui.QFrame):
         self.calbutton = calbutton
         self.decalbutton = decalbutton
         self.databutton = databutton
+        self.label_text = label_text
 
         self.t1_capture = t1_capture
         self.t2_capture = t2_capture
@@ -277,6 +285,10 @@ class ButtonPanel(QtGui.QFrame):
             [f_1, t1_1, t2_1, db_1],
             [f_2, t1_2, t2_2, db_2],
         ]
+
+    def correct_label_text(self):
+        if self.label_text.text() == "":
+            self.label_text.setText("auto")
 
 
 class SigCollection(object):
@@ -332,7 +344,7 @@ class SigCollection(object):
         return len(self.sigs)
 
 
-class UIWindow(QtGui.QMainWindow):
+class UIWindow(QtWidgets.QMainWindow):
     iface = None
     sigcol = None
 
@@ -346,58 +358,76 @@ class UIWindow(QtGui.QMainWindow):
         self.setGeometry(0, 0, 800, 600)
         self.setWindowTitle("APulse UI")
 
-        mainwidget = QtGui.QWidget(self)
+        mainwidget = QtWidgets.QWidget(self)
         self.setCentralWidget(mainwidget)
-        hlayout = QtGui.QHBoxLayout(mainwidget)
+        hlayout = QtWidgets.QHBoxLayout(mainwidget)
         mainwidget.setLayout(hlayout)
-        lframe = QtGui.QFrame(self)
-        rframe = QtGui.QFrame(self)
+        lframe = QtWidgets.QFrame(self)
+        rframe = QtWidgets.QFrame(self)
         hlayout.addWidget(lframe)
         hlayout.addWidget(rframe)
         lframe.setFixedWidth(325)
-        rframe.setSizePolicy(QtGui.QSizePolicy.Expanding,
-                             QtGui.QSizePolicy.Expanding)
+        rframe.setSizePolicy(QtWidgets.QSizePolicy.Expanding,
+                             QtWidgets.QSizePolicy.Expanding)
 
-        leftlayout = QtGui.QVBoxLayout(lframe)
-        rightlayout = QtGui.QVBoxLayout(rframe)
+        leftlayout = QtWidgets.QVBoxLayout(lframe)
+        rightlayout = QtWidgets.QVBoxLayout(rframe)
         lframe.setLayout(leftlayout)
         rframe.setLayout(rightlayout)
 
-        # buttonpanel = QtGui.QFrame(lframe)
+        # buttonpanel = QtWidgets.QFrame(lframe)
         buttonpanel = ButtonPanel(lframe)
 
-        listpanel = QtGui.QFrame(lframe)
-        listlist = QtGui.QListWidget(listpanel)
+        listpanel = QtWidgets.QFrame(lframe)
+        listlist = QtWidgets.QListWidget(listpanel)
         listlist.itemSelectionChanged.connect(self.listchanged)
-        listlayout = QtGui.QVBoxLayout(listpanel)
+        listlayout = QtWidgets.QVBoxLayout(listpanel)
         listlayout.addWidget(listlist)
 
         leftlayout.addWidget(buttonpanel)
         leftlayout.addWidget(listpanel)
 
         # Frame that will contain figures
-        plotpanel = QtGui.QFrame(rframe)
+
+
+        mplpanel = QtWidgets.QFrame(rframe)
+        mpllayout = QtWidgets.QVBoxLayout(mplpanel)
+        
+
+        plotpanel = QtWidgets.QFrame(rframe)
         plotpanel.setFrameStyle(QtCore.Qt.SolidLine)
-        plotpanel.setSizePolicy(QtGui.QSizePolicy.Expanding,
-                                QtGui.QSizePolicy.Expanding)
+        plotpanel.setSizePolicy(QtWidgets.QSizePolicy.Expanding,
+                                QtWidgets.QSizePolicy.Expanding)
+
+        self.fig = PlotFigure()
+        figlayout = QtWidgets.QHBoxLayout(plotpanel)
+        plotpanel.setLayout(figlayout)
+        figlayout.addWidget(self.fig.getWidget())
+
+        self.datalist = listlist
+
+        mplnavbar = NavigationToolbar(self.fig.canvas, mplpanel)
+        mpllayout.addWidget(plotpanel)
+        mpllayout.addWidget(mplnavbar)
+
         mbfont = QtGui.QFont("Monospace", 10)
         mbfont.setStyleHint(mbfont.TypeWriter)
-        messagebox = QtGui.QTextEdit(rframe)
+        messagebox = QtWidgets.QTextEdit(rframe)
         messagebox.setFixedHeight(200)
         messagebox.setCurrentFont(mbfont)
 
-        rightlayout.addWidget(plotpanel)
+        rightlayout.addWidget(mplpanel)
         rightlayout.addWidget(messagebox)
 
-        itemframe = QtGui.QFrame(lframe)
-        itemlayout = QtGui.QGridLayout(itemframe)
+        itemframe = QtWidgets.QFrame(lframe)
+        itemlayout = QtWidgets.QGridLayout(itemframe)
         itemframe.setLayout(itemlayout)
-        clearbutton = QtGui.QPushButton("&Clear", itemframe)
-        clearallbutton = QtGui.QPushButton("&Clear All", itemframe)
-        deletebutton = QtGui.QPushButton("&Delete", itemframe)
-        deleteallbutton = QtGui.QPushButton("&Delete All", itemframe)
-        savebutton = QtGui.QPushButton("&Save", itemframe)
-        filename = QtGui.QLineEdit(itemframe)
+        clearbutton = QtWidgets.QPushButton("&Clear", itemframe)
+        clearallbutton = QtWidgets.QPushButton("&Clear All", itemframe)
+        deletebutton = QtWidgets.QPushButton("&Delete", itemframe)
+        deleteallbutton = QtWidgets.QPushButton("&Delete All", itemframe)
+        savebutton = QtWidgets.QPushButton("&Save", itemframe)
+        filename = QtWidgets.QLineEdit(itemframe)
         itemlayout.addWidget(clearbutton, 0, 0)
         itemlayout.addWidget(clearallbutton, 0, 1)
         itemlayout.addWidget(deletebutton, 1, 0)
@@ -420,12 +450,7 @@ class UIWindow(QtGui.QMainWindow):
         self.plotpanel = plotpanel
         self.messagebox = messagebox
 
-        self.fig = PlotFigure()
-        figlayout = QtGui.QHBoxLayout(self.plotpanel)
-        self.plotpanel.setLayout(figlayout)
-        figlayout.addWidget(self.fig.getWidget())
 
-        self.datalist = listlist
 
         buttonpanel.rstbutton.clicked.connect(self.reset)
         buttonpanel.statbutton.clicked.connect(self.getstat)
@@ -461,6 +486,7 @@ class UIWindow(QtGui.QMainWindow):
         t = time.localtime()
         d = "{}.{}.{}.{}.{}".format(t.tm_mon, t.tm_mday, t.tm_hour,
                                     t.tm_min, t.tm_sec)
+        
         self.datalist.addItem(SignalListItem(LogPSDSeries("RAW " + d, fft)))
         print(("Got {} signals!".format(len(sigs))))
 
@@ -519,9 +545,14 @@ class UIWindow(QtGui.QMainWindow):
         t = time.localtime()
         d = "{}.{}.{}.{}.{}".format(t.tm_mon, t.tm_mday, t.tm_hour,
                                     t.tm_min, t.tm_sec)
-        self.datalist.addItem(SignalListItem(LogPSDSeries("LogPSD " + d, psd)))
+
+        text = self.buttonpanel.label_text.text()
+        if text == "auto":
+            text = d
+
+        self.datalist.addItem(SignalListItem(LogPSDSeries("LogPSD " + text, psd)))
         #print("Deliberately only presenting LogPSD option")
-        self.datalist.addItem(SignalListItem(PSDSeries("PSD " + d, psd)))
+        self.datalist.addItem(SignalListItem(PSDSeries("PSD " + text, psd)))
         #self.datalist.addItem(SignalListItem(TimeSeries("Avg " + d, avg)))
 
     def disconnect(self):
@@ -600,6 +631,6 @@ class UIWindow(QtGui.QMainWindow):
 
 
 if __name__ == '__main__':
-    app = QtGui.QApplication(sys.argv)
+    app = QtWidgets.QApplication(sys.argv)
     a = UIWindow()
     sys.exit(app.exec_())
