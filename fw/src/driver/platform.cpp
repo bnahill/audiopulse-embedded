@@ -24,19 +24,19 @@
 
 Platform::task_t * Platform::head = nullptr;
 
-GPIOPin const Platform::leds[] = {{PTD, 4}, {PTD, 5}, {PTC, 4}};
+//GPIOPin const Platform::leds[] = {{PTD, 4}, {PTD, 5}, {PTC, 4}};
 
-GPIOPin const Platform::power_en = {PTD, 3};
+//GPIOPin const Platform::power_en = {PTD, 3};
 
 UART Platform::uart = UART(UART0, {PTD, 6}, {PTD, 7}, 4);
 
-PWMFTM const Platform::pwm_ftm = {FTM0, GPIOPin::MUX_ALT4};
+//PWMFTM const Platform::pwm_ftm = {FTM0, GPIOPin::MUX_ALT4};
 
-PWMGPIOPin const Platform::pwm[] = {
-	PWMGPIOPin(Platform::pwm_ftm, Platform::leds[0], 4),
-	PWMGPIOPin(Platform::pwm_ftm, Platform::leds[1], 5),
-	PWMGPIOPin(Platform::pwm_ftm, Platform::leds[2], 3)
-};
+//PWMGPIOPin const Platform::pwm[] = {
+//	PWMGPIOPin(Platform::pwm_ftm, Platform::leds[0], 4),
+//	PWMGPIOPin(Platform::pwm_ftm, Platform::leds[1], 5),
+//	PWMGPIOPin(Platform::pwm_ftm, Platform::leds[2], 3)
+//};
 
 SPI Platform::spi0 = {
 	SPI0,
@@ -181,12 +181,18 @@ void Platform::earlyInit(){
     power_on();
 #endif
 
-	for(auto &led : leds){
-		// Setup that one LED so it can be used for debugging
-		led.make_output();
-		led.clear();
-		led.configure(GPIOPin::MUX_GPIO, true);
-	}
+
+
+	led_blue.make_output();
+	led_blue.clear();
+	led_blue.configure(GPIOPin::MUX_GPIO, true);
+	led_red.make_output();
+	led_red.clear();
+	led_red.configure(GPIOPin::MUX_GPIO, true);
+	led_green.make_output();
+	led_green.clear();
+	led_green.configure(GPIOPin::MUX_GPIO, true);
+	
 
     Clock::setupClocks();
 

@@ -1,0 +1,17 @@
+define r
+	mon reset
+end
+
+define l
+	r
+	load
+	r
+end
+
+set remotetimeout 2
+file @OUTFILE@
+
+target remote :2331
+
+l
+b main

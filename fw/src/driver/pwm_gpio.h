@@ -6,15 +6,15 @@
 
 class PWMFTM {
 public:
-	constexpr PWMFTM(FTM_MemMapPtr ftm, GPIOPin::mux_t mux) :
+	constexpr PWMFTM(FTM_Type& ftm, GPIOPin::mux_t mux) :
 		ftm(ftm), mux(mux){}
 
 	void init() const {
-		if(ftm == FTM0_BASE_PTR){
+		if(&ftm == FTM0_BASE_PTR){
 			SIM_SCGC6 |= SIM_SCGC6_FTM0_MASK;
-		} else if(ftm == FTM1_BASE_PTR){
+		} else if(&ftm == FTM1_BASE_PTR){
 			SIM_SCGC6 |= SIM_SCGC6_FTM1_MASK;
-		} else if(ftm == FTM2_BASE_PTR){
+		} else if(&ftm == FTM2_BASE_PTR){
 			SIM_SCGC6 |= SIM_SCGC6_FTM2_MASK;
 		}
 	}
@@ -38,7 +38,7 @@ public:
 	GPIOPin::mux_t const mux;
 
 protected:
-	FTM_MemMapPtr const ftm;
+	FTM_Type& ftm;
 };
 
 class PWMGPIOPin {

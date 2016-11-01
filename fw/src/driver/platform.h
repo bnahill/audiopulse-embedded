@@ -57,15 +57,25 @@ public:
 
         uart.init(1000000);
 
-		leds[0].clear();
-		leds[1].clear();
-		leds[2].clear();
+		led_red.clear();
+		led_green.clear();
+		led_blue.clear();
 	}
 
-	static PWMFTM const pwm_ftm;
+	static constexpr PWMFTM const pwm_ftm = {FTM0, GPIOPin::MUX_ALT4};
 
-	static GPIOPin const leds[3];
-	static PWMGPIOPin const pwm[3];
+	
+	static constexpr GPIOPin const led_red = {PTD, 5}; 
+	static constexpr GPIOPin const led_blue = {PTC, 4};
+	static constexpr GPIOPin const led_green = {PTD, 4};
+	
+	static constexpr GPIOPin const led_proc_wavegen = led_red; 
+	static constexpr GPIOPin const led_proc_ctrl = led_green;
+	static constexpr GPIOPin const led_proc_input = led_blue;
+	
+	static constexpr PWMGPIOPin const pwm_red = {pwm_ftm, Platform::led_red, 4};
+	static constexpr PWMGPIOPin const pwm_blue = {pwm_ftm, Platform::led_blue, 5};
+	static constexpr PWMGPIOPin const pwm_green = {pwm_ftm, Platform::led_green, 3};
 
 	static SPI spi0;
 	static SPI_slave codec_slave;
@@ -148,9 +158,8 @@ public:
 
 private:
 	//! Analog power enable
-	static GPIOPin const power_en;
-
-
+	static constexpr GPIOPin power_en = {PTD, 3};
+	//static GPIOPin const leds[3];
 };
 
 #endif // __cplusplus
@@ -173,6 +182,9 @@ void SPI0_ISR();
 // Codec DMA ISRs
 void DMA_CH0_ISR();
 void DMA_CH1_ISR();
+
+// UART DMA ISR
+void DMA_CH4_ISR();
 
 void SysTick_ISR();
 

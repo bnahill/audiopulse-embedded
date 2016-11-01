@@ -115,7 +115,7 @@ PT_THREAD(APulseController::pt_controller)(struct pt * pt){
 			if(teststate == TEST_RUNNING){
                 Platform::codec.stop();
 			}
-			Platform::leds[1].clear();
+			Platform::led_proc_ctrl.clear();
 			// Clean up after test
 			teststate = TEST_DONE;
 
@@ -182,7 +182,7 @@ PT_THREAD(APulseController::pt_controller)(struct pt * pt){
 		if(teststate == TEST_STARTING){
 			// Supply was already enabled
 			// Delay for startup
-			Platform::leds[1].set();
+			Platform::led_proc_ctrl.set();
 			//Platform::power_en.set();
 			timer.reset();
 			timer.start();
@@ -312,7 +312,7 @@ void APulseController::handle_dataI ( uint8_t* data, uint8_t size ) {
 		waveform_dump.reset();
 
 		teststate = TEST_RESET;
-		Platform::leds[1].clear();
+		Platform::led_proc_ctrl.clear();
 		WaveGen::request_resetI();
 		InputDSP::request_resetI();
 		break;

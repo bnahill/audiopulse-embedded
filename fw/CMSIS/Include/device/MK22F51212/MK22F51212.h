@@ -3463,31 +3463,31 @@ typedef struct {
 
 
 /* FTM - Register accessors */
-#define FTM_SC_REG(base)                         ((base)->SC)
-#define FTM_CNT_REG(base)                        ((base)->CNT)
-#define FTM_MOD_REG(base)                        ((base)->MOD)
-#define FTM_CnSC_REG(base,index)                 ((base)->CONTROLS[index].CnSC)
-#define FTM_CnV_REG(base,index)                  ((base)->CONTROLS[index].CnV)
-#define FTM_CNTIN_REG(base)                      ((base)->CNTIN)
-#define FTM_STATUS_REG(base)                     ((base)->STATUS)
-#define FTM_MODE_REG(base)                       ((base)->MODE)
-#define FTM_SYNC_REG(base)                       ((base)->SYNC)
-#define FTM_OUTINIT_REG(base)                    ((base)->OUTINIT)
-#define FTM_OUTMASK_REG(base)                    ((base)->OUTMASK)
-#define FTM_COMBINE_REG(base)                    ((base)->COMBINE)
-#define FTM_DEADTIME_REG(base)                   ((base)->DEADTIME)
-#define FTM_EXTTRIG_REG(base)                    ((base)->EXTTRIG)
-#define FTM_POL_REG(base)                        ((base)->POL)
-#define FTM_FMS_REG(base)                        ((base)->FMS)
-#define FTM_FILTER_REG(base)                     ((base)->FILTER)
-#define FTM_FLTCTRL_REG(base)                    ((base)->FLTCTRL)
-#define FTM_QDCTRL_REG(base)                     ((base)->QDCTRL)
-#define FTM_CONF_REG(base)                       ((base)->CONF)
-#define FTM_FLTPOL_REG(base)                     ((base)->FLTPOL)
-#define FTM_SYNCONF_REG(base)                    ((base)->SYNCONF)
-#define FTM_INVCTRL_REG(base)                    ((base)->INVCTRL)
-#define FTM_SWOCTRL_REG(base)                    ((base)->SWOCTRL)
-#define FTM_PWMLOAD_REG(base)                    ((base)->PWMLOAD)
+#define FTM_SC_REG(base)                         ((base).SC)
+#define FTM_CNT_REG(base)                        ((base).CNT)
+#define FTM_MOD_REG(base)                        ((base).MOD)
+#define FTM_CnSC_REG(base,index)                 ((base).CONTROLS[index].CnSC)
+#define FTM_CnV_REG(base,index)                  ((base).CONTROLS[index].CnV)
+#define FTM_CNTIN_REG(base)                      ((base).CNTIN)
+#define FTM_STATUS_REG(base)                     ((base).STATUS)
+#define FTM_MODE_REG(base)                       ((base).MODE)
+#define FTM_SYNC_REG(base)                       ((base).SYNC)
+#define FTM_OUTINIT_REG(base)                    ((base).OUTINIT)
+#define FTM_OUTMASK_REG(base)                    ((base).OUTMASK)
+#define FTM_COMBINE_REG(base)                    ((base).COMBINE)
+#define FTM_DEADTIME_REG(base)                   ((base).DEADTIME)
+#define FTM_EXTTRIG_REG(base)                    ((base).EXTTRIG)
+#define FTM_POL_REG(base)                        ((base).POL)
+#define FTM_FMS_REG(base)                        ((base).FMS)
+#define FTM_FILTER_REG(base)                     ((base).FILTER)
+#define FTM_FLTCTRL_REG(base)                    ((base).FLTCTRL)
+#define FTM_QDCTRL_REG(base)                     ((base).QDCTRL)
+#define FTM_CONF_REG(base)                       ((base).CONF)
+#define FTM_FLTPOL_REG(base)                     ((base).FLTPOL)
+#define FTM_SYNCONF_REG(base)                    ((base).SYNCONF)
+#define FTM_INVCTRL_REG(base)                    ((base).INVCTRL)
+#define FTM_SWOCTRL_REG(base)                    ((base).SWOCTRL)
+#define FTM_PWMLOAD_REG(base)                    ((base).PWMLOAD)
 
 /*!
  * @}
@@ -3918,23 +3918,27 @@ typedef struct {
 /** Peripheral FTM0 base address */
 #define FTM0_BASE                                (0x40038000u)
 /** Peripheral FTM0 base pointer */
-#define FTM0                                     ((FTM_Type *)FTM0_BASE)
-#define FTM0_BASE_PTR                            (FTM0)
+extern FTM_Type FTM0;
+//#define FTM0                                     ((FTM_Type *)FTM0_BASE)
+#define FTM0_BASE_PTR                            (&FTM0)
 /** Peripheral FTM1 base address */
 #define FTM1_BASE                                (0x40039000u)
 /** Peripheral FTM1 base pointer */
-#define FTM1                                     ((FTM_Type *)FTM1_BASE)
-#define FTM1_BASE_PTR                            (FTM1)
+extern FTM_Type FTM1;
+//#define FTM1                                     ((FTM_Type *)FTM1_BASE)
+#define FTM1_BASE_PTR                            (&FTM1)
 /** Peripheral FTM2 base address */
 #define FTM2_BASE                                (0x4003A000u)
 /** Peripheral FTM2 base pointer */
-#define FTM2                                     ((FTM_Type *)FTM2_BASE)
-#define FTM2_BASE_PTR                            (FTM2)
+extern FTM_Type FTM2;
+//#define FTM2                                     ((FTM_Type *)FTM2_BASE)
+#define FTM2_BASE_PTR                            (&FTM2)
 /** Peripheral FTM3 base address */
 #define FTM3_BASE                                (0x40026000u)
 /** Peripheral FTM3 base pointer */
-#define FTM3                                     ((FTM_Type *)FTM3_BASE)
-#define FTM3_BASE_PTR                            (FTM3)
+extern FTM_Type FTM3;
+//#define FTM3                                     ((FTM_Type *)FTM3_BASE)
+#define FTM3_BASE_PTR                            (&FTM3)
 /** Array initializer of FTM peripheral base addresses */
 #define FTM_BASE_ADDRS                           { FTM0_BASE, FTM1_BASE, FTM2_BASE, FTM3_BASE }
 /** Array initializer of FTM peripheral base pointers */

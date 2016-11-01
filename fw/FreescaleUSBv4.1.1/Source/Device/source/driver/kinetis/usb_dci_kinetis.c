@@ -1113,7 +1113,7 @@ void  USB_DCI_Clear_DATA0_Endpoint (
 	/*Check for a valid bdt index */
 	if (bdt_index != INVALID_BDT_INDEX)
 	{
-		ENDPT0STR *endpoint = (ENDPT0STR*)(&USB0_ENDPT0 + (4 * endpoint_number));
+		//ENDPT0STR *endpoint = (ENDPT0STR*)(&USB0_ENDPT0 + (4 * endpoint_number));
 		g_bdtmap->ep_dsc[bdt_index].Stat._byte = _DATA0;
 	}
     return;

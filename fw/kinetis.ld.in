@@ -51,11 +51,11 @@ MEMORY {
   /* Then the flash we actually want */
   m_text      (RX) : ORIGIN = 1k + 32, LENGTH = ${FLASH_SIZE} - 32
   /* There are two RAM regions... They are centered around 0x20000000 */
-  m_data      (RW) : ORIGIN = 0x20000000 - ${SRAM_BANK_SIZE}, LENGTH = ${SRAM_BANK_SIZE}
+  m_data2      (RW) : ORIGIN = 0x20000000 - ${SRAM_LBANK_SIZE}, LENGTH = ${SRAM_LBANK_SIZE}
   /* To avoid variables crossing this boundary, they are separated.
    * Hopefully this won't screw something up.
    */
-  m_data2     (RW) : ORIGIN = 0x20000000, LENGTH = ${SRAM_BANK_SIZE}
+  m_data     (RW) : ORIGIN = 0x20000000, LENGTH = ${SRAM_UBANK_SIZE}
 }
 
 /* Define output sections */

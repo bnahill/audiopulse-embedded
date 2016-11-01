@@ -156,9 +156,18 @@ if(${TARGET_K22})
 	set(MCFLAGS "${MCFLAGS} -mfloat-abi=hard -mfpu=fpv4-sp-d16")
 	add_definitions(-DCORTEX_USE_FPU=1 )
 	add_definitions(${MCFLAGS})
-	add_definitions(-DARM_MATH_CM4 -DMCU_MK22FN512VLH7 -D__FPU_PRESENT=1 -DLITTLE_ENDIAN)
-	set(SRAM_BANK_SIZE "64k")
+	
+	#For K22FN256VLH12
+	#add_definitions(-DARM_MATH_CM4 -DMCU_MK22FN256VLH12 -D__FPU_PRESENT=1 -DLITTLE_ENDIAN)
+	#set(SRAM_LBANK_SIZE "16k")
+	#set(SRAM_UBANK_SIZE "32k")
+	#set(FLASH_SIZE "256k")
+	#For K22FN512VLH12
+	add_definitions(-DARM_MATH_CM4 -DMCU_MK22FN512VLH12 -D__FPU_PRESENT=1 -DLITTLE_ENDIAN)
+	set(SRAM_LBANK_SIZE "64k")
+	set(SRAM_UBANK_SIZE "64k")
 	set(FLASH_SIZE "512k")
+	set(SVD_FILE "MK22F51212.svd")
 else()
 	set(MCFLAGS "${MCFLAGS} -mfloat-abi=soft")
 	add_definitions(-DCORTEX_USE_FPU=0)
@@ -166,6 +175,7 @@ else()
 	add_definitions(-DARM_MATH_CM4 -DMCU_MK20DX128VLH7 -DLITTLE_ENDIAN)
 	set(SRAM_BANK_SIZE "16k")
 	set(FLASH_SIZE "256k")
+	set(SVD_FILE "MK20D7.svd")
 endif()
 
 
@@ -356,6 +366,7 @@ endif()
 
 configure_file(${CMAKE_SOURCE_DIR}/start.gdb.in ${CMAKE_CURRENT_BINARY_DIR}/start.gdb)
 set(GDB_ARGS -x ${CMAKE_CURRENT_BINARY_DIR}/start.gdb)
+configure_file(${CMAKE_SOURCE_DIR}/start_kdevelop.gdb.in ${CMAKE_CURRENT_BINARY_DIR}/start_kdevelop.gdb)
 
 ##############################################################
 # Configuration for GDB

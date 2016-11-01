@@ -84,7 +84,7 @@ void Cpu_INT_NMIInterrupt(void)
 
 void Cpu_Interrupt(void)
 {
-	uint8_t vector_num;
+	static uint8_t volatile vector_num;
 	
 	vector_num = *(volatile uint8_t*)(0xE000ED04);
 	(void)vector_num;
@@ -169,7 +169,7 @@ const tVectorTable __vector_table __attribute__ ((section(".vectortable"))) = {
 			(tIsrFunc)DMA_CH1_ISR,					/* 0x11  0x00000044   -   ivINT_DMA1                     unused by PE */
 			(tIsrFunc)DMA_CH2_ISR,					/* 0x12  0x00000048   -   ivINT_DMA2                     unused by PE */
 			(tIsrFunc)DMA_CH3_ISR,					/* 0x13  0x0000004C   -   ivINT_DMA3                     unused by PE */
-			(tIsrFunc)Cpu_Interrupt,				/* 0x14  0x00000050   -   ivINT_DMA4                     unused by PE */
+			(tIsrFunc)DMA_CH4_ISR,					/* 0x14  0x00000050   -   ivINT_DMA4                     unused by PE */
 			(tIsrFunc)Cpu_Interrupt,				/* 0x15  0x00000054   -   ivINT_DMA5                     unused by PE */
 			(tIsrFunc)Cpu_Interrupt,				/* 0x16  0x00000058   -   ivINT_DMA6                     unused by PE */
 			(tIsrFunc)Cpu_Interrupt,				/* 0x17  0x0000005C   -   ivINT_DMA7                     unused by PE */

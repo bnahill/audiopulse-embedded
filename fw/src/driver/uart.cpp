@@ -155,7 +155,7 @@ void UART::dequeue(){
     __disable_irq();
     if(queue_count == 0){
         __enable_irq();
-        while(1);
+        return;
     }
 
     tx_busy = 0;

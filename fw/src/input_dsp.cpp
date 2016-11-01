@@ -227,7 +227,7 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
         Platform::codec.set_source(src, scale_mic, scale_ext);
 		new_samples = nullptr;
 		state = ST_CAPTURING;
-		Platform::leds[0].set();
+		Platform::led_proc_input.set();
 
 		range_psd.reset();
 		range_decimated.reset();
@@ -388,6 +388,7 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 					mag_psd,
 					transform_len + 2
 				);
+				
 // 				complex_power_avg_update(
 // 					(powerFractional)constants.one_over,
 // 					complex_transform,
@@ -411,7 +412,7 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 					                                    transform_len / 2 + 1);
 //					vector_mult_scalar(window_scale, mag_psd, mag_psd, transform_len/2 + 1);
 					state = ST_DONE;
-					Platform::leds[0].clear();
+					Platform::led_proc_input.clear();
 					break;
 				}
 
@@ -437,7 +438,7 @@ void InputDSP::do_reset(){
 
 	max = 0;
 	min = 0;
-	Platform::leds[0].clear();
+	Platform::led_proc_input.clear();
 
 	// Decimated frame buffer really doesn't need to be zero'd...
 	for(auto &a : decimated_frame_buffer) a = 0;

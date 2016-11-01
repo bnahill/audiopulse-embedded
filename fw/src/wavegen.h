@@ -134,7 +134,7 @@ public:
 
 		if(alldone){
 			mute();
-			Platform::leds[2].clear();
+			Platform::led_blue.clear();
 			state = ST_DONE;
 		}
 	}
@@ -187,7 +187,7 @@ public:
 			// Enable output if relevant
 			if(state == ST_STARTING){
 				state = ST_RUNNING;
-				Platform::leds[2].set();
+				Platform::led_proc_wavegen.set();
 				//if(!silent && !TPA6130A2::is_ready()){
 				//	TPA6130A2::enable();
 				//}
@@ -280,7 +280,7 @@ protected:
 	static bool pending_reset;
 
 	static void do_reset(){
-		Platform::leds[2].clear();
+		Platform::led_proc_wavegen.clear();
 		mute();
 		set_off(0);
 		set_off(1);
@@ -302,7 +302,7 @@ protected:
 	 sine wave to achieve the desired gain.
 	 */
     static float db_to_pp(float db){
-        return std::pow(10.0f, (db - 80)/20.0);
+        return std::pow(10.0f, (db - 87.5)/20.0);
 		//return pow10f(db.asFloat()/20.0) / 4096;
 	}
 
