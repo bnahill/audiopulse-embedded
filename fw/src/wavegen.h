@@ -49,7 +49,7 @@ public:
 	uint16_t w2;     //!< End angular rate (chirp)
 	uint16_t t1;     //!< The start time
 	uint16_t t2;     //!< The finish time
-	uint16_t theta;  //!< Current phase in wavetable
+	uint32_t theta;  //!< Current phase in wavetable
 	uint16_t w_current; //!< Theta for angular rate in chirp, might not use
 	uint8_t ch;      //!< Which channel is it?
     float gain;   //!< Gain applied to each full-scale sample
@@ -202,6 +202,12 @@ public:
 		PT_END(pt);
 	}
 protected:
+	static constexpr wave_sample_t get_index(uint32_t index){
+		return (index < wavetable_len) ? wavetable[index] :
+		       ((index < wavetable_len * 2) ? wavetable[(wavetable_len - 1) - (index & (wavetable_len - 1))] :
+		       0 - get_index(index - (wavetable_len * 2)));
+	}
+	
 	static constexpr uint32_t buffer_size = AK4621::out_buffer_size;
 	static constexpr uint32_t wavetable_len = 8192;
     static const wave_sample_t wavetable[wavetable_len];
@@ -244,10 +250,13 @@ protected:
 		uint32_t theta = generator.theta;
         wave_sample_t gain = generator.gain;
 		for(uint32_t i = 0; i < buffer_size / 2; i++){
-            s = wavetable[theta & (wavetable_len - 1)];
+            //s = wavetable[theta & (wavetable_len - 1)];
+			while(theta >= wavetable_len * 4);
+				
+			s = get_index(theta);
 			// Negate for second half-wave
-			if(theta & wavetable_len)
-				s = -s;
+			//if(theta & wavetable_len)
+			//	s = -s;
 
 			s = s * gain;//__SSAT((((q63_t) s * gain) >> 32),31);
 			//s = s * get_speaker_gain(generator.f1);
@@ -257,7 +266,7 @@ protected:
 
 			dst += increment;
 
-			theta = (theta + generator.w1) & (wavetable_len * 2 - 1);
+			theta = (theta + generator.w1) & (wavetable_len * 4 - 1);
 		}
 		generator.theta = theta;
 	}
@@ -302,7 +311,7 @@ protected:
 	 sine wave to achieve the desired gain.
 	 */
     static float db_to_pp(float db){
-        return std::pow(10.0f, (db - 87.5)/20.0);
+        return std::pow(10.0f, (db - 119.5)/20.0);
 		//return pow10f(db.asFloat()/20.0) / 4096;
 	}
 

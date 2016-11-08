@@ -458,6 +458,12 @@ void complex_psd_mac(Ts a,
 					 Tpwr * dst,
 					 size_t n){
 
+	dst[0] = X[0]*X[0]*a + Y[0];
+	X += 1;
+	dst += 1;
+	Y += 1;
+	n -= 1;
+	
 	while(n >= 8){
 		T x1 = X[0];
 		T x2 = X[1];
@@ -502,6 +508,9 @@ void complex_psd_mac(Ts a,
 		Tpwr pwr1 = (x1*x1) + (x2*x2);
 		*dst++ = pwr1 * a + *Y++;
 		n -= 2;
+	}
+	if(n == 1){
+		dst[0] = X[0]*X[0]*a + Y[0];
 	}
 }
 

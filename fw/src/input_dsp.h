@@ -187,6 +187,7 @@ protected:
 	static transformFractional complex_transform[transform_len + 2];
 
 	static powerFractional mag_psd[transform_len / 2 + 1];
+	static transformFractional acc_buffer[transform_len / 2 + 1];
 
 	//! The average windowed waveform
 	static sampleFractional average_buffer[transform_len];

@@ -269,6 +269,8 @@ set(DSP_SOURCES
 	${DSP_SRC}/FilteringFunctions/arm_biquad_cascade_df1_init_f32.c
 	${DSP_SRC}/BasicMathFunctions/arm_shift_q31.c
 	${DSP_SRC}/BasicMathFunctions/arm_mult_f32.c
+	${DSP_SRC}/BasicMathFunctions/arm_add_f32.c
+	${DSP_SRC}/BasicMathFunctions/arm_scale_f32.c
 	${DSP_SRC}/TransformFunctions/arm_rfft_fast_init_f32.c
 	${DSP_SRC}/TransformFunctions/arm_rfft_fast_f32.c
 	${DSP_SRC}/TransformFunctions/arm_cfft_radix4_q31.c
@@ -279,8 +281,9 @@ set(DSP_SOURCES
 	${DSP_SRC}/TransformFunctions/arm_bitreversal.c
 	${DSP_SRC}/SupportFunctions/arm_copy_q31.c
 	${DSP_SRC}/SupportFunctions/arm_copy_f32.c
-        ${DSP_SRC}/SupportFunctions/arm_q31_to_float.c
+	${DSP_SRC}/SupportFunctions/arm_q31_to_float.c
 	${DSP_SRC}/CommonTables/arm_common_tables.c
+	${DSP_SRC}/ComplexMathFunctions/arm_cmplx_mag_f32.c
 )
 set_property(SOURCE ${DSP_SRC}/TransformFunctions/arm_bitreversal2.S PROPERTY LANGUAGE C)
 

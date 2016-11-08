@@ -57,6 +57,9 @@ __attribute__((section(".m_data2")))
 decltype(InputDSP::mag_psd) InputDSP::mag_psd;
 
 __attribute__((section(".m_data2")))
+decltype(InputDSP::acc_buffer) InputDSP::acc_buffer;
+
+__attribute__((section(".m_data2")))
 InputDSP::sampleFractional InputDSP::average_buffer[transform_len];
 
 uint32_t InputDSP::window_count;
@@ -294,7 +297,7 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 									 (float32_t*)&transform_buffer[num_before_end],
 									 transform_len - num_before_end);
 					}
-
+/* // Because we don't care about the average
 					weighted_vector_sum(
 						constants.one_over,
 						&decimated_frame_buffer[decimation_read_head],
@@ -312,7 +315,7 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 						&average_buffer[num_before_end],
 						transform_len - num_before_end
 					);
-
+*/
 				} else {
 					// All in one shot
 					if(use_rectangular){
@@ -329,7 +332,7 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 							transform_len
 						);
 					}
-
+/*
 					weighted_vector_sum(
 						constants.one_over,
 						&decimated_frame_buffer[decimation_read_head],
@@ -338,6 +341,7 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 						average_buffer,
 						transform_len
 					);
+*/
 				}
 
 				
@@ -381,13 +385,28 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 //					transform_len + 2
 //				);
 
-				complex_psd_mac(
-					window_scale,
-					complex_transform,
-					mag_psd,
-					mag_psd,
-					transform_len + 2
-				);
+				// Killed switching to coherent integration Nov 1 2016
+				//complex_psd_mac(
+				//	window_scale,
+				//	complex_transform,
+				//	mag_psd,
+				//	mag_psd,
+				//	transform_len + 2
+				//);
+				
+				// Accumulate FFT ouputs--don't care about the weird data format yet
+				//arm_add_f32(
+				//	complex_transform,
+				//	coherent_int_buffer,
+				//	coherent_int_buffer,
+				//	transform_len
+				//);
+				
+				arm_cmplx_mag_f32(complex_transform + 1, complex_transform + 1, transform_len / 2 - 1);
+				arm_add_f32(complex_transform + 1, mag_psd + 1, mag_psd + 1, transform_len / 2 - 1);
+				mag_psd[0] += complex_transform[0];
+				mag_psd[transform_len / 2] += complex_transform[transform_len];
+				// mag_psd now contains sum of absolute values
 				
 // 				complex_power_avg_update(
 // 					(powerFractional)constants.one_over,
@@ -402,14 +421,16 @@ PT_THREAD(InputDSP::pt_dsp(struct pt * pt)){
 				window_count += 1;
 				if(APulseController::get_time_ms() > end_time_ms){
 				//if(++window_count >= num_windows){
+					arm_scale_f32(mag_psd, 1.0/window_count, mag_psd, transform_len / 2 + 1);
+					arm_mult_f32(mag_psd, mag_psd, mag_psd, transform_len / 2 + 1);
 					if(calibrate_mic){
 						for(uint32_t i = 0; i < transform_len / 2; i++){
 							mag_psd[i] = mag_psd[i] * APulseController::coeffs[i / 16];
 						}
 						mag_psd[transform_len / 2] = mag_psd[transform_len / 2] * APulseController::coeffs[15];
 					}
-					vector_mult_scalar<powerFractional>(1.0 / window_count, mag_psd, mag_psd,
-					                                    transform_len / 2 + 1);
+					//vector_mult_scalar<powerFractional>(1.0 / window_count, mag_psd, mag_psd,
+					//                                    transform_len / 2 + 1);
 //					vector_mult_scalar(window_scale, mag_psd, mag_psd, transform_len/2 + 1);
 					state = ST_DONE;
 					Platform::led_proc_input.clear();
@@ -446,6 +467,7 @@ void InputDSP::do_reset(){
 	// These ones are important though...
 	for(auto &a : mag_psd) a = 0;
 	for(auto &a : average_buffer) a = 0;
+	for(auto &a : acc_buffer) a = 0;
 
     if(do_filter){
         if(use_iir) {
