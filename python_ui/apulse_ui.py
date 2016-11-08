@@ -213,10 +213,10 @@ class ButtonPanel(QtWidgets.QFrame):
         t2_1 = QtWidgets.QLineEdit("8000", self)
         db_1 = QtWidgets.QLineEdit("65.0", self)
 
-        f_2 = QtWidgets.QLineEdit("2400", self)
+        f_2 = QtWidgets.QLineEdit("2440", self)
         t1_2 = QtWidgets.QLineEdit("200", self)
         t2_2 = QtWidgets.QLineEdit("8000", self)
-        db_2 = QtWidgets.QLineEdit("65.0", self)
+        db_2 = QtWidgets.QLineEdit("55.0", self)
 
         t1_capture_label = QtWidgets.QLabel("t1 (ms)")
         t2_capture_label = QtWidgets.QLabel("t2 (ms")
