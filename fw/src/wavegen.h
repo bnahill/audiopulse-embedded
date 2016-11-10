@@ -43,13 +43,13 @@ public:
 	} gen_type_t;
 
 	gen_type_t type;
-	uint16_t f1;
-	uint16_t f2;
-	uint16_t w1;     //!< Start normalized angular rate
-	uint16_t w2;     //!< End angular rate (chirp)
+	float f1;
+	float f2;
+	float w1;     //!< Start normalized angular rate
+	float w2;     //!< End angular rate (chirp)
 	uint16_t t1;     //!< The start time
 	uint16_t t2;     //!< The finish time
-	uint32_t theta;  //!< Current phase in wavetable
+	float theta;  //!< Current phase in wavetable
 	uint16_t w_current; //!< Theta for angular rate in chirp, might not use
 	uint8_t ch;      //!< Which channel is it?
     float gain;   //!< Gain applied to each full-scale sample
@@ -250,13 +250,7 @@ protected:
 		uint32_t theta = generator.theta;
         wave_sample_t gain = generator.gain;
 		for(uint32_t i = 0; i < buffer_size / 2; i++){
-            //s = wavetable[theta & (wavetable_len - 1)];
-			while(theta >= wavetable_len * 4);
-				
-			s = get_index(theta);
-			// Negate for second half-wave
-			//if(theta & wavetable_len)
-			//	s = -s;
+			s = get_index(round_unsigned<uint32_t>(theta));
 
 			s = s * gain;//__SSAT((((q63_t) s * gain) >> 32),31);
 			//s = s * get_speaker_gain(generator.f1);
@@ -266,7 +260,9 @@ protected:
 
 			dst += increment;
 
-			theta = (theta + generator.w1) & (wavetable_len * 4 - 1);
+			theta = theta + generator.w1;
+			if(theta >= wavetable_len * 4)
+				theta -= wavetable_len * 4;
 		}
 		generator.theta = theta;
 	}

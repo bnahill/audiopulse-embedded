@@ -336,6 +336,11 @@ void vector_mult_scalar(Ts a, T const * B, T * dst, size_t n){
 	}
 }
 
+template<typename T>
+T round_unsigned(float x){
+	return static_cast<T>(x+0.5);
+}
+
 /*!
  @brief Compute dst = aX + bY
 
