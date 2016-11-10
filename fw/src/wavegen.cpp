@@ -49,7 +49,7 @@ void WaveGen::set_tone (uint8_t idx, uint8_t ch, uint16_t f1, uint16_t t1,
 		gen.gain = db_to_pp(gaindb);
 		gen.t1 = t1;
 		gen.t2 = t2;
-		gen.w1 = f1 * wavetable_len * 4 / fs;
+		gen.w1 = static_cast<float>(f1) * wavetable_len * 4 / fs;
 		gen.f1 = f1;
 		gen.theta = 0;
 		gen.type = Generator::GEN_FIXED;

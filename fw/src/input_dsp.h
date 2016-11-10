@@ -48,6 +48,26 @@ public:
 	typedef float transformFractional;
 #endif
 
+	class GoertzelBin {
+	public:
+		constexpr GoertzelBin(float coeff) :
+			coeff(coeff), s_prev(0), s_prev2(0) {}
+		
+		void push_sample(float x){
+			float s = x + coeff * s_prev - s_prev2;
+			s_prev2 = s_prev;
+			s_prev = s;
+		}
+		
+		float get_power(){
+			return s_prev2 * s_prev2 +
+			       s_prev * s_prev -
+			       coeff * s_prev * s_prev2;
+		}
+	private:
+		float coeff;
+		float s_prev, s_prev2;
+	};
 
 	/*!
 	 @brief The protothread for performing required DSP operations
@@ -238,7 +258,7 @@ protected:
 	//! Apply calibration coefficients to input spectrum
 	static constexpr bool calibrate_mic = false;
 	
-    static constexpr bool do_filter = true;
+	static constexpr bool do_filter = true;
 
 	//! Use the IIR decimation routines instead of FIR
 	static constexpr bool use_iir = false;
