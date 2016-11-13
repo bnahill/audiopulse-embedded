@@ -44,7 +44,7 @@ Comment2 ""
 Comment3 ""
 Comment4 ""
 $EndDescr
-Text HLabel 9050 4900 2    60   Output ~ 0
+Text HLabel 4100 5950 2    60   Output ~ 0
 HP_~SD
 $Comp
 L CAP C34
@@ -133,7 +133,7 @@ Text HLabel 8450 1550 2    60   BiDi ~ 0
 USB_D-
 Text Label 8350 1450 0    60   ~ 0
 ~RESET
-Text HLabel 9050 5000 2    60   Output ~ 0
+Text HLabel 4600 4100 2    60   Output ~ 0
 CODEC_PDN
 Text Notes 2550 3000 0    40   ~ 0
 Fs*256: 25.476MHz (for 96kHz)
@@ -181,17 +181,6 @@ F 2 "lib:SMD0402" H 8300 5850 60  0001 C CNN
 F 3 "~" H 8300 5850 60  0000 C CNN
 	1    8300 5850
 	0    -1   -1   0   
-$EndComp
-$Comp
-L TP TP4
-U 1 1 5251BBAF
-P 9600 5250
-F 0 "TP4" H 9600 5150 60  0000 C CNN
-F 1 "TP_PTE0" H 9600 5350 60  0000 C CNN
-F 2 "lib:TP_HOLE" H 9600 5250 60  0001 C CNN
-F 3 "~" H 9600 5250 60  0000 C CNN
-	1    9600 5250
-	1    0    0    -1  
 $EndComp
 Text HLabel 4100 6450 2    60   Output ~ 0
 SPI1_CS_CODEC
@@ -243,7 +232,7 @@ F 3 "" H 1850 3050 60  0000 C CNN
 	1    1850 3050
 	1    0    0    -1  
 $EndComp
-Text HLabel 9150 5450 2    60   Output ~ 0
+Text HLabel 4100 7250 2    60   Output ~ 0
 ANALOG_EN
 $Comp
 L RES R30
@@ -426,8 +415,6 @@ Wire Wire Line
 	8150 4450 8150 4350
 Wire Wire Line
 	8150 4350 8400 4350
-Wire Wire Line
-	9500 5250 9050 5250
 Wire Wire Line
 	8500 6000 8500 6100
 Wire Wire Line
@@ -853,14 +840,14 @@ Connection ~ 4950 1000
 Connection ~ 4800 1000
 Text Label 1700 2600 2    60   ~ 0
 CLK_EN
-Text Label 9450 5700 2    60   ~ 0
+Text Label 8200 3650 2    60   ~ 0
 CLK_EN
 Wire Wire Line
-	2900 7350 2750 7350
-Text Label 3400 3300 2    60   ~ 0
+	2900 6950 2100 6950
+Text Label 2100 6950 2    60   ~ 0
 LED2
 Wire Wire Line
-	3400 3300 3500 3300
+	3050 3300 3500 3300
 Text Label 8500 5500 1    60   ~ 0
 LED2
 Wire Wire Line
@@ -869,11 +856,11 @@ Text Label 8300 5500 1    60   ~ 0
 LED1
 Wire Wire Line
 	8300 5500 8300 5700
-Text Label 2750 7350 2    60   ~ 0
+Text Label 3050 3300 2    60   ~ 0
 LED1
 Wire Wire Line
-	2900 7050 2750 7050
-Text Label 2750 7050 2    60   ~ 0
+	3500 4300 3050 4300
+Text Label 3050 4300 2    60   ~ 0
 LED3
 Text Label 8700 5500 1    60   ~ 0
 LED3
@@ -999,7 +986,7 @@ F 3 "" H 6150 2550 50  0000 C CNN
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
-	6150 2550 6150 2450
+	6150 2450 6150 2550
 Wire Wire Line
 	6150 2500 6600 2500
 Wire Wire Line
@@ -1012,4 +999,18 @@ Wire Wire Line
 	6600 2500 6600 2450
 Connection ~ 6450 2500
 Connection ~ 6150 2050
+Wire Wire Line
+	4100 7250 3700 7250
+Text Notes 2850 6950 2    40   ~ 0
+PWMC0_H0
+Text Notes 3500 4300 2    40   ~ 0
+PWMC0_H1
+Text Notes 3500 3300 2    40   ~ 0
+PWMC0_H1
+Wire Wire Line
+	4100 5950 3700 5950
+Wire Wire Line
+	4600 4100 4300 4100
+Wire Wire Line
+	8200 3650 8400 3650
 $EndSCHEMATC
