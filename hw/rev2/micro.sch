@@ -29,6 +29,7 @@ LIBS:opto
 LIBS:atmel
 LIBS:contrib
 LIBS:valves
+LIBS:audio_iface_rev2-cache
 EELAYER 25 0
 EELAYER END
 $Descr A 11000 8500
@@ -1012,4 +1013,10 @@ F 3 "" H 1600 1600 50  0000 C CNN
 	1    1600 1600
 	1    0    0    -1  
 $EndComp
+Wire Wire Line
+	7100 1450 6250 1450
+Connection ~ 6250 1450
+Wire Wire Line
+	7100 1550 6250 1550
+Connection ~ 6250 1550
 $EndSCHEMATC
