@@ -1,0 +1,3 @@
+[submodule "fw_chibios/ChibiOS-RT"]
+	path = fw_chibios/ChibiOS-RT
+	url = git@github.com:bnahill/ChibiOS-Audiopulse.git
