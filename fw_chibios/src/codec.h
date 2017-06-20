@@ -35,8 +35,8 @@ public:
     //! A single audio sample
     typedef sFractional<0,31> sample_t;
     //! A callback for handling either unused or full data buffers
-    typedef void (*audio_cb_t)(sample_t * samples, size_t nframes);
-    typedef void (*audio_out_cb_t)(sample_t * samples, size_t nframes, uint32_t channels);
+    typedef void (*audio_out_cb_t)(sample_t * samples, size_t nframes);
+    typedef void (*audio_in_cb_t)(sample_t const * samples, size_t nframes, uint32_t channels);
 
 
     // Early declaration to ensure alignment
@@ -66,11 +66,17 @@ public:
         MIX = 2,
     };
 
-    constexpr AK4621(SAI_TypeDef &sai_in, SAI_TypeDef &sai_out, SPIDriver &spi, uint32_t spi_ncs_line) :
-        SAI_IN(sai_in), SAI_OUT(sai_out), SPI(spi),
+    constexpr AK4621(SAI_TypeDef &sai_in, uint8_t sai_in_ch, SAI_TypeDef &sai_out, uint8_t sai_out_ch, SPIDriver &spi, uint32_t spi_ncs_line, uint32_t pdn_line, uint32_t clk_en_line,
+                     uint32_t dma_channel_rx, uint32_t dma_stream_rx, uint32_t dma_prio_rx, uint32_t dma_irq_prio_rx,
+                     uint32_t dma_channel_tx, uint32_t dma_stream_tx, uint32_t dma_prio_tx, uint32_t dma_irq_prio_tx) :
+        SAI_IN(sai_in), sai_in_ch(sai_in_ch), SAI_OUT(sai_out), sai_out_ch(sai_out_ch), SPI(spi),
         rx_buffer_sel(0), tx_buffer_sel(0), source(Src::MIC), cb_in(nullptr), cb_out(nullptr),
-        spi_ncs_line(spi_ncs_line)
-
+        spi_ncs_line(spi_ncs_line), pdn_line(pdn_line), clk_en_line(clk_en_line),
+        dma_channel_rx(dma_channel_rx), dma_channel_tx(dma_channel_tx),
+        dma_stream_rx(dma_stream_rx), dma_stream_tx(dma_stream_tx),
+        dma_prio_rx(dma_prio_rx), dma_prio_tx(dma_prio_tx),
+        dma_irq_prio_rx(dma_irq_prio_rx), dma_irq_prio_tx(dma_irq_prio_tx),
+        dma_mode_rx(0), dma_mode_tx(0)
     {}
 
     bool is_Src(Src val){
@@ -103,7 +109,7 @@ public:
          The function provided will be called with a pointer to the new data, which
          will be of length \ref in_buffer_size
          */
-    void set_in_cb(audio_cb_t new_cb){cb_in = new_cb;}
+    void set_in_cb(audio_in_cb_t new_cb){cb_in = new_cb;}
 
     /*!
          @brief Set callback for free output buffer
@@ -114,7 +120,7 @@ public:
          @note If called before starting output, both buffers will be presented for
          population before the stream begins
          */
-    void set_out_cb(audio_out_cb_t new_cb){cb_out= new_cb;}
+    void set_out_cb(audio_out_cb_t new_cb){cb_out = new_cb;}
 
     /*!
          @brief Interrupt service routine for outgoing data buffer empty
@@ -247,8 +253,20 @@ protected:
     SAI_TypeDef &SAI_OUT;
     SPIDriver &SPI;
 
-    //uint32_t const dma_ch_rx;
-    //uint32_t const dma_ch_tx;
+    uint8_t sai_in_ch;
+    uint8_t sai_out_ch;
+
+    uint32_t const dma_channel_rx;
+    uint32_t const dma_stream_rx;
+    uint32_t const dma_prio_rx;
+    uint32_t const dma_irq_prio_rx;
+    uint32_t const dma_channel_tx;
+    uint32_t const dma_stream_tx;
+    uint32_t const dma_prio_tx;
+    uint32_t const dma_irq_prio_tx;
+
+    uint32_t dma_mode_rx;
+    uint32_t dma_mode_tx;
 
     static constexpr uint32_t word_width = 32;
     static constexpr uint32_t nwords = 2;
@@ -257,28 +275,20 @@ protected:
     static constexpr uint32_t lrck_hz = 48000;
     static constexpr uint32_t bclk_hz = word_width * nwords * lrck_hz;
 
-    static constexpr uint32_t mclk_gen_frac(){
-
-    }
-    static constexpr uint32_t mclk_gen_div(){
-
-    }
-    //static constexpr uint32_t mclk_gen_frac = 1;
-    //static constexpr uint32_t mclk_gen_div = 8;
-
-    static constexpr bool enable_dma_tx = true;
-    static constexpr bool enable_dma_rx = true;
-    static constexpr bool ext_mclk = true;
-
     uint_fast8_t rx_buffer_sel;
     uint_fast8_t tx_buffer_sel;
 
     Src source;
 
     uint32_t spi_ncs_line;
+    uint32_t pdn_line;
+    uint32_t clk_en_line;
 
-    void (*cb_in)(sample_t *, size_t);
-    void (*cb_out)(sample_t *, size_t, uint32_t);
+    audio_in_cb_t cb_in;
+    audio_out_cb_t cb_out;
+
+    static void data_in_handler(void * device, uint32_t flags);
+    static void data_out_handler(void * device, uint32_t flags);
 } __attribute__ ((aligned (64)));
 
 #endif // __cplusplus

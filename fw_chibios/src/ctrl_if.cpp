@@ -35,6 +35,10 @@ typedef struct {
 
 THD_WORKING_AREA(CtrlIF::thread_wa, thread_stack_size);
 
+static AK4621 codec(*SAI2, 1, *SAI1, 0, SPID3, LINE_SPI1_CS_CODEC, LINE_CODEC_PDN, LINE_CLK_EN,
+                    STM32_SAI1A_DMA_CHN, STM32_SAI_SAI1A_DMA_STREAM, STM32_SAI_SAI2B_DMA_PRIORITY, STM32_SAI_SAI1A_DMA_IRQ_PRIORITY,
+                    STM32_SAI2B_DMA_CHN, STM32_SAI_SAI2B_DMA_STREAM, STM32_SAI_SAI1A_DMA_PRIORITY, STM32_SAI_SAI2B_DMA_IRQ_PRIORITY);
+
 THD_FUNCTION(CtrlIF::thread_fn, arg){
     (void)arg;
     chRegSetThreadName("CtrlIF");
@@ -43,7 +47,7 @@ THD_FUNCTION(CtrlIF::thread_fn, arg){
     uint16_t cmd_op;
     uint16_t nbytes;
 
-    AK4621 codec(*SAI2, *SAI1, SPID3, LINE_SPI1_CS_CODEC);
+
     codec.init_hw();
     codec.init();
 

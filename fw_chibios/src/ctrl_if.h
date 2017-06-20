@@ -22,7 +22,7 @@ private:
         enum cmd_opcode op;
     } __attribute__((packed));
     
-    static constexpr uint32_t thread_stack_size = 4096;
+    static constexpr uint32_t thread_stack_size = 8192;
     static constexpr uint32_t usb_write_timeout = MS2ST(500);
     static constexpr uint32_t usb_read_timeout = MS2ST(500);
     

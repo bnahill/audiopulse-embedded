@@ -69,7 +69,7 @@
 #define STM32_PLLSAIP_VALUE                 4
 #define STM32_PLLSAIQ_VALUE                 4
 #define STM32_PLLSAIR_VALUE                 4
-#define STM32_PLLSAIDIVR                    STM32_PLLSAIDIVR_OFF
+#define STM32_PLLSAIDIVR_VALUE              4
 #define STM32_SAI1SEL                       STM32_SAI1SEL_OFF
 #define STM32_SAI2SEL                       STM32_SAI2SEL_OFF
 #define STM32_USART1SEL                     STM32_USART1SEL_PCLK2
@@ -107,6 +107,15 @@
 #define STM32_ADC_ADC1_DMA_IRQ_PRIORITY     6
 #define STM32_ADC_ADC2_DMA_IRQ_PRIORITY     6
 #define STM32_ADC_ADC3_DMA_IRQ_PRIORITY     6
+
+
+#define STM32_SAI_SAI1A_DMA_STREAM           STM32_DMA_STREAM_ID(2, 1)
+#define STM32_SAI_SAI2B_DMA_STREAM           STM32_DMA_STREAM_ID(2, 6)
+#define STM32_SAI_SAI1A_DMA_PRIORITY         2
+#define STM32_SAI_SAI2B_DMA_PRIORITY         2
+#define STM32_SAI_SAI1A_DMA_IRQ_PRIORITY     6
+#define STM32_SAI_SAI2B_DMA_IRQ_PRIORITY     6
+
 
 /*
  * CAN driver system settings.

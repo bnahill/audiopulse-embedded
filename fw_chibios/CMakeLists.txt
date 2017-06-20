@@ -164,7 +164,7 @@ set(OS_PLATFORM_SRC
     ${OS_DIR}/os/hal/ports/STM32/LLD/TIMv1/hal_icu_lld.c
     ${OS_DIR}/os/hal/ports/STM32/LLD/TIMv1/hal_pwm_lld.c
     ${OS_DIR}/os/hal/ports/STM32/LLD/TIMv1/hal_st_lld.c
-    ${OS_DIR}/os/hal/ports/STM32/LLD/TIMv1/stm32_tim.c
+    #${OS_DIR}/os/hal/ports/STM32/LLD/TIMv1/stm32_tim.c
     ${OS_DIR}/os/hal/ports/STM32/LLD/USARTv2/hal_serial_lld.c
     ${OS_DIR}/os/hal/ports/STM32/LLD/USARTv2/hal_uart_lld.c
     ${OS_DIR}/os/hal/ports/STM32/LLD/xWDGv1/hal_wdg_lld.c
