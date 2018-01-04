@@ -22,12 +22,12 @@
 #ifndef __APULSE_CODEC_H_
 #define __APULSE_CODEC_H_
 
-#if __cplusplus
+#ifdef __cplusplus
 
 #include <hal.h>
 #include <stdint.h>
 #include <apulse_math.h>
-
+#include <gpio.h>
 
 
 class AK4621 {
@@ -66,17 +66,19 @@ public:
         MIX = 2,
     };
 
-    constexpr AK4621(SAI_TypeDef &sai_in, uint8_t sai_in_ch, SAI_TypeDef &sai_out, uint8_t sai_out_ch, SPIDriver &spi, uint32_t spi_ncs_line, uint32_t pdn_line, uint32_t clk_en_line,
+    constexpr AK4621(SAI_TypeDef &sai_in, SAI_Block_TypeDef &sai_block_in, SAI_TypeDef &sai_out, SAI_Block_TypeDef &sai_block_out, SPIDriver &spi,
+                     GPIOPin spi_ncs_line, GPIOPin pdn_line, GPIOPin clk_en_line,
                      uint32_t dma_channel_rx, uint32_t dma_stream_rx, uint32_t dma_prio_rx, uint32_t dma_irq_prio_rx,
                      uint32_t dma_channel_tx, uint32_t dma_stream_tx, uint32_t dma_prio_tx, uint32_t dma_irq_prio_tx) :
-        SAI_IN(sai_in), sai_in_ch(sai_in_ch), SAI_OUT(sai_out), sai_out_ch(sai_out_ch), SPI(spi),
+        SAI_IN(sai_in), SAI_BLOCK_IN(sai_block_in), SAI_OUT(sai_out), SAI_BLOCK_OUT(sai_block_out), SPI(spi),
         rx_buffer_sel(0), tx_buffer_sel(0), source(Src::MIC), cb_in(nullptr), cb_out(nullptr),
         spi_ncs_line(spi_ncs_line), pdn_line(pdn_line), clk_en_line(clk_en_line),
         dma_channel_rx(dma_channel_rx), dma_channel_tx(dma_channel_tx),
         dma_stream_rx(dma_stream_rx), dma_stream_tx(dma_stream_tx),
         dma_prio_rx(dma_prio_rx), dma_prio_tx(dma_prio_tx),
         dma_irq_prio_rx(dma_irq_prio_rx), dma_irq_prio_tx(dma_irq_prio_tx),
-        dma_mode_rx(0), dma_mode_tx(0)
+        dma_mode_rx(0), dma_mode_tx(0),
+        buffer_in({0}), buffer_out({0})
     {}
 
     bool is_Src(Src val){
@@ -251,10 +253,9 @@ protected:
 
     SAI_TypeDef &SAI_IN;
     SAI_TypeDef &SAI_OUT;
+    SAI_Block_TypeDef volatile &SAI_BLOCK_IN;
+    SAI_Block_TypeDef volatile &SAI_BLOCK_OUT;
     SPIDriver &SPI;
-
-    uint8_t sai_in_ch;
-    uint8_t sai_out_ch;
 
     uint32_t const dma_channel_rx;
     uint32_t const dma_stream_rx;
@@ -280,9 +281,9 @@ protected:
 
     Src source;
 
-    uint32_t spi_ncs_line;
-    uint32_t pdn_line;
-    uint32_t clk_en_line;
+    GPIOPin const spi_ncs_line;
+    GPIOPin const pdn_line;
+    GPIOPin const clk_en_line;
 
     audio_in_cb_t cb_in;
     audio_out_cb_t cb_out;

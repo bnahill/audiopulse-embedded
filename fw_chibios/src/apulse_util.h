@@ -33,7 +33,7 @@ constexpr uint32_t count_ones(uint32_t i){
 }
 
 constexpr uint32_t rv(uint32_t mask, uint32_t value){
-    return (value & (1 << count_ones(mask))) << count_low_zeros(mask);
+    return (value & ((1 << count_ones(mask)) - 1)) << count_low_zeros(mask);
 }
 
 template< typename to, typename from >

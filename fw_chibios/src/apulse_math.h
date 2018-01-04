@@ -191,7 +191,8 @@ public:
     constexpr inline sFractional(int i) :
         i(i){}
 
-    constexpr sFractional() {}
+    constexpr sFractional() :
+        i(0){}
 
     /*!
          * @brief Constructor for arbitrary signed fractionals
@@ -297,14 +298,14 @@ public:
 template<typename Ts, typename T>
 void vector_mult_scalar(Ts a, T const * B, T * dst, size_t n){
     while(n >= 8){
-        register T b1 = B[0];
-        register T b2 = B[1];
-        register T b3 = B[2];
-        register T b4 = B[3];
-        register T b5 = B[4];
-        register T b6 = B[5];
-        register T b7 = B[6];
-        register T b8 = B[7];
+        T b1 = B[0];
+        T b2 = B[1];
+        T b3 = B[2];
+        T b4 = B[3];
+        T b5 = B[4];
+        T b6 = B[5];
+        T b7 = B[6];
+        T b8 = B[7];
 
         B += 8;
 

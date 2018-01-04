@@ -54,14 +54,6 @@ int main(void) {
     halInit();
     chSysInit();
 
-    //sduObjectInit(&SDU1);
-    //sduStart(&SDU1, &serusbcfg);
-
-    //usbDisconnectBus(serusbcfg.usbp);
-    //chThdSleepMilliseconds(1500);
-    //usbStart(serusbcfg.usbp, &usbcfg);
-    //usbConnectBus(serusbcfg.usbp);
-
     CtrlIF::Initialize();
 
     /*

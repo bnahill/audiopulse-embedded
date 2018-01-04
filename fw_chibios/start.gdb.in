@@ -1,0 +1,17 @@
+define r
+        mon reset 0
+end
+
+define l
+	r
+	load
+	r
+end
+
+source /home/ben/git/PyCortexMDebug/cmdebug/svd_gdb.py
+svd_load ${SVD_FILE}
+
+#set remotetimeout 2
+file apulse_iface.elf
+
+target extended-remote :2331

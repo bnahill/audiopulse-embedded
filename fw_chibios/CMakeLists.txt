@@ -52,11 +52,11 @@ set(OS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/ChibiOS-RT)
 
 set(TARGET_STM32F722 TRUE)
 
-set(OPTIMIZATION "-O2")
+set(OPTIMIZATION "-Og")
 set(LTO )#"-flto")
 
-set(PROCESS_STACKSIZE 0x1000)
-set(EXCEPTION_STACKSIZE 0x1000)
+set(PROCESS_STACKSIZE 0x2000)
+set(EXCEPTION_STACKSIZE 0x2000)
 
 if(${TARGET_STM32F722})
 	set(MCFLAGS "${MCFLAGS} -mcpu=cortex-m7 -mfloat-abi=hard -mfpu=fpv5-sp-d16 -fsingle-precision-constant")
@@ -72,13 +72,14 @@ set(MCFLAGS "${MCFLAGS} -g3 -mthumb -fomit-frame-pointer -fdelete-null-pointer-c
 
 set(LINKER_DIR ${OS_DIR}/os/common/startup/ARMCMx/compilers/GCC/ld)
 set(LINKER_SCRIPT STM32F722xE.ld)
+set(PERIPH_LINKER_SCRIPT ${CMAKE_SOURCE_DIR}/stm32f722_periph.ld)
 
 ###################################################
 # Compiler Flags
 ###################################################
 set(CXX_WARNINGS "-Waddress -Warray-bounds -Wc++11-compat -Wchar-subscripts ")
 set(CXX_WARNINGS "${CXX_WARNINGS} -Wcomment -Wformat -Wmaybe-uninitialized -Wnonnull -Wparentheses -Wreturn-type ")
-set(CXX_WARNINGS "${CXX_WARNINGS} -Wsequence-point -Wstrict-aliasing -Wstrict-overflow=1 -Wswitch -Wtrigraphs ") #-Wsign-compare
+set(CXX_WARNINGS "${CXX_WARNINGS} -Wsequence-point -Wstrict-aliasing -Wstrict-overflow=1 -Wswitch -Wtrigraphs -Wimplicit-fallthrough")
 set(CXX_WARNINGS "${CXX_WARNINGS} -Wuninitialized -Wunknown-pragmas -Wunused-function -Wunused-label -Wunused-value -Wunused-variable -Wvolatile-register-var")
 
 set(C_WARNINGS "-Wall")
@@ -86,11 +87,11 @@ set(C_WARNINGS "-Wall")
 # Flags for both C and C++ compilers
 set(COMMON_FLAGS "${LTO}  ${MCFLAGS}")
 # Eliminate the need for a bunch of extra support code that may not work on the chip anyways
-set(CMAKE_CXX_FLAGS "--std=gnu++14 -fno-rtti -fno-exceptions ${CXX_WARNINGS} ${COMMON_FLAGS}")
+set(CMAKE_CXX_FLAGS "--std=gnu++17 -fno-rtti -fno-exceptions ${CXX_WARNINGS} ${COMMON_FLAGS}")
 # Use the new C11 standard
 set(CMAKE_ASM_FLAGS "${MCFLAGS}")
 set(CMAKE_C_FLAGS "--std=gnu11 ${C_WARNINGS} ${COMMON_FLAGS}")
-set(CMAKE_EXE_LINKER_FLAGS "-L${LINKER_DIR} -T${LINKER_SCRIPT} ${LTO} ${OPTIMIZATION} -Wl,-Map=${TARGET}.map,--cref,--gc-sections,--defsym=__main_stack_size__=${EXCEPTION_STACKSIZE},--defsym=__process_stack_size__=${PROCESS_STACKSIZE} -nostartfiles ${MCFLAGS} ${CMAKE_EXE_LINKER_FLAGS}")
+set(CMAKE_EXE_LINKER_FLAGS "-L${LINKER_DIR} -T${LINKER_SCRIPT} -T${PERIPH_LINKER_SCRIPT} ${LTO} ${OPTIMIZATION} -Wl,-Map=${TARGET}.map,--cref,--gc-sections,--defsym=__main_stack_size__=${EXCEPTION_STACKSIZE},--defsym=__process_stack_size__=${PROCESS_STACKSIZE} -nostartfiles ${MCFLAGS} ${CMAKE_EXE_LINKER_FLAGS}")
 
 ########################################################
 # Sources
@@ -281,7 +282,8 @@ set(OS_TEST_INC
 set(APP_SRC
     ${CMAKE_SOURCE_DIR}/src/main.cpp
     ${CMAKE_SOURCE_DIR}/src/ctrl_if.cpp
-    #${CMAKE_SOURCE_DIR}/src/usbcfg.c
+    ${CMAKE_SOURCE_DIR}/src/platform.cpp
+    ${CMAKE_SOURCE_DIR}/src/usbserial.cpp
     ${CMAKE_SOURCE_DIR}/src/codec.cpp
 )
 
@@ -317,12 +319,15 @@ add_custom_target(assembly_output ALL DEPENDS ${TARGET}.lst)
 
 set(GDB    "${TC_PREFIX}gdb")
 set(GDBTUI ${TC_PREFIX}gdb -tui -ex \"layout split\" -ex \"focus CMD\")
+set(GDB_ARGS "-x" "start.gdb")
 
 #if(${DETECTED_HOST} STREQUAL "Windows")
 #endif(${DETECTED_HOST} STREQUAL "Windows")
 
 #if(${DETECTED_HOST} STREQUAL "Linux")
-##configure_file(${CMAKE_SOURCE_DIR}/start.gdb.in ${CMAKE_CURRENT_BINARY_DIR}/.gdbinit)
+
+set(SVD_FILE ${CMAKE_SOURCE_DIR}/STM32F7x2.svd)
+configure_file(${CMAKE_SOURCE_DIR}/start.gdb.in ${CMAKE_CURRENT_BINARY_DIR}/start.gdb)
 #endif(${DETECTED_HOST} STREQUAL "Linux")
 
 add_custom_target(gdb COMMAND ${GDB} ${GDB_ARGS})
