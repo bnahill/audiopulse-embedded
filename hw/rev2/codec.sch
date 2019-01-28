@@ -1,36 +1,6 @@
-EESchema Schematic File Version 2
-LIBS:symbols
-LIBS:power
-LIBS:device
-LIBS:transistors
-LIBS:conn
-LIBS:linear
-LIBS:regul
-LIBS:74xx
-LIBS:cmos4000
-LIBS:adc-dac
-LIBS:memory
-LIBS:xilinx
-LIBS:microcontrollers
-LIBS:dsp
-LIBS:microchip
-LIBS:analog_switches
-LIBS:motorola
-LIBS:texas
-LIBS:intel
-LIBS:audio
-LIBS:interface
-LIBS:digital-audio
-LIBS:philips
-LIBS:display
-LIBS:cypress
-LIBS:siliconi
-LIBS:opto
-LIBS:atmel
-LIBS:contrib
-LIBS:valves
+EESchema Schematic File Version 4
 LIBS:audio_iface_rev2-cache
-EELAYER 25 0
+EELAYER 26 0
 EELAYER END
 $Descr A 11000 8500
 encoding utf-8
@@ -45,7 +15,7 @@ Comment3 ""
 Comment4 ""
 $EndDescr
 $Comp
-L AK4621 U3
+L symbols:AK4621 U3
 U 1 1 523B94A4
 P 5100 3350
 F 0 "U3" H 5100 2300 60  0000 C CNN
@@ -56,7 +26,7 @@ F 3 "" H 5100 3350 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L CAP C26
+L symbols:CAP C26
 U 1 1 523B94B1
 P 2700 3600
 F 0 "C26" H 2720 3570 50  0000 L TNN
@@ -67,7 +37,7 @@ F 3 "" H 2700 3600 60  0000 C CNN
 	0    -1   -1   0   
 $EndComp
 $Comp
-L CAP C25
+L symbols:CAP C25
 U 1 1 523B94B7
 P 2550 3600
 F 0 "C25" H 2570 3570 50  0000 L TNN
@@ -94,18 +64,18 @@ Wire Wire Line
 Wire Wire Line
 	5700 3300 7900 3300
 Wire Wire Line
-	2800 3500 2800 3850
+	2800 3500 2800 3800
 Wire Wire Line
 	2800 3500 4500 3500
 Wire Wire Line
-	2550 3800 2800 3800
+	2550 3800 2700 3800
 Wire Wire Line
 	2550 3800 2550 3700
 Connection ~ 2800 3800
 Wire Wire Line
 	2550 3500 2550 3400
 Wire Wire Line
-	2450 3400 4500 3400
+	2450 3400 2550 3400
 Wire Wire Line
 	2700 3400 2700 3500
 Connection ~ 2700 3400
@@ -136,7 +106,7 @@ AOUTL-
 Wire Wire Line
 	7900 3300 7900 3400
 $Comp
-L CAP C28
+L symbols:CAP C28
 U 1 1 523B9668
 P 4200 2700
 F 0 "C28" H 4220 2670 50  0000 L TNN
@@ -147,7 +117,7 @@ F 3 "" H 4200 2700 60  0000 C CNN
 	0    -1   -1   0   
 $EndComp
 $Comp
-L CAP C27
+L symbols:CAP C27
 U 1 1 523B9675
 P 4000 2700
 F 0 "C27" H 4020 2670 50  0000 L TNN
@@ -162,7 +132,7 @@ Wire Wire Line
 Wire Wire Line
 	4400 2900 4400 2500
 Wire Wire Line
-	4400 2500 4000 2500
+	4400 2500 4200 2500
 Wire Wire Line
 	4000 2500 4000 2600
 Wire Wire Line
@@ -171,7 +141,7 @@ Connection ~ 4200 2500
 Wire Wire Line
 	4100 2900 4100 2850
 Wire Wire Line
-	4000 2850 4200 2850
+	4000 2850 4100 2850
 Wire Wire Line
 	4200 2850 4200 2800
 Wire Wire Line
@@ -202,7 +172,7 @@ Wire Wire Line
 Wire Wire Line
 	2450 3350 2450 3400
 $Comp
-L +3V #PWR33
+L symbols:+3V #PWR33
 U 1 1 524DAE69
 P 7700 3450
 F 0 "#PWR33" H 7700 3410 30  0001 C CNN
@@ -237,7 +207,7 @@ Wire Wire Line
 NoConn ~ 5700 4300
 NoConn ~ 4500 4300
 $Comp
-L +5V #PWR32
+L power:+5V #PWR32
 U 1 1 524DADF1
 P 7600 3550
 F 0 "#PWR32" H 7600 3640 20  0001 C CNN
@@ -248,7 +218,7 @@ F 3 "" H 7600 3550 60  0000 C CNN
 	-1   0    0    1   
 $EndComp
 $Comp
-L +5VA #PWR26
+L power:+5VA #PWR26
 U 1 1 524E470F
 P 2450 3350
 F 0 "#PWR26" H 2450 3480 20  0001 C CNN
@@ -259,7 +229,7 @@ F 3 "" H 2450 3350 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L +5VA #PWR28
+L power:+5VA #PWR28
 U 1 1 524E4726
 P 3450 3950
 F 0 "#PWR28" H 3450 4080 20  0001 C CNN
@@ -274,7 +244,7 @@ Wire Wire Line
 Wire Wire Line
 	3600 4150 3600 3700
 $Comp
-L AGND_OUT #PWR27
+L symbols:AGND_OUT #PWR27
 U 1 1 524E577E
 P 2800 3850
 F 0 "#PWR27" H 2800 3850 40  0001 C CNN
@@ -285,7 +255,7 @@ F 3 "~" H 2800 3850 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L AGND_OUT #PWR30
+L symbols:AGND_OUT #PWR30
 U 1 1 524E579A
 P 4100 2900
 F 0 "#PWR30" H 4100 2900 40  0001 C CNN
@@ -296,7 +266,7 @@ F 3 "~" H 4100 2900 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L AGND_OUT #PWR29
+L symbols:AGND_OUT #PWR29
 U 1 1 5257A82B
 P 3600 4150
 F 0 "#PWR29" H 3600 4150 40  0001 C CNN
@@ -315,14 +285,14 @@ SPI_MOSI
 Wire Wire Line
 	8200 3900 8200 4150
 Wire Wire Line
-	6750 3750 6750 3600
+	6750 3750 6750 3700
 Wire Wire Line
 	6750 3600 5700 3600
 Wire Wire Line
 	5700 3700 6750 3700
 Connection ~ 6750 3700
 $Comp
-L GNDD #PWR34
+L power:GNDD #PWR34
 U 1 1 57D656B3
 P 7900 3400
 F 0 "#PWR34" H 7900 3150 50  0001 C CNN
@@ -333,7 +303,7 @@ F 3 "" H 7900 3400 50  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L GNDD #PWR35
+L power:GNDD #PWR35
 U 1 1 57D656EE
 P 8200 4150
 F 0 "#PWR35" H 8200 3900 50  0001 C CNN
@@ -344,7 +314,7 @@ F 3 "" H 8200 4150 50  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L GNDD #PWR31
+L power:GNDD #PWR31
 U 1 1 57D65722
 P 6750 3750
 F 0 "#PWR31" H 6750 3500 50  0001 C CNN
@@ -354,4 +324,18 @@ F 3 "" H 6750 3750 50  0000 C CNN
 	1    6750 3750
 	1    0    0    -1  
 $EndComp
+Wire Wire Line
+	2800 3800 2800 3850
+Wire Wire Line
+	2700 3400 4500 3400
+Wire Wire Line
+	2700 3800 2800 3800
+Wire Wire Line
+	2550 3400 2700 3400
+Wire Wire Line
+	4200 2500 4000 2500
+Wire Wire Line
+	4100 2850 4200 2850
+Wire Wire Line
+	6750 3700 6750 3600
 $EndSCHEMATC

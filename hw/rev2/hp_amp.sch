@@ -1,36 +1,6 @@
-EESchema Schematic File Version 2
-LIBS:symbols
-LIBS:power
-LIBS:device
-LIBS:transistors
-LIBS:conn
-LIBS:linear
-LIBS:regul
-LIBS:74xx
-LIBS:cmos4000
-LIBS:adc-dac
-LIBS:memory
-LIBS:xilinx
-LIBS:microcontrollers
-LIBS:dsp
-LIBS:microchip
-LIBS:analog_switches
-LIBS:motorola
-LIBS:texas
-LIBS:intel
-LIBS:audio
-LIBS:interface
-LIBS:digital-audio
-LIBS:philips
-LIBS:display
-LIBS:cypress
-LIBS:siliconi
-LIBS:opto
-LIBS:atmel
-LIBS:contrib
-LIBS:valves
+EESchema Schematic File Version 4
 LIBS:audio_iface_rev2-cache
-EELAYER 25 0
+EELAYER 26 0
 EELAYER END
 $Descr A 11000 8500
 encoding utf-8
@@ -53,7 +23,7 @@ INR-
 Text HLabel 1100 4700 0    60   Input ~ 0
 INR+
 $Comp
-L OPAMP_QUAD U7
+L symbols:OPAMP_QUAD U7
 U 3 1 534EF55D
 P 2400 2600
 F 0 "U7" H 2475 2450 60  0000 L CNN
@@ -64,7 +34,7 @@ F 3 "~" H 2400 2600 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L OPAMP_QUAD U7
+L symbols:OPAMP_QUAD U7
 U 5 1 534EF5CB
 P 3050 7050
 F 0 "U7" H 3125 6900 60  0000 L CNN
@@ -75,7 +45,7 @@ F 3 "~" H 3050 7050 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L RES R35
+L symbols:RES R35
 U 1 1 534EF854
 P 1900 2700
 F 0 "R35" H 1970 2665 50  0000 L TNN
@@ -86,7 +56,7 @@ F 3 "~" H 1900 2700 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L RES R31
+L symbols:RES R31
 U 1 1 534EF861
 P 1500 2700
 F 0 "R31" H 1570 2665 50  0000 L TNN
@@ -97,7 +67,7 @@ F 3 "~" H 1500 2700 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L CAP C55
+L symbols:CAP C55
 U 1 1 534EF869
 P 2350 2200
 F 0 "C55" H 2370 2170 50  0000 L TNN
@@ -108,7 +78,7 @@ F 3 "~" H 2350 2200 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L CAP C51
+L symbols:CAP C51
 U 1 1 534EF876
 P 2150 2900
 F 0 "C51" H 2170 2870 50  0000 L TNN
@@ -119,7 +89,7 @@ F 3 "~" H 2150 2900 60  0000 C CNN
 	0    -1   -1   0   
 $EndComp
 $Comp
-L GND #PWR59
+L power:GND #PWR59
 U 1 1 534EFAAA
 P 2150 3100
 F 0 "#PWR59" H 2150 3100 30  0001 C CNN
@@ -130,7 +100,7 @@ F 3 "" H 2150 3100 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L OPAMP_QUAD U7
+L symbols:OPAMP_QUAD U7
 U 4 1 534EFB0E
 P 2400 3600
 F 0 "U7" H 2475 3450 60  0000 L CNN
@@ -141,7 +111,7 @@ F 3 "~" H 2400 3600 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L RES R36
+L symbols:RES R36
 U 1 1 534EFB14
 P 1900 3700
 F 0 "R36" H 1970 3665 50  0000 L TNN
@@ -152,7 +122,7 @@ F 3 "~" H 1900 3700 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L RES R32
+L symbols:RES R32
 U 1 1 534EFB1A
 P 1500 3700
 F 0 "R32" H 1570 3665 50  0000 L TNN
@@ -163,7 +133,7 @@ F 3 "~" H 1500 3700 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L CAP C56
+L symbols:CAP C56
 U 1 1 534EFB20
 P 2350 3200
 F 0 "C56" H 2370 3170 50  0000 L TNN
@@ -174,7 +144,7 @@ F 3 "~" H 2350 3200 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L CAP C52
+L symbols:CAP C52
 U 1 1 534EFB26
 P 2150 3900
 F 0 "C52" H 2170 3870 50  0000 L TNN
@@ -185,7 +155,7 @@ F 3 "~" H 2150 3900 60  0000 C CNN
 	0    -1   -1   0   
 $EndComp
 $Comp
-L GND #PWR60
+L power:GND #PWR60
 U 1 1 534EFB3A
 P 2150 4100
 F 0 "#PWR60" H 2150 4100 30  0001 C CNN
@@ -196,7 +166,7 @@ F 3 "" H 2150 4100 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L OPAMP_QUAD U7
+L symbols:OPAMP_QUAD U7
 U 1 1 534EFB41
 P 2400 4600
 F 0 "U7" H 2475 4450 60  0000 L CNN
@@ -207,7 +177,7 @@ F 3 "~" H 2400 4600 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L RES R37
+L symbols:RES R37
 U 1 1 534EFB47
 P 1900 4700
 F 0 "R37" H 1970 4665 50  0000 L TNN
@@ -218,7 +188,7 @@ F 3 "~" H 1900 4700 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L RES R33
+L symbols:RES R33
 U 1 1 534EFB4D
 P 1500 4700
 F 0 "R33" H 1570 4665 50  0000 L TNN
@@ -229,7 +199,7 @@ F 3 "~" H 1500 4700 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L CAP C57
+L symbols:CAP C57
 U 1 1 534EFB53
 P 2350 4200
 F 0 "C57" H 2370 4170 50  0000 L TNN
@@ -240,7 +210,7 @@ F 3 "~" H 2350 4200 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L CAP C53
+L symbols:CAP C53
 U 1 1 534EFB59
 P 2150 4900
 F 0 "C53" H 2170 4870 50  0000 L TNN
@@ -251,7 +221,7 @@ F 3 "~" H 2150 4900 60  0000 C CNN
 	0    -1   -1   0   
 $EndComp
 $Comp
-L GND #PWR61
+L power:GND #PWR61
 U 1 1 534EFB6D
 P 2150 5100
 F 0 "#PWR61" H 2150 5100 30  0001 C CNN
@@ -262,7 +232,7 @@ F 3 "" H 2150 5100 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L OPAMP_QUAD U7
+L symbols:OPAMP_QUAD U7
 U 2 1 534EFB74
 P 2400 5600
 F 0 "U7" H 2475 5450 60  0000 L CNN
@@ -273,7 +243,7 @@ F 3 "~" H 2400 5600 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L RES R38
+L symbols:RES R38
 U 1 1 534EFB7A
 P 1900 5700
 F 0 "R38" H 1970 5665 50  0000 L TNN
@@ -284,7 +254,7 @@ F 3 "~" H 1900 5700 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L RES R34
+L symbols:RES R34
 U 1 1 534EFB80
 P 1500 5700
 F 0 "R34" H 1570 5665 50  0000 L TNN
@@ -295,7 +265,7 @@ F 3 "~" H 1500 5700 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L CAP C58
+L symbols:CAP C58
 U 1 1 534EFB86
 P 2350 5200
 F 0 "C58" H 2370 5170 50  0000 L TNN
@@ -306,7 +276,7 @@ F 3 "~" H 2350 5200 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L CAP C54
+L symbols:CAP C54
 U 1 1 534EFB8C
 P 2150 5900
 F 0 "C54" H 2170 5870 50  0000 L TNN
@@ -317,7 +287,7 @@ F 3 "~" H 2150 5900 60  0000 C CNN
 	0    -1   -1   0   
 $EndComp
 $Comp
-L GND #PWR62
+L power:GND #PWR62
 U 1 1 534EFBA0
 P 2150 6100
 F 0 "#PWR62" H 2150 6100 30  0001 C CNN
@@ -328,7 +298,7 @@ F 3 "" H 2150 6100 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L AGND_OUT #PWR67
+L symbols:AGND_OUT #PWR67
 U 1 1 534FD9C3
 P 6350 5250
 F 0 "#PWR67" H 6350 5250 40  0001 C CNN
@@ -339,7 +309,7 @@ F 3 "" H 6350 5250 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L +5VA #PWR68
+L power:+5VA #PWR68
 U 1 1 534FDA74
 P 6550 4150
 F 0 "#PWR68" H 6550 4280 20  0001 C CNN
@@ -350,7 +320,7 @@ F 3 "" H 6550 4150 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L +5VA #PWR69
+L power:+5VA #PWR69
 U 1 1 534FDB27
 P 7200 3850
 F 0 "#PWR69" H 7200 3980 20  0001 C CNN
@@ -361,7 +331,7 @@ F 3 "" H 7200 3850 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L AGND_OUT #PWR70
+L symbols:AGND_OUT #PWR70
 U 1 1 534FDB2D
 P 7200 4300
 F 0 "#PWR70" H 7200 4300 40  0001 C CNN
@@ -372,7 +342,7 @@ F 3 "" H 7200 4300 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L CPOL C66
+L symbols:CPOL C66
 U 1 1 534FDB35
 P 7200 4050
 F 0 "C66" H 7230 4020 50  0000 L TNN
@@ -383,7 +353,7 @@ F 3 "~" H 7200 4050 60  0000 C CNN
 	0    1    1    0   
 $EndComp
 $Comp
-L CAP C67
+L symbols:CAP C67
 U 1 1 534FDB42
 P 7450 4050
 F 0 "C67" H 7470 4020 50  0000 L TNN
@@ -394,7 +364,7 @@ F 3 "~" H 7450 4050 60  0000 C CNN
 	0    -1   -1   0   
 $EndComp
 $Comp
-L CAP C68
+L symbols:CAP C68
 U 1 1 534FDB48
 P 7650 4050
 F 0 "C68" H 7670 4020 50  0000 L TNN
@@ -407,7 +377,7 @@ $EndComp
 Text HLabel 5950 4250 2    60   Output ~ 0
 HPL
 $Comp
-L +5VA #PWR63
+L power:+5VA #PWR63
 U 1 1 534FE1CA
 P 3050 6600
 F 0 "#PWR63" H 3050 6730 20  0001 C CNN
@@ -418,7 +388,7 @@ F 3 "" H 3050 6600 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L AGND_OUT #PWR64
+L symbols:AGND_OUT #PWR64
 U 1 1 534FE2F2
 P 3050 7700
 F 0 "#PWR64" H 3050 7700 40  0001 C CNN
@@ -429,7 +399,7 @@ F 3 "" H 3050 7700 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L TPA6130A2 U8
+L symbols:TPA6130A2 U8
 U 1 1 5356E12C
 P 4900 4350
 F 0 "U8" H 5200 3800 60  0000 C CNN
@@ -440,7 +410,7 @@ F 3 "~" H 4900 4350 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L CAP C59
+L symbols:CAP C59
 U 1 1 5356ECB4
 P 3750 4150
 F 0 "C59" H 3770 4120 50  0000 L TNN
@@ -451,7 +421,7 @@ F 3 "~" H 3750 4150 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L CAP C61
+L symbols:CAP C61
 U 1 1 5356ECC1
 P 4000 4250
 F 0 "C61" H 4020 4220 50  0000 L TNN
@@ -462,7 +432,7 @@ F 3 "~" H 4000 4250 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L CAP C60
+L symbols:CAP C60
 U 1 1 5356ECD1
 P 3750 4450
 F 0 "C60" H 3770 4420 50  0000 L TNN
@@ -473,7 +443,7 @@ F 3 "~" H 3750 4450 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L CAP C62
+L symbols:CAP C62
 U 1 1 5356ECD7
 P 4000 4550
 F 0 "C62" H 4020 4520 50  0000 L TNN
@@ -484,7 +454,7 @@ F 3 "~" H 4000 4550 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L AGND_OUT #PWR65
+L symbols:AGND_OUT #PWR65
 U 1 1 5356F02A
 P 4200 4950
 F 0 "#PWR65" H 4200 4950 40  0001 C CNN
@@ -495,7 +465,7 @@ F 3 "~" H 4200 4950 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L CAP C65
+L symbols:CAP C65
 U 1 1 5356F2A6
 P 4950 3050
 F 0 "C65" H 4970 3020 50  0000 L TNN
@@ -506,7 +476,7 @@ F 3 "~" H 4950 3050 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L +5VA #PWR66
+L power:+5VA #PWR66
 U 1 1 5356F633
 P 4700 3250
 F 0 "#PWR66" H 4700 3380 20  0001 C CNN
@@ -517,7 +487,7 @@ F 3 "" H 4700 3250 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L CAP C64
+L symbols:CAP C64
 U 1 1 5356F6D2
 P 4500 3450
 F 0 "C64" H 4520 3420 50  0000 L TNN
@@ -528,7 +498,7 @@ F 3 "~" H 4500 3450 60  0000 C CNN
 	0    -1   -1   0   
 $EndComp
 $Comp
-L CAP C63
+L symbols:CAP C63
 U 1 1 5356F6F4
 P 4350 3450
 F 0 "C63" H 4370 3420 50  0000 L TNN
@@ -547,7 +517,7 @@ SDA
 Text HLabel 4200 5350 0    60   BiDi ~ 0
 SCL
 $Comp
-L TP TP8
+L symbols:TP TP8
 U 1 1 53575E3E
 P 3300 3700
 F 0 "TP8" H 3300 3600 60  0000 C CNN
@@ -558,7 +528,7 @@ F 3 "~" H 3300 3700 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L TP TP9
+L symbols:TP TP9
 U 1 1 53575F6B
 P 3300 4000
 F 0 "TP9" H 3300 3900 60  0000 C CNN
@@ -569,7 +539,7 @@ F 3 "~" H 3300 4000 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L TP TP10
+L symbols:TP TP10
 U 1 1 53576008
 P 3300 4700
 F 0 "TP10" H 3300 4600 60  0000 C CNN
@@ -580,7 +550,7 @@ F 3 "~" H 3300 4700 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L TP TP11
+L symbols:TP TP11
 U 1 1 5357600E
 P 3300 5000
 F 0 "TP11" H 3300 4900 60  0000 C CNN
@@ -591,7 +561,7 @@ F 3 "~" H 3300 5000 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L CAP C72
+L symbols:CAP C72
 U 1 1 53A98FC3
 P 6350 3900
 F 0 "C72" H 6370 3870 50  0000 L TNN
