@@ -1,0 +1,7 @@
+(fp_lib_table
+  (lib (name ear)(type Legacy)(uri "$(KIPRJMOD)/../lib/ear.mod")(options "")(descr ""))
+  (lib (name MICRON_VFBGA63)(type Legacy)(uri "$(KIPRJMOD)/../lib/MICRON_VFBGA63.mod")(options "")(descr ""))
+  (lib (name oshw)(type Legacy)(uri "$(KIPRJMOD)/../lib/oshw.mod")(options "")(descr ""))
+  (lib (name lib)(type KiCad)(uri "$(KIPRJMOD)/lib.pretty")(options "")(descr ""))
+  (lib (name teensy)(type KiCad)(uri "$(KIPRJMOD)/../lib/teensy.pretty")(options "")(descr ""))
+)
