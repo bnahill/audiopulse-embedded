@@ -1,6 +1,6 @@
 EESchema Schematic File Version 4
 LIBS:audio_iface_rev2-cache
-EELAYER 26 0
+EELAYER 29 0
 EELAYER END
 $Descr A 11000 8500
 encoding utf-8
@@ -19,8 +19,8 @@ S 5200 4600 1300 1400
 U 523BF424
 F0 "Microcontroller" 50
 F1 "micro.sch" 50
-F2 "USB_D+" B L 5200 5700 60 
-F3 "USB_D-" B L 5200 5800 60 
+F2 "USB_D_P" B L 5200 5700 60 
+F3 "USB_D_N" B L 5200 5800 60 
 F4 "USB_ID" B L 5200 5900 50 
 F5 "USB_VBUS" B L 5200 5600 50 
 F6 "MIC0_IN" I L 5200 4700 50 
@@ -216,21 +216,8 @@ F 3 "" H 700 6600 50  0000 C CNN
 	1    700  6600
 	1    0    0    -1  
 $EndComp
-$Comp
-L Power_Protection:USBLC6-2SC6 U1
-U 1 1 5C59C6CB
-P 2200 5750
-F 0 "U1" H 2200 6428 50  0000 C CNN
-F 1 "USBLC6-2SC6" H 2200 6337 50  0000 C CNN
-F 2 "TO_SOT_Packages_SMD:SOT-23-6" H 1450 6150 50  0001 C CNN
-F 3 "http://www2.st.com/resource/en/datasheet/CD00050750.pdf" H 2400 6100 50  0001 C CNN
-	1    2200 5750
-	1    0    0    -1  
-$EndComp
 Wire Wire Line
 	1150 5650 1150 5800
-Wire Wire Line
-	1250 5850 1700 5850
 Wire Wire Line
 	3400 5800 5200 5800
 Wire Wire Line
@@ -269,9 +256,6 @@ Wire Wire Line
 Wire Wire Line
 	3500 5600 5200 5600
 Wire Wire Line
-	1700 5850 1700 5650
-Connection ~ 1700 5850
-Wire Wire Line
 	2900 5450 2900 5200
 Wire Wire Line
 	2900 5200 2900 4700
@@ -284,17 +268,6 @@ Wire Wire Line
 	1150 5650 1550 5650
 Wire Wire Line
 	1550 5650 1550 5400
-Wire Wire Line
-	1550 5400 2700 5400
-Wire Wire Line
-	2700 5400 2700 5650
-Connection ~ 2700 5650
-Wire Wire Line
-	2700 5650 2700 5850
-Wire Wire Line
-	3400 6150 1700 6150
-Wire Wire Line
-	1700 6150 1700 5850
 Wire Wire Line
 	3400 5800 3400 6150
 Text Label 4500 3650 2    50   ~ 0
@@ -312,18 +285,18 @@ F 3 "" H 3700 4100 50  0000 C CNN
 	1    3700 4100
 	-1   0    0    -1  
 $EndComp
-Text Label 4500 4050 2    50   ~ 0
-HP_LP
 Text Label 4500 4150 2    50   ~ 0
+HP_LP
+Text Label 4500 4050 2    50   ~ 0
 HP_LN
 Wire Wire Line
 	3700 3750 3700 3950
 Connection ~ 3700 3950
 Wire Wire Line
 	3700 3950 3700 4100
-Text Label 4500 4250 2    50   ~ 0
-HP_RP
 Text Label 4500 4350 2    50   ~ 0
+HP_RP
+Text Label 4500 4250 2    50   ~ 0
 HP_RN
 $Comp
 L Connector_Generic:Conn_01x08 J2
@@ -376,4 +349,29 @@ Text Label 4800 4800 2    50   ~ 0
 MIC1
 Wire Wire Line
 	4800 4800 5200 4800
+Wire Wire Line
+	1250 5850 1700 5850
+Wire Wire Line
+	1650 6150 1650 5650
+Wire Wire Line
+	1650 5650 1700 5650
+Wire Wire Line
+	1650 6150 3400 6150
+$Comp
+L Power_Protection:USBLC6-2SC6 U1
+U 1 1 5C59C6CB
+P 2200 5750
+F 0 "U1" H 2200 6428 50  0000 C CNN
+F 1 "USBLC6-2SC6" H 2200 6337 50  0000 C CNN
+F 2 "TO_SOT_Packages_SMD:SOT-23-6" H 1450 6150 50  0001 C CNN
+F 3 "http://www2.st.com/resource/en/datasheet/CD00050750.pdf" H 2400 6100 50  0001 C CNN
+	1    2200 5750
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	2750 5400 2750 5850
+Wire Wire Line
+	2750 5850 2700 5850
+Wire Wire Line
+	1550 5400 2750 5400
 $EndSCHEMATC

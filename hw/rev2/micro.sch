@@ -1,6 +1,6 @@
 EESchema Schematic File Version 4
 LIBS:audio_iface_rev2-cache
-EELAYER 26 0
+EELAYER 29 0
 EELAYER END
 $Descr B 17000 11000
 encoding utf-8
@@ -37,9 +37,9 @@ F 3 "~" H 4900 2400 60  0000 C CNN
 	0    -1   -1   0   
 $EndComp
 Text HLabel 9950 3100 0    60   BiDi ~ 0
-USB_D+
+USB_D_P
 Text HLabel 9950 3200 0    60   BiDi ~ 0
-USB_D-
+USB_D_N
 Text Label 2100 4150 0    60   ~ 0
 SWDIO
 Text Label 2100 4050 0    60   ~ 0
@@ -95,12 +95,12 @@ $EndComp
 $Comp
 L symbols:CAP C31
 U 1 1 53697AF9
-P 14750 3050
-F 0 "C31" H 14770 3020 50  0000 L TNN
-F 1 "100n" H 14775 3070 30  0000 L BNN
-F 2 "Capacitors_SMD:C_0402" H 14750 3050 60  0001 C CNN
-F 3 "~" H 14750 3050 60  0000 C CNN
-	1    14750 3050
+P 15100 3050
+F 0 "C31" H 15120 3020 50  0000 L TNN
+F 1 "100n" H 15125 3070 30  0000 L BNN
+F 2 "Capacitors_SMD:C_0402" H 15100 3050 60  0001 C CNN
+F 3 "~" H 15100 3050 60  0000 C CNN
+	1    15100 3050
 	0    -1   -1   0   
 $EndComp
 $Comp
@@ -293,17 +293,6 @@ USB_VBUS
 Wire Wire Line
 	10250 3000 10600 3000
 $Comp
-L symbols:ADAU1772 U4
-U 1 1 5C11F03E
-P 12850 6950
-F 0 "U4" H 12850 5714 50  0000 C CNN
-F 1 "ADAU1772" H 12850 5623 50  0000 C CNN
-F 2 "Housings_DFN_QFN:QFN-40-1EP_6x6mm_Pitch0.5mm" H 12850 6950 50  0001 C CNN
-F 3 "http://www.analog.com/media/en/technical-documentation/data-sheets/ADAU1701.pdf" H 12850 6950 50  0001 C CNN
-	1    12850 6950
-	1    0    0    -1  
-$EndComp
-$Comp
 L power:+1V8 #PWR027
 U 1 1 5C02D6F4
 P 12800 5250
@@ -461,8 +450,6 @@ Wire Wire Line
 	15100 2750 14700 2750
 Text Label 14900 2850 0    50   ~ 0
 MCLK
-Wire Wire Line
-	14900 2850 14750 2850
 $Comp
 L power:GNDD #PWR032
 U 1 1 5C0FB75F
@@ -483,17 +470,10 @@ MCLK_EN
 Wire Wire Line
 	13850 2750 14100 2750
 Wire Wire Line
-	13900 3200 14750 3200
-Wire Wire Line
-	14750 3200 14750 3150
+	15100 3200 15100 3150
 Connection ~ 13900 3200
 Wire Wire Line
 	13900 3200 13900 2850
-Wire Wire Line
-	14750 2950 14750 2850
-Connection ~ 14750 2850
-Wire Wire Line
-	14750 2850 14700 2850
 Wire Wire Line
 	6950 7100 8100 7100
 Text Label 7700 7100 0    50   ~ 0
@@ -518,17 +498,6 @@ F 1 "DSC6011JE1A-024.0000" H 9450 3991 60  0000 C CNN
 F 2 "Oscillators:Oscillator_SMD_SeikoEpson_SG210-4pin_2.5x2.0mm" H 9450 3800 60  0001 C CNN
 F 3 "" H 9450 3800 60  0000 C CNN
 	1    9450 3800
-	1    0    0    -1  
-$EndComp
-$Comp
-L power:+1V8 #PWR016
-U 1 1 5C17162D
-P 9900 3600
-F 0 "#PWR016" H 9900 3450 50  0001 C CNN
-F 1 "+1V8" H 9915 3773 50  0000 C CNN
-F 2 "" H 9900 3600 50  0001 C CNN
-F 3 "" H 9900 3600 50  0001 C CNN
-	1    9900 3600
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
@@ -592,6 +561,8 @@ $Comp
 L Connector:Conn_ARM_JTAG_SWD_10 J3
 U 1 1 5C280446
 P 1300 4150
+AR Path="/5C280446" Ref="J3"  Part="1" 
+AR Path="/523BF424/5C280446" Ref="J3"  Part="1" 
 F 0 "J3" H 1650 3600 50  0000 R CNN
 F 1 "Amphenol 20021122" V 850 4600 50  0000 R CNN
 F 2 "Pin_Headers:Pin_Header_Straight_2x05_Pitch1.27mm" H 1350 3600 50  0001 L TNN
@@ -955,8 +926,6 @@ Wire Wire Line
 Wire Wire Line
 	13750 7900 13550 7900
 Connection ~ 12900 8300
-Wire Wire Line
-	12900 8300 12900 8100
 Wire Wire Line
 	13550 7800 13750 7800
 Wire Wire Line
@@ -1722,4 +1691,32 @@ Wire Wire Line
 	13250 3450 13350 3450
 Text Label 7450 6600 0    50   ~ 0
 USB_RESET
+Wire Wire Line
+	14700 2850 14900 2850
+Wire Wire Line
+	15100 2750 15100 2950
+Connection ~ 15100 2750
+Wire Wire Line
+	13900 3200 15100 3200
+Text Label 9900 3600 0    50   ~ 0
+1V8_USB
+Text Label 12450 2900 0    50   ~ 0
+1V8_USB
+Wire Wire Line
+	12900 8300 12900 8100
+$Comp
+L symbols:ADAU1772 U4
+U 1 1 5C11F03E
+P 12850 6950
+F 0 "U4" H 12850 5714 50  0000 C CNN
+F 1 "ADAU1772" H 12850 5623 50  0000 C CNN
+F 2 "lib:QFN-40-1EP_6x6mm_Pitch0.5mm" H 12850 6950 50  0001 C CNN
+F 3 "http://www.analog.com/media/en/technical-documentation/data-sheets/ADAU1701.pdf" H 12850 6950 50  0001 C CNN
+	1    12850 6950
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	12700 8100 12700 8300
+Wire Wire Line
+	12700 8300 12900 8300
 $EndSCHEMATC
