@@ -52,7 +52,7 @@ $EndComp
 Text Notes 5000 6150 3    60   ~ 0
 Floating for USB device
 $Comp
-L symbols:USB_5V #PWR05
+L audio_iface_rev2-rescue:USB_5V-symbols #PWR05
 U 1 1 5350403E
 P 3950 4600
 F 0 "#PWR05" H 3950 4560 30  0001 C CNN
@@ -93,7 +93,7 @@ $EndComp
 Wire Wire Line
 	3350 7150 3350 7050
 $Comp
-L symbols:CAP C2
+L Device:C_Small C2
 U 1 1 57D66AF8
 P 3400 4850
 F 0 "C2" H 3420 4820 50  0000 L TNN
@@ -101,7 +101,7 @@ F 1 "2.2u" H 3425 4870 30  0000 L BNN
 F 2 "Capacitor_SMD:C_0603_1608Metric_Pad1.05x0.95mm_HandSolder" H 3400 4850 60  0001 C CNN
 F 3 "" H 3400 4850 60  0000 C CNN
 	1    3400 4850
-	0    1    1    0   
+	1    0    0    -1  
 $EndComp
 $Comp
 L symbols:FB FB2
@@ -131,15 +131,15 @@ $EndComp
 Wire Wire Line
 	3400 4950 3400 5050
 $Comp
-L symbols:CAP C3
+L Device:C_Small C3
 U 1 1 57D6798C
 P 3850 4850
 F 0 "C3" H 3870 4820 50  0000 L TNN
 F 1 "0.1u" H 3875 4870 30  0000 L BNN
-F 2 "Capacitors_SMD:C_0402" H 3850 4850 60  0001 C CNN
+F 2 "Capacitor_SMD:C_0402_1005Metric" H 3850 4850 60  0001 C CNN
 F 3 "" H 3850 4850 60  0000 C CNN
 	1    3850 4850
-	0    1    1    0   
+	1    0    0    -1  
 $EndComp
 Wire Wire Line
 	3750 4700 3850 4700
@@ -191,7 +191,7 @@ Wire Wire Line
 Wire Wire Line
 	1250 5900 1250 5850
 $Comp
-L symbols:CAP C1
+L Device:C_Small C1
 U 1 1 5C59A595
 P 700 6400
 F 0 "C1" H 720 6370 50  0000 L TNN
@@ -199,7 +199,7 @@ F 1 "2.2u" H 725 6420 30  0000 L BNN
 F 2 "Capacitor_SMD:C_0603_1608Metric_Pad1.05x0.95mm_HandSolder" H 700 6400 60  0001 C CNN
 F 3 "" H 700 6400 60  0000 C CNN
 	1    700  6400
-	0    1    1    0   
+	1    0    0    -1  
 $EndComp
 Wire Wire Line
 	700  6200 700  6300
@@ -364,14 +364,58 @@ Wire Wire Line
 Wire Wire Line
 	1550 5400 2750 5400
 $Comp
-L symbols:AGND #PWR?
+L symbols:AGND #PWR0101
 U 1 1 5D866BD1
 P 3700 4100
-F 0 "#PWR?" H 3700 4100 40  0001 C CNN
+F 0 "#PWR0101" H 3700 4100 40  0001 C CNN
 F 1 "AGND" H 3695 4175 50  0000 C CNN
 F 2 "" H 3700 4100 60  0000 C CNN
 F 3 "" H 3700 4100 60  0000 C CNN
 	1    3700 4100
+	1    0    0    -1  
+$EndComp
+$Comp
+L Mechanical:MountingHole H1
+U 1 1 5D8AAD8E
+P 1150 950
+F 0 "H1" H 1250 996 50  0000 L CNN
+F 1 "MountingHole" H 1250 905 50  0000 L CNN
+F 2 "MountingHole:MountingHole_2.2mm_M2" H 1150 950 50  0001 C CNN
+F 3 "~" H 1150 950 50  0001 C CNN
+	1    1150 950 
+	1    0    0    -1  
+$EndComp
+$Comp
+L Mechanical:MountingHole H3
+U 1 1 5D8AB8E4
+P 2000 950
+F 0 "H3" H 2100 996 50  0000 L CNN
+F 1 "MountingHole" H 2100 905 50  0000 L CNN
+F 2 "MountingHole:MountingHole_2.2mm_M2" H 2000 950 50  0001 C CNN
+F 3 "~" H 2000 950 50  0001 C CNN
+	1    2000 950 
+	1    0    0    -1  
+$EndComp
+$Comp
+L Mechanical:MountingHole H2
+U 1 1 5D8ABA4E
+P 1150 1200
+F 0 "H2" H 1250 1246 50  0000 L CNN
+F 1 "MountingHole" H 1250 1155 50  0000 L CNN
+F 2 "MountingHole:MountingHole_2.2mm_M2" H 1150 1200 50  0001 C CNN
+F 3 "~" H 1150 1200 50  0001 C CNN
+	1    1150 1200
+	1    0    0    -1  
+$EndComp
+$Comp
+L Mechanical:MountingHole H4
+U 1 1 5D8ABCBE
+P 2000 1200
+F 0 "H4" H 2100 1246 50  0000 L CNN
+F 1 "MountingHole" H 2100 1155 50  0000 L CNN
+F 2 "MountingHole:MountingHole_2.2mm_M2" H 2000 1200 50  0001 C CNN
+F 3 "~" H 2000 1200 50  0001 C CNN
+	1    2000 1200
 	1    0    0    -1  
 $EndComp
 $EndSCHEMATC
