@@ -274,26 +274,21 @@ Text Label 4500 3650 2    50   ~ 0
 MIC0
 Text Label 4500 3850 2    50   ~ 0
 MIC1
-Text Label 4500 4150 2    50   ~ 0
-HP_LP
 Text Label 4500 4050 2    50   ~ 0
+HP_LP
+Text Label 4500 3950 2    50   ~ 0
 HP_LN
-Wire Wire Line
-	3700 3750 3700 3950
-Connection ~ 3700 3950
-Wire Wire Line
-	3700 3950 3700 4100
-Text Label 4500 4350 2    50   ~ 0
-HP_RP
 Text Label 4500 4250 2    50   ~ 0
+HP_RP
+Text Label 4500 4150 2    50   ~ 0
 HP_RN
 $Comp
-L Connector_Generic:Conn_01x08 J2
+L Connector_Generic:Conn_01x07 J2
 U 1 1 5C524BA8
 P 4850 3950
 F 0 "J2" H 4930 3942 50  0000 L CNN
-F 1 "Conn_01x08" H 4930 3851 50  0000 L CNN
-F 2 "Connector_PinHeader_1.27mm:PinHeader_1x08_P1.27mm_Vertical" H 4850 3950 50  0001 C CNN
+F 1 "Conn_01x07" H 4930 3851 50  0000 L CNN
+F 2 "Connector_JST:JST_PH_S7B-PH-K_1x07_P2.00mm_Horizontal" H 4850 3950 50  0001 C CNN
 F 3 "~" H 4850 3950 50  0001 C CNN
 	1    4850 3950
 	1    0    0    -1  
@@ -305,15 +300,13 @@ Wire Wire Line
 Wire Wire Line
 	3700 3750 4650 3750
 Wire Wire Line
-	3700 3950 4650 3950
+	4500 3950 4650 3950
 Wire Wire Line
 	4500 4050 4650 4050
 Wire Wire Line
 	4500 4150 4650 4150
 Wire Wire Line
 	4500 4250 4650 4250
-Wire Wire Line
-	4500 4350 4650 4350
 Text Label 6950 4700 0    50   ~ 0
 HP_LP
 Text Label 6950 4800 0    50   ~ 0
@@ -418,4 +411,6 @@ F 3 "~" H 2000 1200 50  0001 C CNN
 	1    2000 1200
 	1    0    0    -1  
 $EndComp
+Wire Wire Line
+	3700 3750 3700 4100
 $EndSCHEMATC
