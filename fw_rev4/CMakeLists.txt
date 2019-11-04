@@ -7,13 +7,13 @@ set(OUTFILE ${TARGET}.elf)
 project(${TARGET})
 cmake_minimum_required(VERSION 2.8)
 
+set(CFLAG_STD "-std=gnu11")
 set(CFLAG_CPU "-mcpu=cortex-m7 -mthumb")
 set(CFLAG_OPT "-Og")
+set(CFLAG_OPT_DSP "-O3")
 set(CFLAG_FLOAT "-mfpu=fpv5-d16 -mfloat-abi=hard")
 set(CFLAG_DEBUG "-gdwarf-2 -g")
-set(CPP_IN "-DUSE_HAL_DRIVER -DSTM32H753xx")
-
-set(CMAKE_C_FLAGS "${CFLAG_CPU} ${CFLAG_FLOAT} ${CFLAG_OPT} ${CFLAG_DEBUG} -fdata-sections -ffunction-sections")
+set(CPP_IN "-DUSE_HAL_DRIVER -DSTM32H753xx -DARM_MATH_CM7 -D__FPU_PRESENT")
 
 add_definitions(${CPP_IN})
 
@@ -480,6 +480,7 @@ set(SRC_DSP
 )
 
 set(SRC_ALL
+  # Exclude DSP so it can be built with its own flags
   #${SRC_DSP}
   ${SRC_USB_DRIVER}
   ${SRC_FREERTOS}
@@ -489,10 +490,22 @@ set(SRC_ALL
 
 set(LINKER_SCRIPT ${CMAKE_SOURCE_DIR}/STM32H753VITx_FLASH.ld)
 
+set(CMAKE_EXE_LINKER_FLAGS "-specs=nano.specs -T${LINKER_SCRIPT} -Wl,-Map=${TARGET}.map,--cref -Wl,--gc-sections  ${CMAKE_EXE_LINKER_FLAGS}")
 
+set(CMAKE_C_FLAGS "${CFLAG_STD} ${CFLAG_CPU} ${CFLAG_FLOAT} ${CFLAG_DEBUG} -fdata-sections -ffunction-sections")
 
-set(CMAKE_EXE_LINKER_FLAGS "-lc -lm -lnosys -specs=nano.specs -T${LINKER_SCRIPT} ${LTO} ${OPTIMIZATION} -Wl,-Map=${TARGET}.map,--cref -Wl,--gc-sections  ${CMAKE_EXE_LINKER_FLAGS}")
-
+add_library(dsp STATIC ${SRC_DSP})
 add_executable(${OUTFILE} ${SRC_ALL})
-set_target_properties(${OUTFILE} PROPERTIES COMPILE_FLAGS "${OPTIMIZATION}")
-#target_link_libraries(${OUTFILE} dsp)# libarm_cortexM4l_math.a)
+
+target_link_libraries(${OUTFILE} c m nosys dsp)
+
+set_target_properties(dsp PROPERTIES
+    COMPILE_FLAGS ${CFLAG_OPT_DSP})
+
+set_target_properties(${OUTFILE} PROPERTIES
+    COMPILE_FLAGS ${CFLAG_OPT})
+
+add_custom_command(
+        TARGET ${OUTFILE} POST_BUILD
+        COMMAND arm-none-eabi-size --format=berkeley ${OUTFILE}
+)
