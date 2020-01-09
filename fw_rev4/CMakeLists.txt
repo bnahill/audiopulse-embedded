@@ -165,6 +165,8 @@ set(SRC_ST_CORE
   ${ST_CORE_DIR}/Src/stm32h7xx_it.c
   ${ST_CORE_DIR}/Src/freertos.c
   ${ST_CORE_DIR}/Src/main.c
+  ${ST_CORE_DIR}/Src/audio_ctrl.c
+  ${ST_CORE_DIR}/Src/test_ctrl.c
   ${CMAKE_SOURCE_DIR}/USB_DEVICE/App/usbd_audio_if.c
   ${CMAKE_SOURCE_DIR}/USB_DEVICE/App/usb_device.c
   ${CMAKE_SOURCE_DIR}/USB_DEVICE/App/usbd_desc.c

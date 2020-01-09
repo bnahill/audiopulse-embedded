@@ -52,18 +52,18 @@ __ALIGN_BEGIN static const uint32_t pInitVectCRYP[4] __ALIGN_END = {
 __ALIGN_BEGIN static const uint32_t HeaderCRYP[1] __ALIGN_END = {
                             0x00000000};
 
-HASH_HandleTypeDef hhash;
+HASH_HandleTypeDef hhash = {0};
 
-I2C_HandleTypeDef hi2c4;
+I2C_HandleTypeDef hi2c4 = {0};
 
-SAI_HandleTypeDef hsai_BlockA1;
-SAI_HandleTypeDef hsai_BlockB1;
-DMA_HandleTypeDef hdma_sai1_a;
-DMA_HandleTypeDef hdma_sai1_b;
+SAI_HandleTypeDef hsai_BlockA1 = {0};
+SAI_HandleTypeDef hsai_BlockB1 = {0};
+DMA_HandleTypeDef hdma_sai1_a = {0};
+DMA_HandleTypeDef hdma_sai1_b = {0};
 
-UART_HandleTypeDef huart3;
+UART_HandleTypeDef huart3 = {0};
 
-osThreadId_t defaultTaskHandle;
+osThreadId_t defaultTaskHandle = NULL;
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
@@ -262,7 +262,7 @@ static void MX_CRYP_Init(void)
   /* USER CODE END CRYP_Init 1 */
   hcryp.Instance = CRYP;
   hcryp.Init.DataType = CRYP_DATATYPE_32B;
-  hcryp.Init.KeySize = CRYP_KEYSIZE_128B;
+  hcryp.Init.KeySize = CRYP_KEYSIZE_256B;
   hcryp.Init.pKey = (uint32_t *)pKeyCRYP;
   hcryp.Init.pInitVect = (uint32_t *)pInitVectCRYP;
   hcryp.Init.Algorithm = CRYP_AES_GCM;

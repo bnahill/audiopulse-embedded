@@ -52,8 +52,8 @@ typedef struct
                                         This parameter can be a value of @ref CRYP_Data_Type */
   uint32_t KeySize;                    /*!< Used only in AES mode : 128, 192 or 256 bit key length in CRYP1.
                                             This parameter can be a value of @ref CRYP_Key_Size */
-  uint32_t *pKey;                      /*!< The key used for encryption/decryption */
-  uint32_t *pInitVect;                 /*!< The initialization vector used also as initialization
+  uint32_t const *pKey;                      /*!< The key used for encryption/decryption */
+  uint32_t const *pInitVect;                 /*!< The initialization vector used also as initialization
                                          counter in CTR mode */
   uint32_t Algorithm;                  /*!<  DES/ TDES Algorithm ECB/CBC
                                         AES Algorithm ECB/CBC/CTR/GCM or CCM
